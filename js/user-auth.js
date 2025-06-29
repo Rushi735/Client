@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('password').value;
 
             try {
-                const response = await fetch('https://vpmgt267-3000.inc1.devtunnels.ms/api/user/login', {
+                const response = await fetch('https://serverone-w2xc.onrender.com/api/user/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                const response = await fetch('https://vpmgt267-3000.inc1.devtunnels.ms/api/user/register', {
+                const response = await fetch('https://serverone-w2xc.onrender.com/api/user/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password })
