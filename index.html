@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RideSwift | Premium Cab Booking Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4cc9f0;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .btn-primary {
+            background: var(--primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(67, 97, 238, 0.3);
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .stats-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body class="font-['Poppins'] text-gray-800 antialiased">
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white/90 backdrop-blur-sm shadow-sm z-50">
+        <div class="max-w-7xl mx-auto px-5 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                    <i class="fas fa-car text-white"></i>
+                </div>
+                <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">RideSwift</span>
+            </div>
+            <div class="hidden lg:flex space-x-8 items-center">
+                <a href="#home" class="font-medium hover:text-blue-600 transition">Home</a>
+                <a href="#services" class="font-medium hover:text-blue-600 transition">Services</a>
+                <a href="#cities" class="font-medium hover:text-blue-600 transition">Cities</a>
+                <a href="#safety" class="font-medium hover:text-blue-600 transition">Safety</a>
+                <a href="#business" class="font-medium hover:text-blue-600 transition">Business</a>
+                <div class="flex space-x-4 ml-6">
+                    <a href="user-login.html" class="px-4 py-2 font-medium rounded-lg hover:text-blue-600">User Login</a>
+                    <a href="driver-login.html" class="px-4 py-2 font-medium rounded-lg hover:text-blue-600">Driver Login</a>
+                    <a href="user-register.html" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">Sign Up</a>
+                </div>
+            </div>
+            <button id="menuToggle" class="lg:hidden text-gray-600">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="mobile-menu lg:hidden fixed top-0 right-0 h-full w-64 bg-white shadow-lg z-50 p-4">
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">RideSwift</span>
+                <button id="closeMenu" class="text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="flex flex-col space-y-4">
+                <a href="#home" class="font-medium hover:text-blue-600 transition py-2">Home</a>
+                <a href="#services" class="font-medium hover:text-blue-600 transition py-2">Services</a>
+                <a href="#cities" class="font-medium hover:text-blue-600 transition py-2">Cities</a>
+                <a href="#safety" class="font-medium hover:text-blue-600 transition py-2">Safety</a>
+                <a href="#business" class="font-medium hover:text-blue-600 transition py-2">Business</a>
+                <a href="user-login.html" class="px-4 py-2 font-medium hover:text-blue-600 transition">User Login</a>
+                <a href="driver-login.html" class="px-4 py-2 font-medium hover:text-blue-600 transition">Driver Login</a>
+                <a href="user-register.html" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition text-center">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section (Home) -->
+    <section id="home" class="hero-gradient pt-32 pb-20">
+        <div class="max-w-7xl mx-auto px-5 flex flex-col lg:flex-row items-center">
+            <div class="lg:w-1/2 mb-12 lg:mb-0">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                    <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Ride</span> 
+                    Smarter, Not Harder
+                </h1>
+                <p class="text-lg text-gray-600 mb-8 max-w-lg">
+                    Experience premium urban mobility with our AI-powered platform. 
+                    Get instant quotes, luxury vehicles, and 24/7 support for all your 
+                    transportation needs.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 mb-12">
+                    <a href="user-register.html" class="btn-primary text-white px-8 py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
+                        <i class="fas fa-rocket"></i>
+                        <span>Get Started Now</span>
+                    </a>
+                    <a href="#" class="px-8 py-3 border border-gray-300 rounded-lg font-medium flex items-center justify-center space-x-2 hover:border-blue-600 hover:text-blue-600 transition">
+                        <i class="fas fa-play-circle"></i>
+                        <span>How It Works</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-8">
+                    <div class="flex items-center space-x-2">
+                        <div class="flex -space-x-2">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" class="w-10 h-10 rounded-full border-2 border-white">
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-10 h-10 rounded-full border-2 border-white">
+                            <img src="https://randomuser.me/api/portraits/women/68.jpg" class="w-10 h-10 rounded-full border-2 border-white">
+                        </div>
+                        <span class="text-sm font-medium">10K+ Happy Riders</span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-yellow-400">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span class="text-gray-700 text-sm font-medium">4.9 (2.5K reviews)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:w-1/2 relative">
+                <div class="relative max-w-md mx-auto lg:mr-0 lg:ml-auto">
+                    <div class="absolute -inset-4 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl blur-lg opacity-20 animate-float"></div>
+                    <div class="relative bg-white rounded-xl shadow-xl overflow-hidden">
+                        <div class="bg-gray-900 text-white p-4">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <div class="text-sm">RideSwift App</div>
+                                <div class="w-6"></div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-6">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-500">Pickup Location</span>
+                                    <span class="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full">NOW</span>
+                                </div>
+                                <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                                    <i class="fas fa-map-marker-alt text-blue-600"></i>
+                                    <input type="text" placeholder="Enter pickup address" class="outline-none flex-grow placeholder-gray-400">
+                                </div>
+                            </div>
+                            <div class="mb-6">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-sm font-medium text-gray-500">Destination</span>
+                                </div>
+                                <div class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                                    <i class="fas fa-flag text-green-600"></i>
+                                    <input type="text" placeholder="Where to?" class="outline-none flex-grow placeholder-gray-400">
+                                </div>
+                            </div>
+                            <button class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition">
+                                Confirm Ride
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-blue-100 rounded-full opacity-50"></div>
+                <div class="absolute top-20 -right-10 w-40 h-40 bg-purple-100 rounded-full opacity-30"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-5">
+            <div class="text-center mb-16">
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-600 rounded-full mb-4">OUR SERVICES</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Tailored Transportation Solutions</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Explore our range of services designed to meet every travel need with comfort and efficiency.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-car text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">RideSwift Go</h3>
+                    <p class="text-gray-600 mb-4">Affordable everyday rides with standard vehicles for quick city trips.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Book Now</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-star text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">RideSwift Premium</h3>
+                    <p class="text-gray-600 mb-4">Luxury vehicles for business meetings or special occasions with top-tier comfort.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Book Now</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-green-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-van-shuttle text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">RideSwift XL</h3>
+                    <p class="text-gray-600 mb-4">Spacious SUVs and vans for group travel or extra luggage needs.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Book Now</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cities Section -->
+    <section id="cities" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-5">
+            <div class="text-center mb-16">
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-600 rounded-full mb-4">OUR CITIES</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Where We Operate</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">RideSwift is available in over 25 major cities, providing seamless mobility wherever you go.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="stats-card p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="text-xl font-bold text-blue-600 mb-2">New York</div>
+                    <div class="text-gray-600">24/7 service across all boroughs</div>
+                </div>
+                <div class="stats-card p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="text-xl font-bold text-blue-600 mb-2">San Francisco</div>
+                    <div class="text-gray-600">Eco-friendly options available</div>
+                </div>
+                <div class="stats-card p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="text-xl font-bold text-blue-600 mb-2">Chicago</div>
+                    <div class="text-gray-600">Airport transfers made easy</div>
+                </div>
+                <div class="stats-card p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="text-xl font-bold text-blue-600 mb-2">Miami</div>
+                    <div class="text-gray-600">Premium rides for nightlife</div>
+                </div>
+            </div>
+            <div class="text-center mt-12">
+                <a href="#" class="text-blue-600 font-medium flex items-center justify-center space-x-2">
+                    <span>View All Cities</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Safety Section -->
+    <section id="safety" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-5">
+            <div class="text-center mb-16">
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-600 rounded-full mb-4">SAFETY FIRST</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Your Safety, Our Priority</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">We implement rigorous safety measures to ensure every ride is secure and reliable.</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-shield-alt text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Driver Verification</h3>
+                    <p class="text-gray-600 mb-4">All drivers undergo thorough background checks and training.</p>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-video text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Real-Time Monitoring</h3>
+                    <p class="text-gray-600 mb-4">24/7 ride tracking with emergency response capabilities.</p>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-green-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-exclamation-circle text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Emergency Button</h3>
+                    <p class="text-gray-600 mb-4">Instant access to help via our in-app emergency feature.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Section -->
+    <section id="business" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-5">
+            <div class="text-center mb-16">
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-600 rounded-full mb-4">FOR BUSINESS</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">RideSwift for Business</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Streamline corporate travel with our tailored business solutions.</p>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12">
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-briefcase text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Corporate Accounts</h3>
+                    <p class="text-gray-600 mb-4">Centralized billing and reporting for easy expense management.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Learn More</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-users text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Team Travel</h3>
+                    <p class="text-gray-600 mb-4">Coordinate group rides for events, meetings, or team outings.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Learn More</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-5">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="stats-card p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">15K+</div>
+                    <div class="text-gray-600">Daily Rides</div>
+                </div>
+                <div class="stats-card p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">5K+</div>
+                    <div class="text-gray-600">Professional Drivers</div>
+                </div>
+                <div class="stats-card p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">25+</div>
+                    <div class="text-gray-600">Cities Covered</div>
+                </div>
+                <div class="stats-card p-6 rounded-xl border border-gray-100 shadow-sm text-center">
+                    <div class="text-3xl font-bold text-blue-600 mb-2">98%</div>
+                    <div class="text-gray-600">Customer Satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-5">
+            <div class="text-center mb-16">
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-600 rounded-full mb-4">WHY CHOOSE US</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">Premium Features for <br class="hidden lg:block"> Exceptional Experience</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">We combine cutting-edge technology with premium service to redefine urban mobility</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-bolt text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Instant Booking</h3>
+                    <p class="text-gray-600 mb-4">Get matched with the nearest available driver in under 30 seconds with our AI-powered dispatch system.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-purple-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-shield-alt text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Advanced Safety</h3>
+                    <p class="text-gray-600 mb-4">24/7 ride monitoring, emergency button, and driver verification for your peace of mind.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-green-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-coins text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Fair Pricing</h3>
+                    <p class="text-gray-600 mb-4">Upfront pricing with no surprise charges. Save up to 20% with our smart route optimization.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-yellow-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-car-side text-yellow-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Vehicle Options</h3>
+                    <p class="text-gray-600 mb-4">Choose from economy, premium, SUVs, or vans to match your needs and budget.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-headset text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">24/7 Support</h3>
+                    <p class="text-gray-600 mb-4">Dedicated customer service team available round the clock to assist with any issues.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="feature-card bg-white p-8 rounded-xl border border-gray-100 transition duration-300">
+                    <div class="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-calendar-star text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">Scheduled Rides</h3>
+                    <p class="text-gray-600 mb-4">Book rides in advance for airports, meetings, or events with guaranteed availability.</p>
+                    <a href="#" class="text-blue-600 font-medium flex items-center space-x-2">
+                        <span>Learn more</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Download Section -->
+    <section class="py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div class="max-w-7xl mx-auto px-5 flex flex-col lg:flex-row items-center">
+            <div class="lg:w-1/2 mb-12 lg:mb-0">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6">Get the RideSwift App</h2>
+                <p class="text-lg opacity-90 mb-8 max-w-lg">Download our app for exclusive features, faster booking, and special promotions only available to mobile users.</p>
+                <div class="grid sm:grid-cols-2 gap-4 max-w-md">
+                    <a href="#" class="bg-black/20 hover:bg-black/30 backdrop-blur-sm border border-white/20 rounded-lg p-3 flex items-center space-x-3 transition">
+                        <i class="fab fa-apple text-2xl"></i>
+                        <div>
+                            <div class="text-xs">Download on the</div>
+                            <div class="font-medium">App Store</div>
+                        </div>
+                    </a>
+                    <a href="#" class="bg-black/20 hover:bg-black/30 backdrop-blur-sm border border-white/20 rounded-lg p-3 flex items-center space-x-3 transition">
+                        <i class="fab fa-google-play text-2xl"></i>
+                        <div>
+                            <div class="text-xs">Get it on</div>
+                            <div class="font-medium">Google Play</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="lg:w-1/2 relative">
+                <div class="max-w-md mx-auto lg:mr-0 lg:ml-auto relative">
+                    <img src="https://cdn.pixabay.com/photo/2015/01/09/11/08/startup-594090_1280.jpg" alt="Mobile App" class="rounded-xl shadow-2xl border-8 border-white/20">
+                    <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-white/10 rounded-full backdrop-blur-sm"></div>
+                    <div class="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full backdrop-blur-sm"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-5">
+            <div class="text-center mb-16">
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-600 rounded-full mb-4">TESTIMONIALS</span>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">What Our Customers Say</h2>
+                <p class="text-lg text-gray-600 max-w-2xl mx-auto">Don't just take our word for it - hear from our satisfied riders</p>
+            </div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="flex items-center mb-6">
+                        <img src="https://randomuser.me/api/portraits/women/32.jpg" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-bold">Sarah Johnson</h4>
+                            <div class="flex items-center text-yellow-400 text-sm">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"I use RideSwift daily for my commute. The drivers are always professional and the app makes booking so convenient. Love the upfront pricing!"</p>
+                    <div class="text-sm text-gray-500">Business Executive, 250+ rides</div>
+                </div>
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="flex items-center mb-6">
+                        <img src="https://randomuser.me/api/portraits/men/54.jpg" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-bold">Michael Chen</h4>
+                            <div class="flex items-center text-yellow-400 text-sm">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"The premium vehicles are worth every penny. Perfect for client meetings. The scheduled rides feature saves me so much time for airport trips."</p>
+                    <div class="text-sm text-gray-500">Sales Director, 180+ rides</div>
+                </div>
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="flex items-center mb-6">
+                        <img src="https://randomuser.me/api/portraits/women/68.jpg" class="w-12 h-12 rounded-full mr-4">
+                        <div>
+                            <h4 class="font-bold">Emily Rodriguez</h4>
+                            <div class="flex items-center text-yellow-400 text-sm">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star-half-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4">"As a frequent traveler, I appreciate the consistent quality. The real-time tracking gives me peace of mind when I'm in unfamiliar cities."</p>
+                    <div class="text-sm text-gray-500">Consultant, 300+ rides</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 bg-gray-900 text-white">
+        <div class="max-w-4xl mx-auto px-5 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Transform Your Commute?</h2>
+            <p class="text-lg opacity-90 mb-8 max-w-2xl mx-auto">Join thousands of satisfied riders experiencing premium urban mobility. Download the app or sign up now to get started.</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="user-register.html" class="btn-primary text-white px-8 py-3 rounded-lg font-medium flex items-center justify-center space-x-2">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Create Free Account</span>
+                </a>
+                <a href="#" class="px-8 py-3 border border-gray-600 rounded-lg font-medium flex items-center justify-center space-x-2 hover:border-white transition">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Learn More</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white pt-16 pb-8">
+        <div class="max-w-7xl mx-auto px-5">
+            <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-12">
+                <div class="lg:col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+                            <i class="fas fa-car text-white"></i>
+                        </div>
+                        <span class="text-xl font-bold">RideSwift</span>
+                    </div>
+                    <p class="text-gray-400 mb-6">Redefining urban mobility through technology and exceptional service since 2018.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-blue-600 transition">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-blue-400 transition">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-pink-600 transition">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-red-600 transition">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Company</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Careers</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Press</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Products</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">RideSwift Go</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">RideSwift Premium</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">RideSwift XL</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">RideSwift Business</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Support</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Help Center</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Safety</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Driver Support</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <div class="text-gray-400 text-sm mb-4 md:mb-0">© 2023 RideSwift Technologies. All rights reserved.</div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-white text-sm transition">Privacy Policy</a>
+                    <a href="#" class="text-gray-400 hover:text-white text-sm transition">Terms of Service</a>
+                    <a href="#" class="text-gray-400 hover:text-white text-sm transition">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Mobile Menu -->
+    <script>
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        menuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('open');
+        });
+
+        closeMenu.addEventListener('click', () => {
+            mobileMenu.classList.remove('open');
+        });
+
+        // Close menu when clicking a link
+        mobileMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('open');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+/* Custom styles to complement Tailwind CSS */
+.request-item {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+.request-item:last-child {
+    border-bottom: none;
+}

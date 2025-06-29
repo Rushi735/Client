@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join RideSwift | Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        .form-container {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+        .input-field {
+            transition: all 0.3s ease;
+            background-color: #f8fafc;
+        }
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        .btn-primary {
+            background: var(--primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(67, 97, 238, 0.3);
+        }
+        .social-btn {
+            transition: all 0.3s ease;
+        }
+        .social-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="flex flex-col lg:flex-row w-full max-w-6xl bg-white rounded-2xl overflow-hidden shadow-xl">
+        <!-- Illustration Section -->
+        <div class="lg:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 p-12 text-white hidden lg:flex flex-col justify-center relative overflow-hidden">
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-white/10 rounded-full animate-float"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full animate-float" style="animation-delay: 2s;"></div>
+            
+            <div class="relative z-10">
+                <h2 class="text-3xl font-bold mb-4">Join Our Community</h2>
+                <p class="text-blue-100 mb-8">Create your account to enjoy seamless rides across the city with premium features.</p>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                <i class="fas fa-bolt text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <h4 class="font-medium">Instant Booking</h4>
+                            <p class="text-blue-200 text-sm">Get matched with drivers in seconds</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                <i class="fas fa-shield-alt text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <h4 class="font-medium">Safe Rides</h4>
+                            <p class="text-blue-200 text-sm">Verified drivers and 24/7 support</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                <i class="fas fa-coins text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="ml-3">
+                            <h4 class="font-medium">Exclusive Deals</h4>
+                            <p class="text-blue-200 text-sm">Special discounts for members</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="lg:w-1/2 p-8 sm:p-12">
+            <div class="flex justify-center mb-6 lg:hidden">
+                <div class="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center">
+                    <i class="fas fa-car text-white text-2xl"></i>
+                </div>
+            </div>
+            
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">Create Account</h1>
+            <p class="text-gray-600 text-center mb-8">Join thousands of happy riders today</p>
+            
+            <form id="userRegisterForm" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        <input type="text" id="username" name="username" 
+                               class="input-field w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Enter your username" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                        </div>
+                        <input type="email" id="email" name="email" 
+                               class="input-field w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="your@email.com" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        <input type="password" id="password" name="password" 
+                               class="input-field w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="••••••••" required>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <button type="button" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">Minimum 8 characters with numbers and symbols</p>
+                </div>
+                
+                <div class="flex items-center">
+                    <input id="terms" name="terms" type="checkbox" 
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" required>
+                    <label for="terms" class="ml-2 block text-sm text-gray-700">
+                        I agree to the <a href="#" class="text-blue-600 hover:text-blue-500">Terms of Service</a> and <a href="#" class="text-blue-600 hover:text-blue-500">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Create Account</span>
+                </button>
+            </form>
+            
+            <div class="mt-6">
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                </div>
+                
+                <div class="mt-6 grid grid-cols-2 gap-3">
+                    <a href="#" class="social-btn bg-white border border-gray-300 rounded-lg py-2 px-4 flex items-center justify-center text-gray-700 hover:bg-gray-50">
+                        <i class="fab fa-google text-red-500 mr-2"></i>
+                        <span>Google</span>
+                    </a>
+                    <a href="#" class="social-btn bg-white border border-gray-300 rounded-lg py-2 px-4 flex items-center justify-center text-gray-700 hover:bg-gray-50">
+                        <i class="fab fa-facebook-f text-blue-600 mr-2"></i>
+                        <span>Facebook</span>
+                    </a>
+                </div>
+            </div>
+            
+            <p class="mt-8 text-center text-sm text-gray-600">
+                Already have an account? 
+                <a href="user-login.html" class="text-blue-600 font-medium hover:text-blue-500">Sign in here</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Password toggle functionality
+        document.querySelector('#password + div button').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
+    </script>
+    <script src="./js/driver-auth.js"></script>
+</body>
+</html>
