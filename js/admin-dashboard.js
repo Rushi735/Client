@@ -17,8 +17,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+// Sidebar toggle functionality
+const toggleSidebar = document.getElementById('toggleSidebar');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+if (toggleSidebar && sidebar && sidebarOverlay) {
+    toggleSidebar.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+        sidebarOverlay.classList.toggle('active');
+    });
+
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+    });
+}
+
+// Close sidebar when clicking on a nav item in mobile view
+const navItems = document.querySelectorAll('.nav-item');
+navItems.forEach(item => {
+    item.addEventListener('click', () => {
+        if (window.innerWidth < 768) {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+        }
+    });
+});
+
     // Navigation tab switching
-    const navItems = document.querySelectorAll('.nav-item');
     const contentSections = {
         'dashboard': document.querySelector('main'),
         'ride-requests': createRideRequestsSection(),
