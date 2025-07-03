@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let currentView = 'dashboard'; // 'dashboard' or 'requests'
     let allRequests = [];
+    let previousRequests = []; // For tracking driver assignments
+    let notifiedAssignments = new Set(); // Track notified driver assignments
 
     // Initialize the dashboard
     initDashboard();
@@ -36,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Load initial data
         fetchRequests();
+
+        // Start auto-refresh
+        setInterval(checkForDriverAssignment, 20000); // Check every 10 seconds
     }
 
     function setupEventListeners() {
@@ -63,9 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Mobile menu toggle
-        document.querySelector('.md\\:hidden button')?.addEventListener('click', () => {
+        document.getElementById('mobileMenuToggle')?.addEventListener('click', () => {
             const sidebar = document.querySelector('.sidebar');
             sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('active');
         });
 
         // Logout buttons
@@ -87,13 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'history':
                 showRideRequests();
                 break;
-            case 'payments':
-            case 'favorites':
-            case 'settings':
-            case 'help':
-            case 'profile':
-                alert(`${target} view would be implemented in a complete application`);
-                break;
             default:
                 showDashboard();
         }
@@ -104,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardTitle.textContent = 'Dashboard';
         lastUpdated.textContent = 'Last updated: Just now';
         
-        // Show dashboard content
         mainContent.innerHTML = `
             <div class="mb-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
@@ -112,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div class="card bg-white p-6 rounded-xl border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
@@ -163,121 +161,67 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span>3 available now</span>
                     </div>
                 </div>
-                
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Loyalty Points</p>
-                            <h3 class="text-2xl font-bold mt-1">1,250</h3>
-                        </div>
-                        <div class="p-3 rounded-lg bg-green-100 text-green-600">
-                            <i class="fas fa-gem"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-500 h-2 rounded-full" style="width: 45%"></div>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">450 pts to next tier</p>
-                    </div>
-                </div>
             </div>
 
             <!-- Quick Book Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card bg-white p-6 rounded-xl border border-gray-100 lg:col-span-2">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-semibold">Book a Ride</h2>
-                        <div class="flex space-x-2">
-                            <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg">Now</button>
-                            <button class="px-3 py-1 text-sm border border-gray-300 rounded-lg">Later</button>
-                        </div>
+            <div class="card bg-white p-6 rounded-xl border border-gray-100">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold">Book a Ride</h2>
+                    <div class="flex space-x-2">
+                        <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg">Now</button>
+                        <button class="px-3 py-1 text-sm border border-gray-300 rounded-lg">Later</button>
                     </div>
-                    
-                    <form id="cabRequestForm" class="space-y-4">
-                        <div>
-                            <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-map-marker-alt text-gray-400"></i>
-                                </div>
-                                <input type="text" id="pickupLocation" name="pickupLocation" 
-                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                       placeholder="Enter pickup address Elsa" required>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-1">Dropoff Location</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-flag text-gray-400"></i>
-                                </div>
-                                <input type="text" id="dropoffLocation" name="dropoffLocation" 
-                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 calex focus:ring-blue-500 focus:border-transparent" 
-                                       placeholder="Where to?" required>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-1">Schedule</label>
-                            <input type="datetime-local" id="requestTime" name="requestTime" 
-                                   class="w-full px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                   required>
-                        </div>
-                        
-                        <div class="pt-2">
-                            <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2">
-                                <i class="fas fa-car"></i>
-                                <span>Request Ride</span>
-                            </button>
-                        </div>
-                    </form>
                 </div>
                 
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                    <h2 class="text-xl font-semibold mb-6">Estimated Fare</h2>
-                    <div class="map-container h-40 rounded-lg mb-6 flex items-center justify-center bg-gray-100">
-                        <div class="text-center p-4">
-                            <i class="fas fa-map-marked-alt text-3xl text-gray-400 mb-2"></i>
-                            <p class="text-gray-500">Enter locations to see map</p>
+                <form id="cabRequestForm" class="space-y-4">
+                    <div>
+                        <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-map-marker-alt text-gray-400"></i>
+                            </div>
+                            <input type="text" id="pickupLocation" name="pickupLocation" 
+                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                   placeholder="Enter pickup address" required>
                         </div>
                     </div>
                     
-                    <div class="space-y-4">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Ride</span>
-                            <span class="font-medium">--</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Distance</span>
-                            <span class="font-medium">-</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Estimated Time</span>
-                            <span class="font-medium">-</span>
-                        </div>
-                        <div class="border-t border-gray-200 my-2"></div>
-                        <div class="flex justify-between text-lg font-bold">
-                            <span>Total</span>
-                            <span class="text-blue-600">$--</span>
+                    <div>
+                        <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-1">Dropoff Location</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-flag text-gray-400"></i>
+                            </div>
+                            <input type="text" id="dropoffLocation" name="dropoffLocation" 
+                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                   placeholder="Where to?" required>
                         </div>
                     </div>
                     
-                    <div class="mt-6 text-center text-sm text-gray-500">
-                        <p>Prices may vary based on demand and traffic</p>
+                    <div>
+                        <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-1">Schedule</label>
+                        <input type="datetime-local" id="requestTime" name="requestTime" 
+                               class="w-full px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               required>
                     </div>
-                </div>
+                    
+                    <div class="pt-2">
+                        <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2">
+                            <i class="fas fa-car"></i>
+                            <span>Request Ride</span>
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- Recent Requests Section -->
-            <div class="card bg-white p-6 rounded-xl border border-gray-100">
+            <div class="card bg-white p-6 rounded-xl border border-gray-100 mt-8">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-semibold">Recent Requests</h2>
                     <a href="#" class="text-sm text-blue-600 hover:text-blue-800" id="viewAllRequests">View All</a>
                 </div>
                 
-                <div class="overflow-x-auto">
+                <div class="table-responsive">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -286,7 +230,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
@@ -334,7 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 
-                <div class="overflow-x-auto">
+                <div class="table-responsive">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -343,7 +288,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
@@ -373,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!requests || requests.length === 0) {
             return `
                 <tr>
-                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                         No ride requests found. Book your first ride!
                     </td>
                 </tr>
@@ -391,8 +337,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${formatStatus(req.status)}
                     </span>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.driver ? req.driver.name : 'Not assigned'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${req.driver ? `${req.driver.name} (${req.driver.phone}, ${req.driver.vehicle_number})` : 'Not assigned'}
+                    ${req.driver && req.driver.phone 
+                        ? `<a href="tel:${req.driver.phone}" class="text-blue-600 hover:text-blue-800">${req.driver.phone}</a>` 
+                        : '-'}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     ${getActionButton(req)}
@@ -405,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!requests || requests.length === 0) {
             return `
                 <tr>
-                    <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                         No ride requests found matching your criteria
                     </td>
                 </tr>
@@ -423,8 +372,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${formatStatus(req.status)}
                     </span>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.driver ? req.driver.name : 'Not assigned'}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${req.driver ? `${req.driver.name} (${req.driver.phone}, ${req.driver.vehicle_number})` : 'Not assigned'}
+                    ${req.driver && req.driver.phone 
+                        ? `<a href="tel:${req.driver.phone}" class="text-blue-600 hover:text-blue-800">${req.driver.phone}</a>` 
+                        : '-'}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     ${getActionButton(req)}
@@ -489,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentView === 'dashboard') {
                 requestList.innerHTML = `
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                             <div class="animate-pulse flex justify-center">
                                 <div class="h-4 w-4 bg-blue-600 rounded-full mx-1"></div>
                                 <div class="h-4 w-4 bg-blue-600 rounded-full mx-1"></div>
@@ -524,6 +476,48 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching requests:', error);
             alert('Error fetching requests');
+        }
+    }
+
+    async function checkForDriverAssignment() {
+        try {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/requests', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 401) {
+                localStorage.clear();
+                window.location.href = 'user-login.html';
+                return;
+            }
+
+            const { data } = await response.json();
+            const newRequests = data || [];
+
+            // Check for newly assigned drivers
+            newRequests.forEach(newReq => {
+                const oldReq = previousRequests.find(req => req.id === newReq.id);
+                if (oldReq && !oldReq.driver && newReq.driver && !notifiedAssignments.has(newReq.id)) {
+                    alert(`Driver Assigned!\nRide #RS-${newReq.id}\nDriver: ${newReq.driver.name}\nPhone: ${newReq.driver.phone}\nVehicle: ${newReq.driver.vehicle_number}`);
+                    notifiedAssignments.add(newReq.id); // Mark as notified
+                }
+            });
+
+            // Update previous requests
+            previousRequests = [...newRequests];
+            
+            // Update allRequests and refresh view
+            allRequests = newRequests;
+            if (currentView === 'dashboard') {
+                showDashboard();
+            } else {
+                showRideRequests();
+            }
+        } catch (error) {
+            console.error('Error checking driver assignments:', error);
+            // Suppress alert to avoid spamming user on network errors
         }
     }
 
@@ -604,7 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const { data } = await response.json();
                 const driverInfo = data.driver ? 
-                    `Driver: ${data.driver.name}\nVehicle: ${data.driver.phone} (${data.driver.vehicle_number})` : 
+                    `Driver: ${data.driver.name}\nPhone: ${data.driver.phone}\nVehicle: ${data.driver.vehicle_number}` : 
                     'Driver: Not assigned yet';
                 alert(`Tracking ride #RS-${requestId}\n${driverInfo}\nStatus: ${data.status}`);
             } else {
@@ -627,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const { data } = await response.json();
                 const driverInfo = data.driver ? 
-                    `Driver: ${data.driver.name}\nVehicle: ${data.driver.phone} (${data.driver.vehicle_number})` : 
+                    `Driver: ${data.driver.name}\nPhone: ${data.driver.phone}\nVehicle: ${data.driver.vehicle_number}` : 
                     'Driver: Not assigned';
                 alert(`Ride Details (#RS-${requestId})\n\n` +
                       `Pickup: ${data.pickup_location}\n` +
