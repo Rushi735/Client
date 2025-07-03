@@ -2,132 +2,668 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="theme-color" content="#f8fafc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Driver Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-light: #93c5fd;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #f8fafc;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-color: #f9fafb;
+            --dark-color: #1f2937;
+            --text-color: #374151;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+        }
+        
         body {
-            background-color: #f4f7fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--secondary-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 0;
+            color: var(--text-color);
+            font-size: 15px;
+            line-height: 1.5;
         }
+        
+        /* Sidebar Styles */
         .sidebar {
             position: fixed;
             top: 0;
-            left: 0;
-            width: 250px;
+            left: -280px;
+            width: 280px;
             height: 100%;
-            background-color: #1e3a8a;
+            background-color: white;
             padding-top: 20px;
-            color: white;
-            transition: all 0.3s;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            border-right: 1px solid var(--border-color);
         }
+        
+        .sidebar.active {
+            left: 0;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+        
+        .sidebar-header h4 {
+            color: var(--dark-color);
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+        }
+        
+        .sidebar-header h4 i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
         .sidebar a {
-            color: white;
-            padding: 15px 20px;
+            color: var(--text-color);
+            padding: 12px 20px;
             text-decoration: none;
-            display: block;
-            font-size: 16px;
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 8px;
+            margin: 5px 15px;
+            transition: all 0.2s;
         }
-        .sidebar a:hover {
-            background-color: #172554;
+        
+        .sidebar a:hover, .sidebar a.active {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
         }
+        
+        .sidebar a i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+            color: var(--primary-color);
+        }
+        
+        .sidebar .logout-btn {
+            margin-top: auto;
+            position: absolute;
+            bottom: 20px;
+            width: calc(100% - 30px);
+            color: var(--danger-color);
+        }
+        
+        .sidebar .logout-btn i {
+            color: var(--danger-color);
+        }
+        
+        .sidebar .logout-btn:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        
+        /* Main Content Styles */
         .content {
-            margin-left: 250px;
+            margin-left: 0;
             padding: 20px;
             min-height: 100vh;
+            transition: all 0.3s;
         }
+        
+        .content.active {
+            margin-left: 280px;
+        }
+        
+        /* Mobile Header */
+        .mobile-header {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            padding: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .mobile-header h4 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .menu-toggle {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 20px;
+            margin-right: 15px;
+            padding: 5px;
+        }
+        
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .header h2 {
+            color: var(--dark-color);
+            font-weight: 700;
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .user-profile {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-profile img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+            object-fit: cover;
+            border: 2px solid var(--primary-light);
+        }
+        
+        .user-profile .user-info {
+            line-height: 1.3;
+        }
+        
+        .user-profile .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--dark-color);
+        }
+        
+        .user-profile .user-role {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        
+        /* Card Styles */
         .card {
             border: none;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
             background-color: white;
             transition: all 0.3s ease;
+            margin-bottom: 25px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
         }
+        
         .card-header {
-            background-color: #1e3a8a;
-            color: white;
-            border-radius: 12px 12px 0 0;
+            background-color: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header h5 i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* Profile Info Styles */
+        .profile-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .profile-info-item {
+            background-color: var(--light-color);
             padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-color);
         }
+        
+        .profile-info-item strong {
+            display: block;
+            color: var(--text-light);
+            font-size: 13px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .profile-info-item span {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+        
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
         .table {
+            width: 100%;
             background-color: transparent;
+            border-collapse: separate;
+            border-spacing: 0;
         }
-        .table th, .table td {
+        
+        .table thead th {
+            background-color: var(--light-color);
+            color: var(--text-color);
+            font-weight: 600;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+            font-size: 14px;
+        }
+        
+        .table tbody td {
+            padding: 15px;
             vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
         }
+        
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table tbody tr:hover {
+            background-color: var(--light-color);
+        }
+        
+        /* Status Badges */
+        .badge {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        
+        .badge-pending {
+            background-color: #ffedd5;
+            color: #9a3412;
+        }
+        
+        .badge-accepted {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-in_progress {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-completed {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .btn i {
+            margin-right: 6px;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        
         .btn-primary {
-            background-color: #1e3a8a;
-            border-color: #1e3a8a;
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
         }
+        
         .btn-primary:hover {
-            background-color: #172554;
-            border-color: #172554;
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
         }
-        .status-pending {
-            color: #ffc107;
-            font-weight: bold;
+        
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
         }
-        .status-accepted {
-            color: #0d6efd;
-            font-weight: bold;
+        
+        .btn-success:hover {
+            background-color: #0d9e6e;
+            border-color: #0d9e6e;
         }
-        .status-in_progress {
-            color: #fd7e14;
-            font-weight: bold;
+        
+        .btn-light {
+            background-color: var(--light-color);
+            border-color: var(--border-color);
+            color: var(--text-color);
         }
-        .status-completed {
-            color: #198754;
-            font-weight: bold;
+        
+        .btn-light:hover {
+            background-color: #e5e7eb;
+            border-color: #d1d5db;
+        }
+        
+        /* Phone Link */
+        .phone-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .phone-link:hover {
+            text-decoration: underline;
+        }
+        
+        .phone-link i {
+            margin-right: 5px;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        
+        .empty-state i {
+            font-size: 50px;
+            color: #d1d5db;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state h5 {
+            color: var(--text-color);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        /* Toast Notification */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1100;
+        }
+        
+        .toast {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: none;
+            font-size: 14px;
+        }
+        
+        .toast-header {
+            font-weight: 600;
+        }
+        
+        /* Responsive Styles */
+        @media (min-width: 992px) {
+            .mobile-header {
+                display: none;
+            }
+            
+            .sidebar {
+                left: 0;
+            }
+            
+            .content {
+                margin-left: 280px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .profile-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .card-header .btn {
+                margin-top: 10px;
+                align-self: flex-start;
+            }
+            
+            .table thead {
+                display: none;
+            }
+            
+            .table tbody tr {
+                display: block;
+                margin-bottom: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+                overflow: hidden;
+            }
+            
+            .table tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 15px;
+                border-bottom: 1px solid var(--border-color);
+            }
+            
+            .table tbody td:before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--text-light);
+                margin-right: 15px;
+                flex: 1;
+            }
+            
+            .table tbody td:last-child {
+                border-bottom: none;
+            }
+        }
+        
+        /* Animation for new requests */
+        @keyframes highlight {
+            0% { background-color: rgba(59, 130, 246, 0.1); }
+            100% { background-color: transparent; }
+        }
+        
+        .highlight {
+            animation: highlight 1.5s;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Clickable Elements */
+        .clickable {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .clickable:active {
+            transform: scale(0.98);
+        }
+        
+        /* Ensure text is readable on mobile */
+        @media (max-width: 576px) {
+            body {
+                font-size: 16px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .profile-info-item span {
+                font-size: 16px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 15px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="sidebar">
-        <h4 class="text-center mb-4">Driver Panel</h4>
-        <a href="#profile"><i class="fas fa-user"></i> Profile</a>
-        <a href="#assigned"><i class="fas fa-car"></i> Assigned Requests</a>
-        <a href="#" id="logoutBtn" class="mt-5"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <div class="mobile-header">
+        <button class="menu-toggle clickable" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <h4><i class="fas fa-car me-2"></i>Driver Dashboard</h4>
+    </div>
+    
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h4><i class="fas fa-car-side"></i> Driver Panel</h4>
+        </div>
+        <a href="#profile" class="active clickable"><i class="fas fa-user"></i> Profile</a>
+        <a href="#assigned" class="clickable"><i class="fas fa-tasks"></i> Assigned Requests</a>
+        <a href="#" id="logoutBtn" class="logout-btn clickable"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 
-    <div class="content">
-        <h2 class="mb-4 text-primary">Dashboard</h2>
+    <div class="content" id="mainContent">
+        <div class="header">
+            <h2>Dashboard Overview</h2>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=Driver+User&background=3b82f6&color=fff" alt="Driver" id="profileImage">
+                <div class="user-info">
+                    <div class="user-name" id="headerName">Loading...</div>
+                    <div class="user-role">Driver</div>
+                </div>
+            </div>
+        </div>
 
         <!-- Profile Section -->
         <div class="card mb-4" id="profile">
-            <div class="card-header">Profile</div>
+            <div class="card-header">
+                <h5><i class="fas fa-user-circle me-2"></i>Driver Profile</h5>
+                <a href="edit-profile.html" class="btn btn-primary btn-sm clickable">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </a>
+            </div>
             <div class="card-body">
-                <p><strong>Name:</strong> <span id="profileName">Loading...</span></p>
-                <p><strong>Email:</strong> <span id="profileEmail">Loading...</span></p>
-                <p><strong>Phone:</strong> <span id="profilePhone">Loading...</span></p>
-                <p><strong>Vehicle Type:</strong> <span id="profileVehicleType">Loading...</span></p>
-                <p><strong>Vehicle Number:</strong> <span id="profileVehicleNumber">Loading...</span></p>
-                <a href="edit-profile.html" class="btn btn-primary">Edit Profile</a>
+                <div class="profile-info">
+                    <div class="profile-info-item">
+                        <strong>Full Name</strong>
+                        <span id="profileName">Loading...</span>
+                    </div>
+                    <div class="profile-info-item">
+                        <strong>Email Address</strong>
+                        <span id="profileEmail">Loading...</span>
+                    </div>
+                    <div class="profile-info-item">
+                        <strong>Phone Number</strong>
+                        <span id="profilePhone">Loading...</span>
+                    </div>
+                    <div class="profile-info-item">
+                        <strong>Vehicle Type</strong>
+                        <span id="profileVehicleType">Loading...</span>
+                    </div>
+                    <div class="profile-info-item">
+                        <strong>Vehicle Number</strong>
+                        <span id="profileVehicleNumber">Loading...</span>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Assigned Cab Requests -->
         <div class="card mb-4" id="assigned">
-            <div class="card-header">Assigned Cab Requests</div>
+            <div class="card-header">
+                <h5><i class="fas fa-taxi me-2"></i>Assigned Rides</h5>
+                <div>
+                    <button class="btn btn-light btn-sm clickable" id="refreshRequests">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-striped" id="assignedRequestsTable">
+                    <table class="table" id="assignedRequestsTable">
                         <thead>
                             <tr>
-                                <th>Request ID</th>
-                                <th>Customer Name</th>
-                                <th>Pickup Location</th>
-                                <th>Dropoff Location</th>
-                                <th>Request Time</th>
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Contact</th>
+                                <th>Pickup</th>
+                                <th>Dropoff</th>
+                                <th>Time</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="assignedRequestsBody">
                             <tr>
-                                <td colspan="7" class="text-center">Loading assigned requests...</td>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <h5>Loading assigned requests...</h5>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -136,8 +672,36 @@
         </div>
     </div>
 
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <script src="js/driver-auth.js"></script>
     <script>
+        // Mobile menu toggle
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('mainContent').classList.toggle('active');
+        });
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menuToggle');
+            
+            if (window.innerWidth <= 992 && 
+                !sidebar.contains(event.target) && 
+                !menuToggle.contains(event.target) && 
+                sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+                document.getElementById('mainContent').classList.remove('active');
+            }
+        });
+
+        // Auto-refresh variables
+        let refreshInterval;
+        const refreshTime = 30000; // 30 seconds
+        let isFirstLoad = true;
+        
         document.addEventListener('DOMContentLoaded', async () => {
             if (!driverAuth.getCurrentDriver()) {
                 window.location.href = 'driver-login.html';
@@ -146,104 +710,301 @@
 
             await loadProfile();
             await loadAssignedRequests();
+            
+            // Start auto-refresh
+            startAutoRefresh();
+            
+            // Handle manual refresh
+            document.getElementById('refreshRequests').addEventListener('click', async () => {
+                await loadAssignedRequests();
+            });
         });
 
         document.getElementById('logoutBtn').addEventListener('click', (e) => {
             e.preventDefault();
+            stopAutoRefresh();
             driverAuth.logout();
             window.location.href = 'driver-login.html';
         });
 
+        function startAutoRefresh() {
+            stopAutoRefresh(); // Clear any existing interval
+            refreshInterval = setInterval(loadAssignedRequests, refreshTime);
+        }
+
+        function stopAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        }
+
         async function loadProfile() {
             try {
                 const profile = await driverAuth.getProfile();
-                document.getElementById('profileName').textContent = profile.name;
-                document.getElementById('profileEmail').textContent = profile.email;
-                document.getElementById('profilePhone').textContent = profile.phone;
-                document.getElementById('profileVehicleType').textContent = profile.vehicle_type;
-                document.getElementById('profileVehicleNumber').textContent = profile.vehicle_number;
+                document.getElementById('profileName').textContent = profile.name || 'Not set';
+                document.getElementById('profileEmail').textContent = profile.email || 'Not set';
+                document.getElementById('profilePhone').textContent = profile.phone || 'Not set';
+                document.getElementById('profileVehicleType').textContent = profile.vehicle_type || 'Not set';
+                document.getElementById('profileVehicleNumber').textContent = profile.vehicle_number || 'Not set';
+                document.getElementById('headerName').textContent = profile.name || 'Driver';
+                
+                // Update profile image with initials
+                if (profile.name) {
+                    const initials = profile.name.split(' ').map(n => n[0]).join('');
+                    document.getElementById('profileImage').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=3b82f6&color=fff`;
+                }
             } catch (error) {
                 console.error('Error loading profile:', error);
-                alert('Failed to load profile. Please try again.');
+                showToast('Failed to load profile. Please try again.', 'error');
             }
         }
 
         async function loadAssignedRequests() {
             try {
+                const refreshBtn = document.getElementById('refreshRequests');
+                refreshBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> Refreshing...';
+                refreshBtn.disabled = true;
+                
                 const requests = await driverAuth.getAssignedRequests();
                 const tbody = document.getElementById('assignedRequestsBody');
-                tbody.innerHTML = '';
-
+                
+                // Store current request IDs for highlight comparison
+                const currentIds = Array.from(tbody.querySelectorAll('tr[data-request-id]'))
+                    .map(tr => tr.getAttribute('data-request-id'));
+                
                 if (requests.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center">No assigned requests available</td></tr>';
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="fas fa-taxi"></i>
+                                    <h5>No assigned rides available</h5>
+                                    <p>You currently don't have any assigned rides</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                    refreshBtn.disabled = false;
                     return;
                 }
 
-                requests.forEach(request => {
+                // Sort requests by status and time
+                const sortedRequests = requests.sort((a, b) => {
+                    const statusOrder = { 'in_progress': 1, 'accepted': 2, 'completed': 3, 'pending': 4 };
+                    return statusOrder[a.status] - statusOrder[b.status] || 
+                           new Date(b.request_time || b.created_at) - new Date(a.request_time || a.created_at);
+                });
+
+                tbody.innerHTML = '';
+
+                sortedRequests.forEach(request => {
                     const row = document.createElement('tr');
+                    row.setAttribute('data-request-id', request.id);
                     
                     // Format the date
-                    const requestDate = new Date(request.created_at);
-                    const formattedDate = requestDate.toLocaleString();
+                    const requestDate = new Date(request.request_time || request.created_at);
+                    const formattedDate = requestDate.toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
                     
                     // Determine status class
-                    let statusClass = '';
-                    if (request.status === 'pending') statusClass = 'status-pending';
-                    else if (request.status === 'accepted') statusClass = 'status-accepted';
-                    else if (request.status === 'in_progress') statusClass = 'status-in_progress';
-                    else if (request.status === 'completed') statusClass = 'status-completed';
+                    let statusClass, statusText;
+                    if (request.status === 'pending') {
+                        statusClass = 'badge-pending';
+                        statusText = 'Pending';
+                    } else if (request.status === 'accepted') {
+                        statusClass = 'badge-accepted';
+                        statusText = 'Accepted';
+                    } else if (request.status === 'in_progress') {
+                        statusClass = 'badge-in_progress';
+                        statusText = 'In Progress';
+                    } else if (request.status === 'completed') {
+                        statusClass = 'badge-completed';
+                        statusText = 'Completed';
+                    }
                     
-                    row.innerHTML = `
-                        <td>${request.id}</td>
-                        <td>${request.customer_name || 'N/A'}</td>
-                        <td>${request.pickup_location}</td>
-                        <td>${request.dropoff_location}</td>
-                        <td>${formattedDate}</td>
-                        <td class="${statusClass}">${request.status.replace('_', ' ')}</td>
-                        <td>
-                            ${request.status === 'accepted' ? 
-                                `<button class="btn btn-sm btn-success complete-btn" data-id="${request.id}">
-                                    <i class="fas fa-check-circle"></i> Complete
-                                </button>` : 
-                                ''}
-                            ${request.status === 'in_progress' ? 
-                                `<button class="btn btn-sm btn-primary complete-btn" data-id="${request.id}">
-                                    <i class="fas fa-flag-checkered"></i> Finish Ride
-                                </button>` : 
-                                ''}
-                        </td>
-                    `;
+                    // Add highlight class if this is a new request (except first load)
+                    if (!isFirstLoad && !currentIds.includes(request.id.toString())) {
+                        row.classList.add('highlight');
+                    }
+                    
+                    // Format phone number if available
+                    const phoneDisplay = request.customer_phone ? 
+                        `<a href="tel:${request.customer_phone}" class="phone-link clickable">
+                            <i class="fas fa-phone-alt"></i> ${request.customer_phone}
+                        </a>` : 
+                        '<span class="text-muted">N/A</span>';
+                    
+                    // Format customer name with fallback
+                    const customerName = request.customer_name || '<span class="text-muted">Unknown</span>';
+                    
+                    // Format action buttons based on status
+                    let actionButtons = '';
+                    if (request.status === 'accepted') {
+                        actionButtons = `
+                            <button class="btn btn-success btn-sm complete-btn clickable" data-id="${request.id}">
+                                <i class="fas fa-check-circle"></i> Complete
+                            </button>
+                        `;
+                    } else if (request.status === 'in_progress') {
+                        actionButtons = `
+                            <button class="btn btn-primary btn-sm complete-btn clickable" data-id="${request.id}">
+                                <i class="fas fa-flag-checkered"></i> Finish
+                            </button>
+                        `;
+                    } else if (request.status === 'completed') {
+                        actionButtons = '<span class="badge bg-light text-dark">Completed</span>';
+                    }
+                    
+                    // Create row content
+                    if (window.innerWidth <= 768) {
+                        // Mobile view - vertical layout
+                        row.innerHTML = `
+                            <td data-label="ID">#${request.id}</td>
+                            <td data-label="Customer">${customerName}</td>
+                            <td data-label="Contact">${phoneDisplay}</td>
+                            <td data-label="Pickup">${request.pickup_location}</td>
+                            <td data-label="Dropoff">${request.dropoff_location}</td>
+                            <td data-label="Time">${formattedDate}</td>
+                            <td data-label="Status"><span class="badge ${statusClass}">${statusText}</span></td>
+                            <td data-label="Actions">${actionButtons}</td>
+                        `;
+                    } else {
+                        // Desktop view - normal table
+                        row.innerHTML = `
+                            <td>#${request.id}</td>
+                            <td>${customerName}</td>
+                            <td>${phoneDisplay}</td>
+                            <td>${request.pickup_location}</td>
+                            <td>${request.dropoff_location}</td>
+                            <td>${formattedDate}</td>
+                            <td><span class="badge ${statusClass}">${statusText}</span></td>
+                            <td>${actionButtons}</td>
+                        `;
+                    }
+                    
                     tbody.appendChild(row);
                 });
 
+                // Add event listeners to new buttons
                 document.querySelectorAll('.complete-btn').forEach(btn => {
                     btn.addEventListener('click', async (e) => {
-                        const requestId = e.target.getAttribute('data-id');
+                        const requestId = e.currentTarget.getAttribute('data-id');
                         if (confirm('Are you sure you want to complete this ride?')) {
                             await completeRequest(requestId);
                         }
                     });
                 });
+                
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                refreshBtn.disabled = false;
+                isFirstLoad = false;
             } catch (error) {
                 console.error('Error loading assigned requests:', error);
                 const tbody = document.getElementById('assignedRequestsBody');
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Failed to load assigned requests. Please try again.</td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                                <h5>Failed to load requests</h5>
+                                <p>Please check your connection and try again</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('refreshRequests').innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                document.getElementById('refreshRequests').disabled = false;
+                showToast('Failed to load requests. Please check your connection.', 'error');
             }
         }
 
         async function completeRequest(requestId) {
             try {
+                const completeBtn = document.querySelector(`.complete-btn[data-id="${requestId}"]`);
+                if (completeBtn) {
+                    completeBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> Processing...';
+                    completeBtn.disabled = true;
+                }
+                
                 const response = await driverAuth.completeRequest(requestId);
                 if (response.success) {
-                    alert('Ride completed successfully!');
+                    showToast('Ride completed successfully!', 'success');
                     await loadAssignedRequests();
                 } else {
-                    alert(response.message || 'Failed to complete ride');
+                    showToast(response.message || 'Failed to complete ride', 'error');
+                    if (completeBtn) {
+                        completeBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
+                        completeBtn.disabled = false;
+                    }
                 }
             } catch (error) {
                 console.error('Error completing request:', error);
-                alert('Failed to complete ride. Please try again.');
+                showToast('Failed to complete ride. Please try again.', 'error');
+                const completeBtn = document.querySelector(`.complete-btn[data-id="${requestId}"]`);
+                if (completeBtn) {
+                    completeBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
+                    completeBtn.disabled = false;
+                }
             }
+        }
+
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = `toast show`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            // Set toast color based on type
+            let headerClass, icon;
+            switch(type) {
+                case 'success':
+                    headerClass = 'bg-success';
+                    icon = 'check-circle';
+                    break;
+                case 'error':
+                    headerClass = 'bg-danger';
+                    icon = 'exclamation-circle';
+                    break;
+                case 'warning':
+                    headerClass = 'bg-warning';
+                    icon = 'exclamation-triangle';
+                    break;
+                default:
+                    headerClass = 'bg-primary';
+                    icon = 'info-circle';
+            }
+            
+            toast.innerHTML = `
+                <div class="toast-header ${headerClass} text-white">
+                    <strong class="me-auto"><i class="fas fa-${icon} me-2"></i>Notification</strong>
+                    <small>Just now</small>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body bg-white">
+                    ${message}
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto-remove toast after 5 seconds
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+            
+            // Add click to dismiss
+            toast.querySelector('.btn-close').addEventListener('click', () => {
+                toast.remove();
+            });
         }
     </script>
 </body>
