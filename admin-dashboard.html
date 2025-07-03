@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #4361ee;
@@ -65,9 +64,6 @@
             background-color: #fee2e2;
             color: #dc2626;
         }
-        .chart-container {
-            height: 300px;
-        }
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -115,18 +111,6 @@
                 <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
                     <i class="fas fa-users w-5 text-center"></i>
                     <span>Drivers</span>
-                </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-user-friends w-5 text-center"></i>
-                    <span>Customers</span>
-                </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-chart-line w-5 text-center"></i>
-                    <span>Analytics</span>
-                </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-map-marked-alt w-5 text-center"></i>
-                    <span>Live Tracking</span>
                 </a>
                 <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
                     <i class="fas fa-cog w-5 text-center"></i>
@@ -184,7 +168,7 @@
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="card bg-white p-6 rounded-xl border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
@@ -231,83 +215,10 @@
                         <span>0 new in last hour</span>
                     </div>
                 </div>
-                
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Revenue</p>
-                            <h3 class="text-2xl font-bold mt-1">$0</h3>
-                        </div>
-                        <div class="p-3 rounded-lg bg-purple-100 text-purple-600">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-purple-500 h-2 rounded-full" style="width: 0%"></div>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">0% of monthly target</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts and Driver Availability -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card bg-white p-6 rounded-xl border border-gray-100 lg:col-span-2">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-semibold">Ride Analytics</h2>
-                        <select id="analyticsPeriod" class="text-sm border border-gray-300 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="7">Last 7 Days</option>
-                            <option value="30">Last 30 Days</option>
-                            <option value="365">This Year</option>
-                        </select>
-                    </div>
-                    <canvas id="rideChart" class="chart-container"></canvas>
-                </div>
-                
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                    <h2 class="text-xl font-semibold mb-6">Driver Availability</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="font-medium">Online Drivers</span>
-                                <span id="onlineDrivers">0/0</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div id="onlineDriversBar" class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="font-medium">On Trips</span>
-                                <span id="onTrips">0/0</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div id="onTripsBar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="font-medium">Available Now</span>
-                                <span id="availableNow">0/0</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                <div id="availableNowBar" class="bg-purple-500 h-2 rounded-full" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-8">
-                        <h3 class="font-medium mb-3">Top Performing Drivers</h3>
-                        <div id="topDrivers" class="space-y-3">
-                            <!-- Populated dynamically -->
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Recent Requests Section -->
-            <div class="card bg-white p-6 rounded-xl border border-gray-100">
+            <div class="card bg-white p-6 rounded-xl border border-gray-100 mb-8">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-semibold">Recent Cab Requests</h2>
                     <a href="#" class="text-sm text-blue-600 hover:text-blue-800">View All</a>
