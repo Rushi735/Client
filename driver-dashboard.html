@@ -204,6 +204,76 @@
             color: var(--text-light);
         }
         
+        /* Status Toggle */
+        .status-toggle {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .status-badge.online {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-badge.offline {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--success-color);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
         /* Card Styles */
         .card {
             border: none;
@@ -450,7 +520,71 @@
             font-weight: 600;
         }
         
-        /* Responsive Styles */
+        /* Animation for new requests */
+        @keyframes highlight {
+            0% { background-color: rgba(59, 130, 246, 0.1); }
+            100% { background-color: transparent; }
+        }
+        
+        .highlight {
+            animation: highlight 1.5s;
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Clickable Elements */
+        .clickable {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .clickable:active {
+            transform: scale(0.98);
+        }
+        
+        /* Ensure text is readable on mobile */
+        @media (max-width: 576px) {
+            body {
+                font-size: 16px;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            .profile-info-item span {
+                font-size: 16px;
+            }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .status-toggle {
+                margin: 10px 0;
+                align-self: flex-start;
+            }
+        }
+        
         @media (min-width: 992px) {
             .mobile-header {
                 display: none;
@@ -512,61 +646,6 @@
                 border-bottom: none;
             }
         }
-        
-        /* Animation for new requests */
-        @keyframes highlight {
-            0% { background-color: rgba(59, 130, 246, 0.1); }
-            100% { background-color: transparent; }
-        }
-        
-        .highlight {
-            animation: highlight 1.5s;
-        }
-        
-        /* Loading Spinner */
-        .spinner {
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* Clickable Elements */
-        .clickable {
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .clickable:active {
-            transform: scale(0.98);
-        }
-        
-        /* Ensure text is readable on mobile */
-        @media (max-width: 576px) {
-            body {
-                font-size: 16px;
-            }
-            
-            .content {
-                padding: 15px;
-            }
-            
-            .card-body {
-                padding: 15px;
-            }
-            
-            .profile-info-item span {
-                font-size: 16px;
-            }
-            
-            .btn {
-                padding: 10px 16px;
-                font-size: 15px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -582,18 +661,27 @@
             <h4><i class="fas fa-car-side"></i> Driver Panel</h4>
         </div>
         <a href="#profile" class="active clickable"><i class="fas fa-user"></i> Profile</a>
-        <a href="#assigned" class="clickable"><i class="fas fa-tasks"></i> Assigned Requests</a>
+        <a href="#assigned" class="clickable"><i class="fas fa-tasks"></i> Assigned Rides</a>
         <a href="#" id="logoutBtn" class="logout-btn clickable"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
 
     <div class="content" id="mainContent">
         <div class="header">
             <h2>Dashboard Overview</h2>
-            <div class="user-profile">
-                <img src="https://ui-avatars.com/api/?name=Driver+User&background=3b82f6&color=fff" alt="Driver" id="profileImage">
-                <div class="user-info">
-                    <div class="user-name" id="headerName">Loading...</div>
-                    <div class="user-role">Driver</div>
+            <div class="d-flex align-items-center">
+                <div class="status-toggle">
+                    <span id="statusBadge" class="status-badge offline">Offline</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="onlineToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="user-profile">
+                    <img src="https://ui-avatars.com/api/?name=Driver+User&background=3b82f6&color=fff" alt="Driver" id="profileImage">
+                    <div class="user-info">
+                        <div class="user-name" id="headerName">Loading...</div>
+                        <div class="user-role">Driver</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -654,6 +742,7 @@
                                 <th>Dropoff</th>
                                 <th>Time</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="assignedRequestsBody">
@@ -674,338 +763,519 @@
 
     <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
-
+    
+    <!-- Include your auth script -->
     <script src="js/driver-auth.js"></script>
+    
     <script>
-        // Mobile menu toggle
-        document.getElementById('menuToggle').addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.getElementById('mainContent').classList.toggle('active');
-        });
-
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const menuToggle = document.getElementById('menuToggle');
+        // Driver Dashboard Application
+        const driverApp = {
+            // Tracking variables
+            isTrackingActive: false,
+            watchId: null,
+            lastSentLocation: null,
+            refreshInterval: null,
+            isFirstLoad: true,
             
-            if (window.innerWidth <= 992 && 
-                !sidebar.contains(event.target) && 
-                !menuToggle.contains(event.target) && 
-                sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
-                document.getElementById('mainContent').classList.remove('active');
-            }
-        });
-
-        // Auto-refresh variables
-        let refreshInterval;
-        const refreshTime = 30000; // 30 seconds
-        let isFirstLoad = true;
-        
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (!driverAuth.getCurrentDriver()) {
-                window.location.href = 'driver-login.html';
-                return;
-            }
-
-            await loadProfile();
-            await loadAssignedRequests();
-            
-            // Start auto-refresh
-            startAutoRefresh();
-            
-            // Handle manual refresh
-            document.getElementById('refreshRequests').addEventListener('click', async () => {
-                await loadAssignedRequests();
-            });
-        });
-
-        document.getElementById('logoutBtn').addEventListener('click', (e) => {
-            e.preventDefault();
-            stopAutoRefresh();
-            driverAuth.logout();
-            window.location.href = 'driver-login.html';
-        });
-
-        function startAutoRefresh() {
-            stopAutoRefresh(); // Clear any existing interval
-            refreshInterval = setInterval(loadAssignedRequests, refreshTime);
-        }
-
-        function stopAutoRefresh() {
-            if (refreshInterval) {
-                clearInterval(refreshInterval);
-            }
-        }
-
-        async function loadProfile() {
-            try {
-                const profile = await driverAuth.getProfile();
-                document.getElementById('profileName').textContent = profile.name || 'Not set';
-                document.getElementById('profileEmail').textContent = profile.email || 'Not set';
-                document.getElementById('profilePhone').textContent = profile.phone || 'Not set';
-                document.getElementById('profileVehicleType').textContent = profile.vehicle_type || 'Not set';
-                document.getElementById('profileVehicleNumber').textContent = profile.vehicle_number || 'Not set';
-                document.getElementById('headerName').textContent = profile.name || 'Driver';
-                
-                // Update profile image with initials
-                if (profile.name) {
-                    const initials = profile.name.split(' ').map(n => n[0]).join('');
-                    document.getElementById('profileImage').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=3b82f6&color=fff`;
+            // Initialize the application
+            init: function() {
+                // Check authentication
+                if (!driverAuth.getCurrentDriver()) {
+                    window.location.href = 'driver-login.html';
+                    return;
                 }
-            } catch (error) {
-                console.error('Error loading profile:', error);
-                showToast('Failed to load profile. Please try again.', 'error');
-            }
-        }
+                
+                // Initialize UI components
+                this.initMenuToggle();
+                this.initEventListeners();
+                
+                // Load data
+                this.loadProfile();
+                this.loadAssignedRequests();
+                
+                // Start auto-refresh for requests
+                this.startAutoRefresh();
+            },
+            
+            // Initialize menu toggle functionality
+            initMenuToggle: function() {
+                document.getElementById('menuToggle').addEventListener('click', () => {
+                    document.getElementById('sidebar').classList.toggle('active');
+                    document.getElementById('mainContent').classList.toggle('active');
+                });
+                
+                // Close sidebar when clicking outside on mobile
+                document.addEventListener('click', (event) => {
+                    const sidebar = document.getElementById('sidebar');
+                    const menuToggle = document.getElementById('menuToggle');
+                    
+                    if (window.innerWidth <= 992 && 
+                        !sidebar.contains(event.target) && 
+                        !menuToggle.contains(event.target) && 
+                        sidebar.classList.contains('active')) {
+                        sidebar.classList.remove('active');
+                        document.getElementById('mainContent').classList.remove('active');
+                    }
+                });
+            },
+            
+            // Initialize event listeners
+            initEventListeners: function() {
+                // Logout button
+                document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.logout();
+                });
+                
+                // Refresh requests button
+                document.getElementById('refreshRequests').addEventListener('click', () => {
+                    this.loadAssignedRequests();
+                });
+                
+                // Online/offline toggle
+                document.getElementById('onlineToggle').addEventListener('change', (e) => {
+                    this.toggleOnlineStatus(e.target.checked);
+                });
+            },
+            
+            // Toggle online status
+            toggleOnlineStatus: function(goOnline) {
+                const statusBadge = document.getElementById('statusBadge');
+                
+                if (goOnline) {
+                    // Request to go online
+                    statusBadge.textContent = 'Connecting...';
+                    
+                    // Request location permission
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            // Success callback
+                            this.startLocationTracking(position);
+                            statusBadge.textContent = 'Online';
+                            statusBadge.className = 'status-badge online';
+                            this.showToast('You are now online and available for rides', 'success');
+                        },
+                        (error) => {
+                            // Error callback
+                            this.handleLocationError(error);
+                            document.getElementById('onlineToggle').checked = false;
+                            statusBadge.textContent = 'Offline';
+                            statusBadge.className = 'status-badge offline';
+                        },
+                        { 
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 0
+                        }
+                    );
+                } else {
+                    // Request to go offline
+                    this.stopLocationTracking();
+                    statusBadge.textContent = 'Offline';
+                    statusBadge.className = 'status-badge offline';
+                    this.showToast('You are now offline', 'info');
+                }
+            },
+            
+            // Start location tracking
+            startLocationTracking: function(initialPosition) {
+                this.isTrackingActive = true;
+                
+                // Update with initial position
+                this.updateLocation(initialPosition);
+                
+                // Start watching position
+                this.watchId = navigator.geolocation.watchPosition(
+                    (position) => this.updateLocation(position),
+                    (error) => this.handleLocationError(error),
+                    { 
+                        enableHighAccuracy: true,
+                        maximumAge: 10000,
+                        timeout: 5000
+                    }
+                );
+                
+                // Start periodic updates to server
+                this.trackingInterval = setInterval(() => this.sendLocationUpdate(), 15000); // Every 15 seconds
+                
+                // Send initial update
+                this.sendLocationUpdate();
+            },
+            
+            // Stop location tracking
+            stopLocationTracking: function() {
+                if (this.watchId) {
+                    navigator.geolocation.clearWatch(this.watchId);
+                    this.watchId = null;
+                }
+                if (this.trackingInterval) {
+                    clearInterval(this.trackingInterval);
+                    this.trackingInterval = null;
+                }
+                
+                this.isTrackingActive = false;
+                
+                // Send one last update to mark driver as offline
+                this.updateDriverStatus(false);
+            },
+            
+            // Update location data
+            updateLocation: function(position) {
+                const { latitude, longitude, accuracy } = position.coords;
+                
+                // Store the current location for sending to server
+                this.lastSentLocation = {
+                    latitude,
+                    longitude,
+                    accuracy,
+                    timestamp: new Date().toISOString()
+                };
+            },
+            
+            // Handle location errors
+            handleLocationError: function(error) {
+                let errorMessage;
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = "Location access was denied. Please enable location permissions to go online.";
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = "Location information is unavailable. Please check your connection.";
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = "The request to get your location timed out. Please try again.";
+                        break;
+                    default:
+                        errorMessage = "An unknown error occurred while getting your location.";
+                }
+                
+                this.showToast(errorMessage, 'error');
+            },
+            
+            // Send location update to server
+            sendLocationUpdate: async function() {
+                if (!this.lastSentLocation) return;
+                
+                try {
+                    await driverAuth.updateLocation({
+                        latitude: this.lastSentLocation.latitude,
+                        longitude: this.lastSentLocation.longitude,
+                        accuracy: this.lastSentLocation.accuracy,
+                        timestamp: this.lastSentLocation.timestamp,
+                        isOnline: this.isTrackingActive
+                    });
+                } catch (error) {
+                    console.error('Error sending location update:', error);
+                }
+            },
+            
+            // Update driver status (online/offline)
+            updateDriverStatus: async function(isOnline) {
+                try {
+                    await driverAuth.updateDriverStatus(isOnline);
+                } catch (error) {
+                    console.error('Error updating driver status:', error);
+                }
+            },
+            
+            // Load driver profile
+            loadProfile: async function() {
+                try {
+                    const profile = await driverAuth.getProfile();
+                    document.getElementById('profileName').textContent = profile.name || 'Not set';
+                    document.getElementById('profileEmail').textContent = profile.email || 'Not set';
+                    document.getElementById('profilePhone').textContent = profile.phone || 'Not set';
+                    document.getElementById('profileVehicleType').textContent = profile.vehicle_type || 'Not set';
+                    document.getElementById('profileVehicleNumber').textContent = profile.vehicle_number || 'Not set';
+                    document.getElementById('headerName').textContent = profile.name || 'Driver';
+                    
+                    // Update profile image with initials
+                    if (profile.name) {
+                        document.getElementById('profileImage').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name)}&background=3b82f6&color=fff`;
+                    }
+                } catch (error) {
+                    console.error('Error loading profile:', error);
+                    this.showToast('Failed to load profile. Please try again.', 'error');
+                }
+            },
+            
+            // Load assigned ride requests
+            loadAssignedRequests: async function() {
+                try {
+                    const refreshBtn = document.getElementById('refreshRequests');
+                    refreshBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> Refreshing...';
+                    refreshBtn.disabled = true;
+                    
+                    const requests = await driverAuth.getAssignedRequests();
+                    const tbody = document.getElementById('assignedRequestsBody');
+                    
+                    // Store current request IDs for highlight comparison
+                    const currentIds = Array.from(tbody.querySelectorAll('tr[data-request-id]'))
+                        .map(tr => tr.getAttribute('data-request-id'));
+                    
+                    if (requests.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <i class="fas fa-taxi"></i>
+                                        <h5>No assigned rides available</h5>
+                                        <p>You currently don't have any assigned rides</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                        refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                        refreshBtn.disabled = false;
+                        return;
+                    }
 
-        async function loadAssignedRequests() {
-            try {
-                const refreshBtn = document.getElementById('refreshRequests');
-                refreshBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> Refreshing...';
-                refreshBtn.disabled = true;
-                
-                const requests = await driverAuth.getAssignedRequests();
-                const tbody = document.getElementById('assignedRequestsBody');
-                
-                // Store current request IDs for highlight comparison
-                const currentIds = Array.from(tbody.querySelectorAll('tr[data-request-id]'))
-                    .map(tr => tr.getAttribute('data-request-id'));
-                
-                if (requests.length === 0) {
+                    // Sort requests by status and time
+                    const sortedRequests = requests.sort((a, b) => {
+                        const statusOrder = { 'in_progress': 1, 'accepted': 2, 'completed': 3, 'pending': 4 };
+                        return statusOrder[a.status] - statusOrder[b.status] || 
+                               new Date(b.request_time || b.created_at) - new Date(a.request_time || a.created_at);
+                    });
+
+                    tbody.innerHTML = '';
+
+                    sortedRequests.forEach(request => {
+                        const row = document.createElement('tr');
+                        row.setAttribute('data-request-id', request.id);
+                        
+                        // Format the date
+                        const requestDate = new Date(request.request_time || request.created_at);
+                        const formattedDate = requestDate.toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        
+                        // Determine status class
+                        let statusClass, statusText;
+                        if (request.status === 'pending') {
+                            statusClass = 'badge-pending';
+                            statusText = 'Pending';
+                        } else if (request.status === 'accepted') {
+                            statusClass = 'badge-accepted';
+                            statusText = 'Accepted';
+                        } else if (request.status === 'in_progress') {
+                            statusClass = 'badge-in_progress';
+                            statusText = 'In Progress';
+                        } else if (request.status === 'completed') {
+                            statusClass = 'badge-completed';
+                            statusText = 'Completed';
+                        }
+                        
+                        // Add highlight class if this is a new request (except first load)
+                        if (!this.isFirstLoad && !currentIds.includes(request.id.toString())) {
+                            row.classList.add('highlight');
+                        }
+                        
+                        // Format phone number if available
+                        const phoneDisplay = request.customer_phone ? 
+                            `<a href="tel:${request.customer_phone}" class="phone-link clickable">
+                                <i class="fas fa-phone-alt"></i> ${request.customer_phone}
+                            </a>` : 
+                            '<span class="text-muted">N/A</span>';
+                        
+                        // Format customer name with fallback
+                        const customerName = request.customer_name || '<span class="text-muted">Unknown</span>';
+                        
+                        // Format action buttons based on status
+                        let actionButtons = '';
+                        if (request.status === 'accepted') {
+                            actionButtons = `
+                                <button class="btn btn-success btn-sm complete-btn clickable" data-id="${request.id}">
+                                    <i class="fas fa-check-circle"></i> Complete
+                                </button>
+                            `;
+                        } else if (request.status === 'in_progress') {
+                            actionButtons = `
+                                <button class="btn btn-primary btn-sm complete-btn clickable" data-id="${request.id}">
+                                    <i class="fas fa-flag-checkered"></i> Finish
+                                </button>
+                            `;
+                        } else if (request.status === 'completed') {
+                            actionButtons = '<span class="badge bg-light text-dark">Completed</span>';
+                        }
+                        
+                        // Create row content
+                        if (window.innerWidth <= 768) {
+                            // Mobile view - vertical layout
+                            row.innerHTML = `
+                                <td data-label="ID">#${request.id}</td>
+                                <td data-label="Customer">${customerName}</td>
+                                <td data-label="Contact">${phoneDisplay}</td>
+                                <td data-label="Pickup">${request.pickup_location}</td>
+                                <td data-label="Dropoff">${request.dropoff_location}</td>
+                                <td data-label="Time">${formattedDate}</td>
+                                <td data-label="Status"><span class="badge ${statusClass}">${statusText}</span></td>
+                                <td data-label="Actions">${actionButtons}</td>
+                            `;
+                        } else {
+                            // Desktop view - normal table
+                            row.innerHTML = `
+                                <td>#${request.id}</td>
+                                <td>${customerName}</td>
+                                <td>${phoneDisplay}</td>
+                                <td>${request.pickup_location}</td>
+                                <td>${request.dropoff_location}</td>
+                                <td>${formattedDate}</td>
+                                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                <td>${actionButtons}</td>
+                            `;
+                        }
+                        
+                        tbody.appendChild(row);
+                    });
+
+                    // Add event listeners to new buttons
+                    document.querySelectorAll('.complete-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            const requestId = e.currentTarget.getAttribute('data-id');
+                            if (confirm('Are you sure you want to complete this ride?')) {
+                                await this.completeRequest(requestId);
+                            }
+                        });
+                    });
+                    
+                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                    refreshBtn.disabled = false;
+                    this.isFirstLoad = false;
+                } catch (error) {
+                    console.error('Error loading assigned requests:', error);
+                    const tbody = document.getElementById('assignedRequestsBody');
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="8">
                                 <div class="empty-state">
-                                    <i class="fas fa-taxi"></i>
-                                    <h5>No assigned rides available</h5>
-                                    <p>You currently don't have any assigned rides</p>
+                                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                                    <h5>Failed to load requests</h5>
+                                    <p>Please check your connection and try again</p>
                                 </div>
                             </td>
                         </tr>
                     `;
-                    refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-                    refreshBtn.disabled = false;
-                    return;
+                    document.getElementById('refreshRequests').innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+                    document.getElementById('refreshRequests').disabled = false;
+                    this.showToast('Failed to load requests. Please check your connection.', 'error');
                 }
-
-                // Sort requests by status and time
-                const sortedRequests = requests.sort((a, b) => {
-                    const statusOrder = { 'in_progress': 1, 'accepted': 2, 'completed': 3, 'pending': 4 };
-                    return statusOrder[a.status] - statusOrder[b.status] || 
-                           new Date(b.request_time || b.created_at) - new Date(a.request_time || a.created_at);
-                });
-
-                tbody.innerHTML = '';
-
-                sortedRequests.forEach(request => {
-                    const row = document.createElement('tr');
-                    row.setAttribute('data-request-id', request.id);
-                    
-                    // Format the date
-                    const requestDate = new Date(request.request_time || request.created_at);
-                    const formattedDate = requestDate.toLocaleString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                    
-                    // Determine status class
-                    let statusClass, statusText;
-                    if (request.status === 'pending') {
-                        statusClass = 'badge-pending';
-                        statusText = 'Pending';
-                    } else if (request.status === 'accepted') {
-                        statusClass = 'badge-accepted';
-                        statusText = 'Accepted';
-                    } else if (request.status === 'in_progress') {
-                        statusClass = 'badge-in_progress';
-                        statusText = 'In Progress';
-                    } else if (request.status === 'completed') {
-                        statusClass = 'badge-completed';
-                        statusText = 'Completed';
+            },
+            
+            // Complete a ride request
+            completeRequest: async function(requestId) {
+                try {
+                    const completeBtn = document.querySelector(`.complete-btn[data-id="${requestId}"]`);
+                    if (completeBtn) {
+                        completeBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> Processing...';
+                        completeBtn.disabled = true;
                     }
                     
-                    // Add highlight class if this is a new request (except first load)
-                    if (!isFirstLoad && !currentIds.includes(request.id.toString())) {
-                        row.classList.add('highlight');
-                    }
-                    
-                    // Format phone number if available
-                    const phoneDisplay = request.customer_phone ? 
-                        `<a href="tel:${request.customer_phone}" class="phone-link clickable">
-                            <i class="fas fa-phone-alt"></i> ${request.customer_phone}
-                        </a>` : 
-                        '<span class="text-muted">N/A</span>';
-                    
-                    // Format customer name with fallback
-                    const customerName = request.customer_name || '<span class="text-muted">Unknown</span>';
-                    
-                    // Format action buttons based on status
-                    let actionButtons = '';
-                    if (request.status === 'accepted') {
-                        actionButtons = `
-                            <button class="btn btn-success btn-sm complete-btn clickable" data-id="${request.id}">
-                                <i class="fas fa-check-circle"></i> Complete
-                            </button>
-                        `;
-                    } else if (request.status === 'in_progress') {
-                        actionButtons = `
-                            <button class="btn btn-primary btn-sm complete-btn clickable" data-id="${request.id}">
-                                <i class="fas fa-flag-checkered"></i> Finish
-                            </button>
-                        `;
-                    } else if (request.status === 'completed') {
-                        actionButtons = '<span class="badge bg-light text-dark">Completed</span>';
-                    }
-                    
-                    // Create row content
-                    if (window.innerWidth <= 768) {
-                        // Mobile view - vertical layout
-                        row.innerHTML = `
-                            <td data-label="ID">#${request.id}</td>
-                            <td data-label="Customer">${customerName}</td>
-                            <td data-label="Contact">${phoneDisplay}</td>
-                            <td data-label="Pickup">${request.pickup_location}</td>
-                            <td data-label="Dropoff">${request.dropoff_location}</td>
-                            <td data-label="Time">${formattedDate}</td>
-                            <td data-label="Status"><span class="badge ${statusClass}">${statusText}</span></td>
-                            <td data-label="Actions">${actionButtons}</td>
-                        `;
+                    const response = await driverAuth.completeRequest(requestId);
+                    if (response.success) {
+                        this.showToast('Ride completed successfully!', 'success');
+                        await this.loadAssignedRequests();
                     } else {
-                        // Desktop view - normal table
-                        row.innerHTML = `
-                            <td>#${request.id}</td>
-                            <td>${customerName}</td>
-                            <td>${phoneDisplay}</td>
-                            <td>${request.pickup_location}</td>
-                            <td>${request.dropoff_location}</td>
-                            <td>${formattedDate}</td>
-                            <td><span class="badge ${statusClass}">${statusText}</span></td>
-                            <td>${actionButtons}</td>
-                        `;
-                    }
-                    
-                    tbody.appendChild(row);
-                });
-
-                // Add event listeners to new buttons
-                document.querySelectorAll('.complete-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const requestId = e.currentTarget.getAttribute('data-id');
-                        if (confirm('Are you sure you want to complete this ride?')) {
-                            await completeRequest(requestId);
+                        this.showToast(response.message || 'Failed to complete ride', 'error');
+                        if (completeBtn) {
+                            completeBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
+                            completeBtn.disabled = false;
                         }
-                    });
-                });
-                
-                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-                refreshBtn.disabled = false;
-                isFirstLoad = false;
-            } catch (error) {
-                console.error('Error loading assigned requests:', error);
-                const tbody = document.getElementById('assignedRequestsBody');
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8">
-                            <div class="empty-state">
-                                <i class="fas fa-exclamation-triangle text-danger"></i>
-                                <h5>Failed to load requests</h5>
-                                <p>Please check your connection and try again</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                document.getElementById('refreshRequests').innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
-                document.getElementById('refreshRequests').disabled = false;
-                showToast('Failed to load requests. Please check your connection.', 'error');
-            }
-        }
-
-        async function completeRequest(requestId) {
-            try {
-                const completeBtn = document.querySelector(`.complete-btn[data-id="${requestId}"]`);
-                if (completeBtn) {
-                    completeBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> Processing...';
-                    completeBtn.disabled = true;
-                }
-                
-                const response = await driverAuth.completeRequest(requestId);
-                if (response.success) {
-                    showToast('Ride completed successfully!', 'success');
-                    await loadAssignedRequests();
-                } else {
-                    showToast(response.message || 'Failed to complete ride', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error completing request:', error);
+                    this.showToast('Failed to complete ride. Please try again.', 'error');
+                    const completeBtn = document.querySelector(`.complete-btn[data-id="${requestId}"]`);
                     if (completeBtn) {
                         completeBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
                         completeBtn.disabled = false;
                     }
                 }
-            } catch (error) {
-                console.error('Error completing request:', error);
-                showToast('Failed to complete ride. Please try again.', 'error');
-                const completeBtn = document.querySelector(`.complete-btn[data-id="${requestId}"]`);
-                if (completeBtn) {
-                    completeBtn.innerHTML = '<i class="fas fa-check-circle"></i> Complete';
-                    completeBtn.disabled = false;
+            },
+            
+            // Start auto-refresh for requests
+            startAutoRefresh: function() {
+                this.stopAutoRefresh(); // Clear any existing interval
+                this.refreshInterval = setInterval(() => this.loadAssignedRequests(), 30000); // Every 30 seconds
+            },
+            
+            // Stop auto-refresh
+            stopAutoRefresh: function() {
+                if (this.refreshInterval) {
+                    clearInterval(this.refreshInterval);
                 }
+            },
+            
+            // Show toast notification
+            showToast: function(message, type = 'info') {
+                const toastContainer = document.getElementById('toastContainer');
+                
+                // Create toast element
+                const toast = document.createElement('div');
+                toast.className = `toast show`;
+                toast.setAttribute('role', 'alert');
+                toast.setAttribute('aria-live', 'assertive');
+                toast.setAttribute('aria-atomic', 'true');
+                
+                // Set toast color based on type
+                let headerClass, icon;
+                switch(type) {
+                    case 'success':
+                        headerClass = 'bg-success';
+                        icon = 'check-circle';
+                        break;
+                    case 'error':
+                        headerClass = 'bg-danger';
+                        icon = 'exclamation-circle';
+                        break;
+                    case 'warning':
+                        headerClass = 'bg-warning';
+                        icon = 'exclamation-triangle';
+                        break;
+                    default:
+                        headerClass = 'bg-primary';
+                        icon = 'info-circle';
+                }
+                
+                toast.innerHTML = `
+                    <div class="toast-header ${headerClass} text-white">
+                        <strong class="me-auto"><i class="fas fa-${icon} me-2"></i>Notification</strong>
+                        <small>Just now</small>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body bg-white">
+                        ${message}
+                    </div>
+                `;
+                
+                toastContainer.appendChild(toast);
+                
+                // Auto-remove toast after 5 seconds
+                setTimeout(() => {
+                    toast.remove();
+                }, 5000);
+                
+                // Add click to dismiss
+                toast.querySelector('.btn-close').addEventListener('click', () => {
+                    toast.remove();
+                });
+            },
+            
+            // Handle logout
+            logout: function() {
+                if (this.isTrackingActive) {
+                    this.stopLocationTracking(); // This will send the final offline status
+                }
+                
+                driverAuth.logout();
+                window.location.href = 'driver-login.html';
             }
-        }
-
-        function showToast(message, type = 'info') {
-            const toastContainer = document.getElementById('toastContainer');
-            
-            // Create toast element
-            const toast = document.createElement('div');
-            toast.className = `toast show`;
-            toast.setAttribute('role', 'alert');
-            toast.setAttribute('aria-live', 'assertive');
-            toast.setAttribute('aria-atomic', 'true');
-            
-            // Set toast color based on type
-            let headerClass, icon;
-            switch(type) {
-                case 'success':
-                    headerClass = 'bg-success';
-                    icon = 'check-circle';
-                    break;
-                case 'error':
-                    headerClass = 'bg-danger';
-                    icon = 'exclamation-circle';
-                    break;
-                case 'warning':
-                    headerClass = 'bg-warning';
-                    icon = 'exclamation-triangle';
-                    break;
-                default:
-                    headerClass = 'bg-primary';
-                    icon = 'info-circle';
-            }
-            
-            toast.innerHTML = `
-                <div class="toast-header ${headerClass} text-white">
-                    <strong class="me-auto"><i class="fas fa-${icon} me-2"></i>Notification</strong>
-                    <small>Just now</small>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body bg-white">
-                    ${message}
-                </div>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Auto-remove toast after 5 seconds
-            setTimeout(() => {
-                toast.remove();
-            }, 5000);
-            
-            // Add click to dismiss
-            toast.querySelector('.btn-close').addEventListener('click', () => {
-                toast.remove();
-            });
-        }
+        };
+        
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => driverApp.init());
     </script>
 </body>
 </html>

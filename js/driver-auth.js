@@ -92,10 +92,36 @@ window.driverAuth = {
         return data ? JSON.parse(data) : null;
     },
 
+    getToken() {
+        return localStorage.getItem('driverToken');
+    },
+
+    async refreshToken() {
+        try {
+            const token = this.getToken();
+            const response = await fetch(`${API_BASE_URL}/refresh-token`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            const data = await handleApiResponse(response);
+            localStorage.setItem('driverToken', data.token);
+            return data.token;
+        } catch (error) {
+            console.error('Token refresh failed:', error);
+            this.logout();
+            throw error;
+        }
+    },
+
     async getProfile() {
         try {
-            const token = localStorage.getItem('driverToken');
-            const response = await fetch(`${API_BASE_URL}/profile`, {
+            const token = this.getToken();
+            let response = await fetch(`${API_BASE_URL}/profile`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -103,6 +129,18 @@ window.driverAuth = {
                     'Accept': 'application/json'
                 }
             });
+
+            if (response.status === 401) {
+                const newToken = await this.refreshToken();
+                response = await fetch(`${API_BASE_URL}/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${newToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+            }
 
             const data = await handleApiResponse(response);
             localStorage.setItem('driverData', JSON.stringify(data.driver));
@@ -115,8 +153,8 @@ window.driverAuth = {
 
     async getAssignedRequests() {
         try {
-            const token = localStorage.getItem('driverToken');
-            const response = await fetch(`${API_BASE_URL}/assigned-requests`, {
+            const token = this.getToken();
+            let response = await fetch(`${API_BASE_URL}/assigned-requests`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -124,6 +162,18 @@ window.driverAuth = {
                     'Accept': 'application/json'
                 }
             });
+
+            if (response.status === 401) {
+                const newToken = await this.refreshToken();
+                response = await fetch(`${API_BASE_URL}/assigned-requests`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${newToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+            }
 
             const data = await handleApiResponse(response);
             return data.requests;
@@ -135,8 +185,8 @@ window.driverAuth = {
 
     async completeRequest(requestId) {
         try {
-            const token = localStorage.getItem('driverToken');
-            const response = await fetch(`${API_BASE_URL}/complete-request`, {
+            const token = this.getToken();
+            let response = await fetch(`${API_BASE_URL}/complete-request`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -145,6 +195,19 @@ window.driverAuth = {
                 },
                 body: JSON.stringify({ requestId })
             });
+
+            if (response.status === 401) {
+                const newToken = await this.refreshToken();
+                response = await fetch(`${API_BASE_URL}/complete-request`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${newToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ requestId })
+                });
+            }
 
             return await handleApiResponse(response);
         } catch (error) {
@@ -153,62 +216,68 @@ window.driverAuth = {
         }
     },
 
-    async getRecentRequests() {
+    async updateLocation(locationData) {
         try {
-            const token = localStorage.getItem('driverToken');
-            const response = await fetch(`${API_BASE_URL}/recent-requests`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            });
-
-            const data = await handleApiResponse(response);
-            return data.requests;
-        } catch (error) {
-            console.error('Failed to fetch recent requests:', error);
-            throw error;
-        }
-    },
-
-    async getPastRides() {
-        try {
-            const token = localStorage.getItem('driverToken');
-            const response = await fetch(`${API_BASE_URL}/past-rides`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            });
-
-            const data = await handleApiResponse(response);
-            return data.rides;
-        } catch (error) {
-            console.error('Failed to fetch past rides:', error);
-            throw error;
-        }
-    },
-
-    async acceptRequest(requestId) {
-        try {
-            const token = localStorage.getItem('driverToken');
-            const response = await fetch(`${API_BASE_URL}/accept-request`, {
+            const token = this.getToken();
+            const response = await fetch(`${API_BASE_URL}/location`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                body: JSON.stringify({ requestId })
+                body: JSON.stringify(locationData)
             });
+
+            if (response.status === 401) {
+                const newToken = await this.refreshToken();
+                response = await fetch(`${API_BASE_URL}/location`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${newToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(locationData)
+                });
+            }
 
             return await handleApiResponse(response);
         } catch (error) {
-            console.error('Failed to accept request:', error);
+            console.error('Failed to update location:', error);
+            throw error;
+        }
+    },
+
+    async updateDriverStatus(statusData) {
+        try {
+            const token = this.getToken();
+            const response = await fetch(`${API_BASE_URL}/status`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(statusData)
+            });
+
+            if (response.status === 401) {
+                const newToken = await this.refreshToken();
+                response = await fetch(`${API_BASE_URL}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${newToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(statusData)
+                });
+            }
+
+            return await handleApiResponse(response);
+        } catch (error) {
+            console.error('Failed to update status:', error);
             throw error;
         }
     }

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchRequests();
 
         // Start auto-refresh
-        setInterval(checkForDriverAssignment, 20000); // Check every 10 seconds
+        setInterval(checkForDriverAssignment, 20000); // Check every 20 seconds
     }
 
     function setupEventListeners() {
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Mobile menu toggle
-        document.getElementById('mobileMenuToggle')?.addEventListener('click', () => {
+        document.getElementById('mobileMenuButton')?.addEventListener('click', () => {
             const sidebar = document.querySelector('.sidebar');
             sidebar.classList.toggle('hidden');
             sidebar.classList.toggle('active');
@@ -232,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">View Location</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
@@ -290,6 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">View Location</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
@@ -319,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!requests || requests.length === 0) {
             return `
                 <tr>
-                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                    <td colspan="9" class="px-6 py-4 text-center text-gray-500">
                         No ride requests found. Book your first ride!
                     </td>
                 </tr>
@@ -327,23 +329,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return requests.map(req => `
-            <tr>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#RS-${req.id}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(req.request_time)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.pickup_location}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.dropoff_location}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
+            <tr class="table-row">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-${req.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">${formatDate(req.request_time)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">${req.pickup_location}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">${req.dropoff_location}</td>
+                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
                     <span class="px-2 py-1 text-xs font-medium ride-status-${req.status.toLowerCase()} rounded-full">
                         ${formatStatus(req.status)}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.driver ? req.driver.name : 'Not assigned'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Name">${req.driver ? req.driver.name : 'Not assigned'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
                     ${req.driver && req.driver.phone 
                         ? `<a href="tel:${req.driver.phone}" class="text-blue-600 hover:text-blue-800">${req.driver.phone}</a>` 
                         : '-'}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
+                    ${req.driver && req.driver.latitude && req.driver.longitude 
+                        ? `<a href="https://www.google.com/maps?q=${req.driver.latitude},${req.driver.longitude}" class="text-blue-600 hover:text-blue-800" target="_blank">View</a>` 
+                        : 'N/A'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
                     ${getActionButton(req)}
                 </td>
             </tr>
@@ -354,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!requests || requests.length === 0) {
             return `
                 <tr>
-                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                    <td colspan="9" class="px-6 py-4 text-center text-gray-500">
                         No ride requests found matching your criteria
                     </td>
                 </tr>
@@ -362,23 +369,28 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         return requests.map(req => `
-            <tr>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#RS-${req.id}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(req.request_time)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.pickup_location}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.dropoff_location}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
+            <tr class="table-row">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-${req.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">${formatDate(req.request_time)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">${req.pickup_location}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">${req.dropoff_location}</td>
+                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
                     <span class="px-2 py-1 text-xs font-medium ride-status-${req.status.toLowerCase()} rounded-full">
                         ${formatStatus(req.status)}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.driver ? req.driver.name : 'Not assigned'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Name">${req.driver ? req.driver.name : 'Not assigned'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
                     ${req.driver && req.driver.phone 
                         ? `<a href="tel:${req.driver.phone}" class="text-blue-600 hover:text-blue-800">${req.driver.phone}</a>` 
                         : '-'}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
+                    ${req.driver && req.driver.latitude && req.driver.longitude 
+                        ? `<a href="https://www.google.com/maps?q=${req.driver.latitude},${req.driver.longitude}" class="text-blue-600 hover:text-blue-800" target="_blank">View</a>` 
+                        : 'N/A'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
                     ${getActionButton(req)}
                 </td>
             </tr>
@@ -441,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentView === 'dashboard') {
                 requestList.innerHTML = `
                     <tr>
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="9" class="px-6 py-4 text-center text-gray-500">
                             <div class="animate-pulse flex justify-center">
                                 <div class="h-4 w-4 bg-blue-600 rounded-full mx-1"></div>
                                 <div class="h-4 w-4 bg-blue-600 rounded-full mx-1"></div>

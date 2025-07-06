@@ -247,25 +247,7 @@
                         <span>3 available now</span>
                     </div>
                 </div>
-<!--                 
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Loyalty Points</p>
-                            <h3 class="text-2xl font-bold mt-1">1,250</h3>
-                        </div>
-                        <div class="p-3 rounded-lg bg-green-100 text-green-600">
-                            <i class="fas fa-gem"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-500 h-2 rounded-full" style="width: 45%"></div>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-1">450 pts to next tier</p>
-                    </div>
-                </div>
-            </div> -->
+            </div>
 
             <!-- Quick Book Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -318,8 +300,7 @@
                         </div>
                     </form>
                 </div>
-<!--                 
-                
+            </div>
 
             <!-- Recent Requests Section -->
             <div class="card bg-white p-6 rounded-xl border border-gray-100">
@@ -339,53 +320,61 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">View Location</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
                         <tbody id="requestList" class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#RS-5842</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Today, 10:30 AM</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">123 Main St</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Airport Terminal 2</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                            <tr class="table-row">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-5842</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">Today, 10:30 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">123 Main St</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">Airport Terminal 2</td>
+                                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
                                     <span class="px-2 py-1 text-xs font-medium ride-status-confirmed rounded-full">Confirmed</span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
                                     <a href="tel:+1234567890" class="text-blue-600 hover:text-blue-800">+1234567890</a>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">John Smith</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">John Smith</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
+                                    <a href="https://www.google.com/maps?q=40.7128,-74.0060" class="text-blue-600 hover:text-blue-800" target="_blank">View</a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
                                     <button class="text-blue-600 hover:text-blue-900">Track</button>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#RS-5781</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yesterday, 3:15 PM</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">456 Oak Ave</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Central Mall</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                            <tr class="table-row">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-5781</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">Yesterday, 3:15 PM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">456 Oak Ave</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">Central Mall</td>
+                                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
                                     <span class="px-2 py-1 text-xs font-medium ride-status-completed rounded-full">Completed</span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
                                     <a href="tel:+1234567890" class="text-blue-600 hover:text-blue-800">+1234567890</a>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jane Doe</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">Jane Doe</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
+                                    <a href="https://www.google.com/maps?q=40.7306,-73.9352" class="text-blue-600 hover:text-blue-800" target="_blank">View</a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
                                     <button class="text-blue-600 hover:text-blue-900">Details</button>
                                 </td>
                             </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">userid-5723</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yesterday, 9:45 AM</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">789 Pine Rd</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Business District</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                            <tr class="table-row">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">userid-5723</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">Yesterday, 9:45 AM</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">789 Pine Rd</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">Business District</td>
+                                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
                                     <span class="px-2 py-1 text-xs font-medium ride-status-cancelled rounded-full">Cancelled</span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Not assigned</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Not assigned</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">Not assigned</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">Not assigned</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">N/A</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
                                     <button class="text-blue-600 hover:text-blue-900">Book Again</button>
                                 </td>
                             </tr>
@@ -402,13 +391,9 @@
             <i class="fas fa-home"></i>
             <span class="text-xs mt-1">Home</span>
         </a>
-        <!-- <a href="#" class="p-2 text-gray-500 flex flex-col items-center">
-            <i class="fas fa-car"></i>
-            <span class="text-xs mt-1">Rides</span>
-        </a> -->
         <a href="#" class="p-2 text-gray-500 flex flex-col items-center">
             <i class="fas fa-history"></i>
-            <span class="text-xs mt-1"> Ride History</span>
+            <span class="text-xs mt-1">Ride History</span>
         </a>
         <a href="#" class="p-2 text-gray-500 flex flex-col items-center" id="logoutMobile">
             <i class="fas fa-sign-out-alt"></i>
@@ -420,5 +405,3 @@
     <div id="notificationArea" class="notification"></div>
 
     <script src="./js/user-dashboard.js"></script>
-</body>
-</html>

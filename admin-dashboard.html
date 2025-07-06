@@ -9,18 +9,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #f8fafc;
+            --primary: #0f172a; /* Polished black for primary actions */
+            --primary-dark: #0a0f1f; /* Darker black for hover states */
+            --secondary: #f8fafc; /* Clean slate for backgrounds */
+            --success: #10b981; /* Emerald for success states */
+            --warning: #f59e0b; /* Amber for warnings */
+            --danger: #ef4444; /* Red for errors */
+            --font-primary: #0f172a; /* Polished black for main text */
+            --font-secondary: #1e293b; /* Slightly lighter black for secondary text */
         }
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f5f7fa;
             overflow-x: hidden;
+            color: var(--font-primary);
         }
         .sidebar {
             transition: all 0.3s ease;
             z-index: 50;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
         }
         .sidebar-mobile-hidden {
             transform: translateX(-100%);
@@ -38,20 +45,24 @@
         .sidebar-overlay.active {
             display: block;
         }
+        .nav-item {
+            transition: all 0.2s ease;
+        }
         .nav-item.active {
-            background-color: rgba(67, 97, 238, 0.1);
+            background-color: rgba(15, 23, 42, 0.1);
             color: var(--primary);
             border-left: 3px solid var(--primary);
         }
         .nav-item:hover:not(.active) {
-            background-color: rgba(67, 97, 238, 0.05);
+            background-color: rgba(15, 23, 42, 0.05);
         }
         .card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
         .btn-primary {
             background: var(--primary);
@@ -59,29 +70,90 @@
         }
         .btn-primary:hover {
             background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.3);
+        }
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
         }
         .status-pending {
             background-color: #fef3c7;
-            color: #d97706;
+            color: #92400e;
         }
         .status-confirmed {
             background-color: #dcfce7;
-            color: #16a34a;
+            color: #166534;
         }
         .status-in_progress {
-            background-color: #e0f2fe;
-            color: #0284c7;
+            background-color: #dbeafe;
+            color: #1e40af;
         }
         .status-completed {
             background-color: #e0f2fe;
-            color: #0284c7;
+            color: #0369a1;
         }
         .status-cancelled {
             background-color: #fee2e2;
-            color: #dc2626;
+            color: #b91c1c;
         }
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .badge-primary {
+            background-color: #e5e7eb;
+            color: var(--primary);
+        }
+        .badge-success {
+            background-color: #dcfce7;
+            color: var(--success);
+        }
+        .badge-warning {
+            background-color: #fef3c7;
+            color: var(--warning);
+        }
+        .badge-danger {
+            background-color: #fee2e2;
+            color: var(--danger);
+        }
+        
+        /* Map container */
+        #map {
+            height: 500px;
+            width: 100%;
+            border-radius: 0.75rem;
+            margin-top: 1rem;
+            z-index: 0;
+        }
+        
+        /* Table styles */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        table {
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            background-color: #f9fafb;
+            z-index: 10;
+            color: var(--font-secondary);
+        }
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+        
+        /* Loading animation */
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -93,7 +165,7 @@
         /* Mobile optimizations */
         @media (max-width: 767px) {
             .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(1, 1fr);
             }
             .header-search {
                 display: none;
@@ -103,14 +175,50 @@
                 width: 100%;
                 margin: 10px 0;
             }
-            .table-responsive {
-                display: block;
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
             .btn-text-hidden {
                 display: none;
+            }
+            
+            /* Sidebar mobile styles */
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                z-index: 50;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 40;
+            }
+            .sidebar-overlay.active {
+                display: block;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            
+            /* Map adjustments for mobile */
+            #map {
+                height: 350px;
+            }
+            
+            /* Table adjustments */
+            table {
+                display: block;
+            }
+            th, td {
+                min-width: 120px;
             }
         }
         
@@ -121,99 +229,59 @@
             .header-search-mobile {
                 display: none;
             }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
-
-        /* Replace the existing @media (max-width: 767px) section with this: */
-@media (max-width: 767px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .header-search {
-        display: none;
-    }
-    .header-search-mobile {
-        display: block;
-        width: 100%;
-        margin: 10px 0;
-    }
-    .table-responsive {
-        display: block;
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    .btn-text-hidden {
-        display: none;
-    }
-    
-    /* Add these new rules for mobile sidebar */
-    .sidebar {
-        transform: translateX(-100%);
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        z-index: 50;
-    }
-    .sidebar.active {
-        transform: translateX(0);
-    }
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(0,0,0,0.5);
-        z-index: 40;
-    }
-    .sidebar-overlay.active {
-        display: block;
-    }
-    .main-content {
-        margin-left: 0;
-    }
-}
+        
+        @media (min-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="flex h-screen overflow-hidden bg-gray-50">
     <!-- Sidebar Overlay (Mobile Only) -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     
     <!-- Sidebar Navigation -->
     <div class="sidebar w-64 bg-white border-r border-gray-200 flex-shrink-0 fixed md:static h-full sidebar-mobile-hidden" id="sidebar">
         <div class="p-4 border-b border-gray-200 flex items-center space-x-2">
-            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-full bg-black flex items-center justify-center">
                 <i class="fas fa-car text-white"></i>
             </div>
-            <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">RideSwift</span>
+            <span class="text-xl font-bold bg-gradient-to-r from-black to-gray-600 bg-clip-text text-transparent">RideSwift</span>
         </div>
         <div class="p-4">
             <div class="flex items-center space-x-3 mb-6">
-                <img src="https://randomuser.me/api/portraits/men/75.jpg" class="w-10 h-10 rounded-full">
+                <img src="https://randomuser.me/api/portraits/men/75.jpg" class="w-10 h-10 rounded-full object-cover">
                 <div>
-                    <div class="font-medium">Admin User</div>
+                    <div class="font-medium text-black">Admin User</div>
                     <div class="text-xs text-gray-500">Super Admin</div>
                 </div>
             </div>
             
             <nav class="space-y-1">
-                <a href="#" class="nav-item active flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-tachometer-alt w-5 text-center"></i>
-                    <span>Dashboard</span>
+                <a href="#" class="nav-item active flex items-center space-x-3 px-3 py-2.5 rounded-lg">
+                    <i class="fas fa-tachometer-alt w-5 text-center text-black"></i>
+                    <span class="text-black font-medium">Dashboard</span>
                 </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-car w-5 text-center"></i>
-                    <span>Ride Requests</span>
+                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg">
+                    <i class="fas fa-car w-5 text-center text-black"></i>
+                    <span class="text-black font-medium">Ride Requests</span>
                 </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-users w-5 text-center"></i>
-                    <span>Drivers</span>
+                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg">
+                    <i class="fas fa-users w-5 text-center text-black"></i>
+                    <span class="text-black font-medium">Drivers</span>
                 </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-cog w-5 text-center"></i>
-                    <span>Settings</span>
+                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg">
+                    <i class="fas fa-map-marker-alt w-5 text-center text-black"></i>
+                    <span class="text-black font-medium">Driver Locations</span>
+                </a>
+                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2.5 rounded-lg">
+                    <i class="fas fa-cog w-5 text-center text-black"></i>
+                    <span class="text-black font-medium">Settings</span>
                 </a>
             </nav>
         </div>
@@ -226,23 +294,23 @@
             <div class="flex flex-col md:flex-row md:items-center md:justify-between">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center md:hidden">
-                        <button id="toggleSidebar" class="text-gray-500 mr-4">
+                        <button id="toggleSidebar" class="text-gray-500 mr-4 focus:outline-none">
                             <i class="fas fa-bars text-xl"></i>
                         </button>
-                        <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center md:hidden">
+                        <div class="w-8 h-8 rounded-full bg-black flex items-center justify-center md:hidden">
                             <i class="fas fa-car text-white text-sm"></i>
                         </div>
                     </div>
                     
-                    <h1 class="text-xl font-bold text-gray-800 ml-2 md:ml-0 md:hidden">Dashboard</h1>
+                    <h1 class="text-xl font-bold text-black ml-2 md:ml-0 md:hidden">Dashboard</h1>
                     
                     <div class="flex items-center space-x-4 md:hidden">
-                        <button class="p-2 rounded-full hover:bg-gray-100 relative">
+                        <button class="p-2 rounded-full hover:bg-gray-100 relative focus:outline-none">
                             <i class="fas fa-bell text-gray-600"></i>
                             <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
                         </button>
                         <div class="flex items-center space-x-2">
-                            <img src="https://randomuser.me/api/portraits/men/75.jpg" class="w-8 h-8 rounded-full">
+                            <img src="https://randomuser.me/api/portraits/men/75.jpg" class="w-8 h-8 rounded-full object-cover">
                         </div>
                     </div>
                 </div>
@@ -253,7 +321,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-gray-400"></i>
                         </div>
-                        <input type="text" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Search...">
+                        <input type="text" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" placeholder="Search...">
                     </div>
                 </div>
                 
@@ -263,16 +331,16 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-search text-gray-400"></i>
                         </div>
-                        <input type="text" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Search...">
+                        <input type="text" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent" placeholder="Search...">
                     </div>
                     
-                    <button class="p-2 rounded-full hover:bg-gray-100 relative">
+                    <button class="p-2 rounded-full hover:bg-gray-100 relative focus:outline-none">
                         <i class="fas fa-bell text-gray-600"></i>
                         <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
                     </button>
                     <div class="flex items-center space-x-2">
-                        <img src="https://randomuser.me/api/portraits/men/75.jpg" class="w-8 h-8 rounded-full">
-                        <span class="font-medium">Admin</span>
+                        <img src="https://randomuser.me/api/portraits/men/75.jpg" class="w-8 h-8 rounded-full object-cover">
+                        <span class="font-medium text-black">Admin</span>
                         <i class="fas fa-chevron-down text-gray-500 text-xs"></i>
                     </div>
                 </div>
@@ -281,99 +349,237 @@
 
         <!-- Dashboard Content -->
         <main class="flex-1 overflow-y-auto p-4 md:p-6">
-            <div id="errorContainer" class="hidden bg-red-100 text-red-700 p-4 rounded-lg mb-4"></div>
-            <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center">
-                <h1 class="text-2xl font-bold text-gray-800 mb-4 sm:mb-0">Admin Dashboard</h1>
-                <div class="flex space-x-3">
-                    <!-- <button class="btn-primary text-white py-2 px-4 rounded-lg font-medium flex items-center space-x-2">
-                        <i class="fas fa-plus"></i>
-                        <span class="hidden sm:inline">Add Driver</span>
-                    </button> -->
-                    <button id="exportDashboard" class="btn-export bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-lg font-medium flex items-center space-x-2 hover:bg-gray-50">
-                        <i class="fas fa-download"></i>
-                        <span class="hidden sm:inline">Export</span>
-                    </button>
+            <!-- Error/Success Messages -->
+            <div id="notificationContainer" class="fixed top-4 right-4 z-50 w-80 hidden">
+                <div class="p-4 rounded-lg shadow-lg">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            <i id="notificationIcon" class="fas fa-info-circle text-black"></i>
+                        </div>
+                        <div class="ml-3 w-0 flex-1 pt-0.5">
+                            <p id="notificationMessage" class="text-sm font-medium text-black"></p>
+                        </div>
+                        <div class="ml-4 flex-shrink-0 flex">
+                            <button class="inline-flex text-gray-400 focus:outline-none" id="closeNotification">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            <div class="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-black">Admin Dashboard</h1>
+                    <p class="text-sm text-gray-500 mt-1">Overview of your ride management system</p>
+                </div>
+                <div class="flex space-x-3 mt-4 sm:mt-0">
+                    <button id="exportDashboard" class="btn-export bg-white border border-gray-300 text-black py-2 px-4 rounded-lg font-medium flex items-center space-x-2 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent">
+                        <i class="fas fa-download"></i>
+                        <span class="hidden sm:inline">Export</span>
+                    </button>
+                    <button id="refreshDashboard" class="bg-white border border-gray-300 text-black py-2 px-4 rounded-lg font-medium flex items-center space-x-2 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent">
+                        <i class="fas fa-sync-alt"></i>
+                        <span class="hidden sm:inline">Refresh</span>
+                    </div>
+            </div>
+
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 stats-grid">
+            <div class="grid gap-4 sm:gap-6 mb-8 stats-grid">
+                <!-- Total Rides Card -->
                 <div class="card bg-white p-4 sm:p-6 rounded-xl border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Rides</p>
-                            <h3 class="text-xl sm:text-2xl font-bold mt-1">0</h3>
+                            <h3 class="text-2xl font-bold mt-1 text-black" id="totalRides">0</h3>
                         </div>
-                        <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
-                            <i class="fas fa-car-side"></i>
+                        <div class="p-3 rounded-lg bg-gray-100 text-black">
+                            <i class="fas fa-car-side text-xl"></i>
                         </div>
                     </div>
-                    <div class="mt-4 flex items-center text-sm text-green-500">
-                        <i class="fas fa-arrow-up mr-1"></i>
-                        <span>0% from last week</span>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span id="ridesChange" class="flex items-center">
+                            <i class="fas fa-arrow-up mr-1 text-green-500"></i>
+                            <span class="text-green-500">0% from last week</span>
+                        </span>
                     </div>
                 </div>
                 
+                <!-- Active Drivers Card -->
                 <div class="card bg-white p-4 sm:p-6 rounded-xl border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Active Drivers</p>
-                            <h3 class="text-xl sm:text-2xl font-bold mt-1">0</h3>
+                            <h3 class="text-2xl font-bold mt-1 text-black" id="activeDrivers">0</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-green-100 text-green-600">
-                            <i class="fas fa-user-check"></i>
+                            <i class="fas fa-user-check text-xl"></i>
                         </div>
                     </div>
                     <div class="mt-4">
-                        <span class="inline-block px-2 py-1 text-xs font-medium status-confirmed rounded">0 available</span>
+                        <span class="status-badge status-confirmed" id="availableDrivers">
+                            <i class="fas fa-circle text-xs mr-1"></i>
+                            <span>0 available</span>
+                        </span>
                     </div>
                 </div>
                 
+                <!-- Pending Requests Card -->
                 <div class="card bg-white p-4 sm:p-6 rounded-xl border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Pending Requests</p>
-                            <h3 class="text-xl sm:text-2xl font-bold mt-1">0</h3>
+                            <h3 class="text-2xl font-bold mt-1 text-black" id="pendingRequests">0</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600">
-                            <i class="fas fa-clock"></i>
+                            <i class="fas fa-clock text-xl"></i>
                         </div>
                     </div>
-                    <div class="mt-4 flex items-center text-sm text-red-500">
-                        <i class="fas fa-arrow-up mr-1"></i>
-                        <span>0 new in last hour</span>
+                    <div class="mt-4 flex items-center text-sm">
+                        <span id="newRequests" class="flex items-center">
+                            <i class="fas fa-arrow-up mr-1 text-red-500"></i>
+                            <span class="text-red-500">0 new in last hour</span>
+                        </span>
                     </div>
+                </div>
+                
+                <!-- Online Drivers Card -->
+                <div class="card bg-white p-4 sm:p-6 rounded-xl border border-gray-100">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Online Drivers</p>
+                            <h3 class="text-2xl font-bold mt-1 text-black" id="onlineDrivers">0</h3>
+                        </div>
+                        <div class="p-3 rounded-lg bg-gray-100 text-black">
+                            <i class="fas fa-map-marker-alt text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="#" id="viewLocationsBtn" class="text-sm text-black hover:text-gray-600 font-medium">
+                            View Locations <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver Locations Section -->
+            <div class="card bg-white p-4 sm:p-6 rounded-xl border border-gray-100 mb-8" id="locationsSection">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-black">Driver Locations</h2>
+                        <p class="text-sm text-gray-500 mt-1">Real-time tracking of active drivers</p>
+                    </div>
+                    <div class="flex space-x-2 mt-4 sm:mt-0">
+                        <button id="refreshLocations" class="text-sm bg-gray-100 hover:bg-gray-200 text-black px-3 py-1.5 rounded-lg flex items-center focus:outline-none">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                        <button id="toggleMapView" class="text-sm bg-black text-white hover:bg-gray-800 px-3 py-1.5 rounded-lg flex items-center focus:outline-none">
+                            <i class="fas fa-map mr-1"></i> Map View
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Map View -->
+                <div id="map" class="hidden rounded-xl overflow-hidden border border-gray-200"></div>
+                
+                <!-- Table View -->
+                <div class="table-responsive" id="locationsTable">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Update</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driverLocationsList" class="bg-white divide-y divide-gray-200">
+                            <!-- Loading state -->
+                            <tr id="locationsLoading">
+                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                    <div class="flex justify-center items-center space-x-2">
+                                        <i class="fas fa-circle-notch fa-spin text-black"></i>
+                                        <span>Loading driver locations...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Empty state (hidden by default) -->
+                            <tr id="locationsEmpty" class="hidden">
+                                <td colspan="5" class="px-6 py-8 text-center">
+                                    <div class="flex flex-col items-center justify-center text-gray-400">
+                                        <i class="fas fa-map-marker-alt text-4xl mb-2"></i>
+                                        <h4 class="font-medium text-gray-500">No active drivers</h4>
+                                        <p class="text-sm mt-1">Currently there are no drivers online</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Data will be inserted here dynamically -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
             <!-- Recent Requests Section -->
             <div class="card bg-white p-4 sm:p-6 rounded-xl border border-gray-100 mb-8">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-                    <h2 class="text-lg sm:text-xl font-semibold mb-2 sm:mb-0">Recent Cab Requests</h2>
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-800">View All</a>
+                    <div>
+                        <h2 class="text-xl font-semibold text-black">Recent Ride Requests</h2>
+                        <p class="text-sm text-gray-500 mt-1">Latest customer ride requests</p>
+                    </div>
+                    <a href="#" class="text-sm text-black hover:text-gray-600 font-medium">
+                        View All <i class="fas fa-chevron-right ml-1 text-xs"></i>
+                    </a>
                 </div>
                 
                 <div class="table-responsive">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                <th scope="col" class="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
-                                <th scope="col" class="hidden sm:table-cell px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
+                                <th scope="col" class="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
                         <tbody id="requestList" class="bg-white divide-y divide-gray-200">
-                            <!-- Populated dynamically -->
+                            <!-- Loading state -->
+                            <tr id="requestsLoading">
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                    <div class="flex justify-center items-center space-x-2">
+                                        <i class="fas fa-circle-notch fa-spin text-black"></i>
+                                        <span>Loading ride requests...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Empty state (hidden by default) -->
+                            <tr id="requestsEmpty" class="hidden">
+                                <td colspan="6" class="px-6 py-8 text-center">
+                                    <div class="flex flex-col items-center justify-center text-gray-400">
+                                        <i class="fas fa-taxi text-4xl mb-2"></i>
+                                        <h4 class="font-medium text-gray-500">No recent requests</h4>
+                                        <p class="text-sm mt-1">No ride requests have been made recently</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Data will be inserted here dynamically -->
                         </tbody>
                     </table>
                 </div>
-            </div>    
+            </div>
         </main>
     </div>
 
+    <!-- Include Leaflet JS and CSS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    
+    <!-- Include Chart.js for analytics (optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom JS -->
     <script src="./js/admin-dashboard.js"></script>
 </body>
 </html>
