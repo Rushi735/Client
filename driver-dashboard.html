@@ -864,7 +864,7 @@
                         },
                         { 
                             enableHighAccuracy: true,
-                            timeout: 10000,
+                            timeout: 3000,
                             maximumAge: 0
                         }
                     );
@@ -876,107 +876,81 @@
                     this.showToast('You are now offline', 'info');
                 }
             },
-            
             // Start location tracking
-            startLocationTracking: function(initialPosition) {
-                this.isTrackingActive = true;
-                
-                // Update with initial position
-                this.updateLocation(initialPosition);
-                
-                // Start watching position
-                this.watchId = navigator.geolocation.watchPosition(
-                    (position) => this.updateLocation(position),
-                    (error) => this.handleLocationError(error),
-                    { 
-                        enableHighAccuracy: true,
-                        maximumAge: 10000,
-                        timeout: 5000
-                    }
-                );
-                
-                // Start periodic updates to server
-                this.trackingInterval = setInterval(() => this.sendLocationUpdate(), 15000); // Every 15 seconds
-                
-                // Send initial update
-                this.sendLocationUpdate();
-            },
+        startLocationTracking: function(initialPosition) {
+            this.isTrackingActive = true;
+            this.updateLocation(initialPosition);
             
-            // Stop location tracking
-            stopLocationTracking: function() {
-                if (this.watchId) {
-                    navigator.geolocation.clearWatch(this.watchId);
-                    this.watchId = null;
+            this.watchId = navigator.geolocation.watchPosition(
+                (position) => this.updateLocation(position),
+                (error) => this.handleLocationError(error),
+                { 
+                    enableHighAccuracy: true,
+                    maximumAge: 10000,
+                    timeout: 5000
                 }
-                if (this.trackingInterval) {
-                    clearInterval(this.trackingInterval);
-                    this.trackingInterval = null;
-                }
-                
-                this.isTrackingActive = false;
-                
-                // Send one last update to mark driver as offline
-                this.updateDriverStatus(false);
-            },
+            );
             
-            // Update location data
-            updateLocation: function(position) {
-                const { latitude, longitude, accuracy } = position.coords;
-                
-                // Store the current location for sending to server
-                this.lastSentLocation = {
-                    latitude,
-                    longitude,
-                    accuracy,
-                    timestamp: new Date().toISOString()
-                };
-            },
+            // Send updates every 15 seconds
+            this.trackingInterval = setInterval(() => this.sendLocationUpdate(), 15000);
+            this.sendLocationUpdate(); // Initial update
             
-            // Handle location errors
-            handleLocationError: function(error) {
-                let errorMessage;
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage = "Location access was denied. Please enable location permissions to go online.";
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage = "Location information is unavailable. Please check your connection.";
-                        break;
-                    case error.TIMEOUT:
-                        errorMessage = "The request to get your location timed out. Please try again.";
-                        break;
-                    default:
-                        errorMessage = "An unknown error occurred while getting your location.";
-                }
-                
-                this.showToast(errorMessage, 'error');
-            },
+            // Also update online status
+            this.updateDriverStatus(true);
+        },
+        
+        // Update location data
+        updateLocation: function(position) {
+            const { latitude, longitude, accuracy } = position.coords;
             
-            // Send location update to server
-            sendLocationUpdate: async function() {
-                if (!this.lastSentLocation) return;
-                
-                try {
-                    await driverAuth.updateLocation({
-                        latitude: this.lastSentLocation.latitude,
-                        longitude: this.lastSentLocation.longitude,
-                        accuracy: this.lastSentLocation.accuracy,
-                        timestamp: this.lastSentLocation.timestamp,
-                        isOnline: this.isTrackingActive
-                    });
-                } catch (error) {
-                    console.error('Error sending location update:', error);
-                }
-            },
+            this.lastSentLocation = {
+                current_latitude: latitude,
+                current_longitude: longitude,
+                location_accuracy: accuracy,
+                last_location_update: new Date().toISOString(),
+                is_online: this.isTrackingActive
+            };
+        },
+        
+        // Send location update to server
+        sendLocationUpdate: async function() {
+            if (!this.lastSentLocation) return;
             
-            // Update driver status (online/offline)
-            updateDriverStatus: async function(isOnline) {
-                try {
-                    await driverAuth.updateDriverStatus(isOnline);
-                } catch (error) {
-                    console.error('Error updating driver status:', error);
-                }
-            },
+            try {
+                await driverAuth.updateLocation(this.lastSentLocation);
+                console.log('Location updated successfully');
+            } catch (error) {
+                console.error('Error sending location update:', error);
+                this.showToast('Failed to update location. Trying again...', 'error');
+            }
+        },
+        
+        // Update driver status (online/offline)
+        updateDriverStatus: async function(isOnline) {
+            try {
+                await driverAuth.updateDriverStatus({
+                    is_online: isOnline,
+                    last_seen: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error('Error updating driver status:', error);
+            }
+        },
+        
+        // Stop location tracking
+        stopLocationTracking: function() {
+            if (this.watchId) {
+                navigator.geolocation.clearWatch(this.watchId);
+                this.watchId = null;
+            }
+            if (this.trackingInterval) {
+                clearInterval(this.trackingInterval);
+                this.trackingInterval = null;
+            }
+            
+            this.isTrackingActive = false;
+            this.updateDriverStatus(false);
+        },
             
             // Load driver profile
             loadProfile: async function() {
@@ -1074,9 +1048,9 @@
                         }
                         
                         // Format phone number if available
-                        const phoneDisplay = request.customer_phone ? 
-                            `<a href="tel:${request.customer_phone}" class="phone-link clickable">
-                                <i class="fas fa-phone-alt"></i> ${request.customer_phone}
+                        const phoneDisplay = request.phone ? 
+                            `<a href="tel:${request.phone}" class="phone-link clickable">
+                                <i class="fas fa-phone-alt"></i> ${request.phone}
                             </a>` : 
                             '<span class="text-muted">N/A</span>';
                         

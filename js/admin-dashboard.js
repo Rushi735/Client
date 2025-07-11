@@ -161,10 +161,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoading();
         try {
             const [requestsRes, driversRes] = await Promise.all([
-                fetch('https://serverone-w2xc.onrender.com/api/admin/requests', {
+                fetch('http://localhost:3000/api/admin/requests', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                fetch('https://serverone-w2xc.onrender.com/api/admin/drivers', {
+                fetch('http://localhost:3000/api/admin/drivers', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
@@ -203,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ridesChange) ridesChange.innerHTML = `<i class="fas fa-arrow-up mr-1 text-green-500"></i><span class="text-green-500">0% from last week</span>`;
         if (newRequests) newRequests.innerHTML = `<i class="fas fa-arrow-up mr-1 text-red-500"></i><span class="text-red-500">0 new in last hour</span>`;
     }
-
     function formatTime(timestamp) {
         if (!timestamp) return 'N/A';
         const date = new Date(timestamp);
@@ -212,8 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
             minute: 'numeric',
             hour12: true,
             month: 'short',
-            day: 'numeric',
-            year: 'numeric'
+            day: 'numeric'
         });
     }
 
@@ -222,13 +220,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const locationsList = document.getElementById('driverLocationsList');
         const locationsEmpty = document.getElementById('locationsEmpty');
         const locationsLoading = document.getElementById('locationsLoading');
+
         if (locationsList) locationsList.innerHTML = '';
         if (locationsEmpty) locationsEmpty.classList.add('hidden');
         if (locationsLoading) locationsLoading.classList.remove('hidden');
+
         try {
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/drivers/locations', {
+            const response = await fetch('http://localhost:3000/api/admin/drivers/locations', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
             if (!response.ok) {
                 if (response.status === 401) {
                     localStorage.clear();
@@ -237,12 +238,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
+
             const { data: drivers } = await response.json();
+
             if (locationsLoading) locationsLoading.classList.add('hidden');
             if (drivers.length === 0) {
                 if (locationsEmpty) locationsEmpty.classList.remove('hidden');
                 return;
             }
+
             drivers.forEach(driver => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
@@ -250,11 +254,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="flex-shrink-0 h-10 w-10">
-                                <img class="h-10 w-10 rounded-full" src="${driver.avatar || `https://randomuser.me/api/portraits/men/${Math.floor(Math.random() * 100)}.jpg`}" alt="${driver.name || 'Unknown'}">
+                                <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/men/${Math.floor(Math.random() * 100)}.jpg" alt="${driver.name || 'Unknown'}">
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">${driver.name || 'Unknown'}</div>
-                                <div class="text-sm text-gray-500">${driver.vehicle || 'N/A'}</div>
+                                <div class="text-sm text-gray-500">${driver.vehicle_type || 'N/A'} - ${driver.vehicle_number || 'N/A'}</div>
                             </div>
                         </div>
                     </td>
@@ -262,50 +266,43 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusClass(driver.status)}">
                             ${driver.status || 'Unknown'}
                         </span>
+                        <span class="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${driver.online_status === 'Online' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                            ${driver.online_status || 'Offline'}
+                        </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTime(driver.lastUpdate)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${driver.location || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="text-black hover:text-gray-600 view-on-map" data-lat="${driver.lat || 51.505}" data-lng="${driver.lng || -0.09}">View on Map</button>
+                        ${driver.lat && driver.lng ? `
+                            <button class="text-black hover:text-gray-600 view-on-map" data-lat="${driver.lat}" data-lng="${driver.lng}" data-name="${driver.name || 'Driver'}">View on Map</button>
+                        ` : 'N/A'}
                     </td>
                 `;
                 if (locationsList) locationsList.appendChild(row);
             });
+
             document.querySelectorAll('.view-on-map').forEach(button => {
                 button.addEventListener('click', () => {
                     const lat = parseFloat(button.getAttribute('data-lat'));
                     const lng = parseFloat(button.getAttribute('data-lng'));
+                    const name = button.getAttribute('data-name');
+
                     if (mapContainer.classList.contains('hidden')) {
                         mapContainer.classList.remove('hidden');
                         locationsTable.classList.add('hidden');
                         if (!map) initMap();
                     }
+
                     if (map) {
                         map.setView([lat, lng], 15);
                         if (currentMarker) map.removeLayer(currentMarker);
                         currentMarker = L.marker([lat, lng]).addTo(map)
-                            .bindPopup(`<b>${button.parentElement.parentElement.querySelector('td:nth-child(1) div:nth-child(2) div:nth-child(1)').textContent}</b><br>Status: ${button.parentElement.parentElement.querySelector('td:nth-child(2) span').textContent}`);
-                        currentMarker.openPopup();
-                        drivers.forEach(driver => {
-                            if (!isNaN(driver.lat) && !isNaN(driver.lng)) {
-                                const marker = L.marker([driver.lat, driver.lng]).addTo(map)
-                                    .bindPopup(`<b>${driver.name || 'Unknown'}</b><br>Status: ${driver.status || 'Unknown'}`);
-                                marker.setIcon(
-                                    L.divIcon({
-                                        className: `driver-marker-${driver.status.toLowerCase().replace(' ', '-')}`,
-                                        html: `<div class="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-white"><i class="fas fa-car text-xs"></i></div>`,
-                                        iconSize: [24, 24],
-                                        iconAnchor: [12, 12]
-                                    })
-                                );
-                                marker.getElement().querySelector('div').style.backgroundColor =
-                                    driver.status === 'Available' ? '#10b981' :
-                                        driver.status === 'On Trip' ? '#3b82f6' : '#6b7280';
-                            }
-                        });
+                            .bindPopup(`<b>${name}</b>`)
+                            .openPopup();
                     }
                 });
             });
+
         } catch (error) {
             console.error('Error loading driver locations:', error);
             showErrorMessage('Failed to load driver locations. Please try again.');
@@ -386,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function exportDashboardData() {
         showLoading();
         try {
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/dashboard/export', {
+            const response = await fetch('http://localhost:3000/api/admin/dashboard/export', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Failed to export dashboard');
@@ -410,63 +407,66 @@ document.addEventListener('DOMContentLoaded', () => {
         const section = document.createElement('div');
         section.className = 'p-6';
         section.innerHTML = `
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-black">Ride Requests Management</h2>
-                <div class="flex space-x-3">
-                    <button id="refreshRequests" class="btn-primary bg-black text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-800">
-                        <i class="fas fa-sync-alt mr-2"></i>Refresh
-                    </button>
-                    <button id="exportRequests" class="bg-white border border-gray-300 text-black py-2 px-4 rounded-lg font-medium hover:bg-gray-50">
-                        <i class="fas fa-download mr-2"></i>Export
-                    </button>
-                </div>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-black">Ride Requests Management</h2>
+            <div class="flex space-x-3">
+                <button id="refreshRequests" class="btn-primary bg-black text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-800">
+                    <i class="fas fa-sync-alt mr-2"></i>Refresh
+                </button>
+                <button id="exportRequests" class="bg-white border border-gray-300 text-black py-2 px-4 rounded-lg font-medium hover:bg-gray-50">
+                    <i class="fas fa-download mr-2"></i>Export
+                </button>
             </div>
-            <div class="bg-white rounded-xl border border-gray-100 p-6">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rideRequestsTable" class="bg-white divide-y divide-gray-200">
-                            <tr id="requestsLoading">
-                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                                    <div class="flex justify-center items-center space-x-2">
-                                        <i class="fas fa-circle-notch fa-spin text-black"></i>
-                                        <span>Loading ride requests...</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr id="requestsEmpty" class="hidden">
-                                <td colspan="7" class="px-6 py-8 text-center">
-                                    <div class="flex flex-col items-center justify-center text-gray-400">
-                                        <i class="fas fa-taxi text-4xl mb-2"></i>
-                                        <h4 class="font-medium text-gray-500">No recent requests</h4>
-                                        <p class="text-sm mt-1">No ride requests have been made recently</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-100 p-6">
+            <div class="max-h-[500px] overflow-y-auto">
+                <table class="w-full divide-y divide-gray-200 table-fixed">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">Gender</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[25%]">Pickup</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[25%]">Dropoff</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">Driver</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rideRequestsTable" class="bg-white divide-y divide-gray-200">
+                        <tr id="requestsLoading">
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                <div class="flex justify-center items-center space-x-2">
+                                    <i class="fas fa-circle-notch fa-spin text-black"></i>
+                                    <span>Loading ride requests...</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="requestsEmpty" class="hidden">
+                            <td colspan="7" class="px-6 py-8 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-400">
+                                    <i class="fas fa-taxi text-4xl mb-2"></i>
+                                    <h4 class="font-medium text-gray-500">No recent requests</h4>
+                                    <p class="text-sm mt-1">No ride requests have been made recently</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-        `;
+        </div>
+    `;
         document.querySelector('main').parentNode.appendChild(section);
         section.querySelector('#refreshRequests').addEventListener('click', fetchRideRequests);
         section.querySelector('#exportRequests').addEventListener('click', async () => {
             try {
                 showLoading();
-                const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/requests/export', {
+                const response = await fetch('http://localhost:3000/api/admin/requests/export', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (!response.ok) throw new Error('Failed to export requests');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Failed to export requests: ${errorData.message || 'Unknown error'}`);
+                }
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (requestsLoading) requestsLoading.classList.remove('hidden');
         if (requestsEmpty) requestsEmpty.classList.add('hidden');
         try {
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/requests', {
+            const response = await fetch('http://localhost:3000/api/admin/requests', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -593,48 +593,48 @@ document.addEventListener('DOMContentLoaded', () => {
         const section = document.createElement('div');
         section.className = 'p-6';
         section.innerHTML = `
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-black">Drivers Management</h2>
-                <button id="addDriverBtn" class="btn-primary bg-black text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-800">
-                    <i class="fas fa-plus mr-2"></i>Add Driver
-                </button>
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Drivers Management</h2>
+            <button id="addDriverBtn" class="btn-primary bg-gradient-to-r from-gray-800 to-black text-white py-2 px-4 rounded-lg font-semibold hover:bg-gradient-to-r hover:from-gray-900 hover:to-black hover:scale-105 transition transform duration-200">
+                <i class="fas fa-plus mr-2"></i>Add Driver
+            </button>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+            <div class="max-h-[500px] overflow-y-auto">
+                <table class="w-full table-fixed border-collapse">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-base font-semibold text-gray-600 uppercase tracking-wider w-[10%]">ID</th>
+                            <th class="px-4 py-3 text-left text-base font-semibold text-gray-600 uppercase tracking-wider w-[20%]">Name</th>
+                            <th class="px-4 py-3 text-left text-base font-semibold text-gray-600 uppercase tracking-wider w-[20%]">Phone</th>
+                            <th class="px-4 py-3 text-left text-base font-semibold text-gray-600 uppercase tracking-wider w-[20%]">Vehicle</th>
+                            <th class="px-4 py-3 text-left text-base font-semibold text-gray-600 uppercase tracking-wider w-[20%]">Status</th>
+                            <th class="px-4 py-3 text-left text-base font-semibold text-gray-600 uppercase tracking-wider w-[15%]">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driversList" class="bg-white">
+                        <tr id="driversLoading">
+                            <td colspan="6" class="px-4 py-4 text-center text-gray-600">
+                                <div class="flex justify-center items-center space-x-2 bg-gray-50 rounded-lg p-4">
+                                    <i class="fas fa-circle-notch fa-spin text-gray-600"></i>
+                                    <span class="text-sm font-medium">Loading drivers...</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="driversEmpty" class="hidden">
+                            <td colspan="6" class="px-4 py-8 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-600 bg-gray-50 rounded-lg p-6">
+                                    <i class="fas fa-users text-4xl mb-2 text-gray-400"></i>
+                                    <h4 class="font-semibold text-gray-600">No drivers available</h4>
+                                    <p class="text-sm mt-1 text-gray-500">No drivers have been added yet</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="bg-white rounded-xl border border-gray-100 p-6">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehicle</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="driversList" class="bg-white divide-y divide-gray-200">
-                            <tr id="driversLoading">
-                                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                                    <div class="flex justify-center items-center space-x-2">
-                                        <i class="fas fa-circle-notch fa-spin text-black"></i>
-                                        <span>Loading drivers...</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr id="driversEmpty" class="hidden">
-                                <td colspan="6" class="px-6 py-8 text-center">
-                                    <div class="flex flex-col items-center justify-center text-gray-400">
-                                        <i class="fas fa-users text-4xl mb-2"></i>
-                                        <h4 class="font-medium text-gray-500">No drivers available</h4>
-                                        <p class="text-sm mt-1">No drivers have been added yet</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
+        </div>
+    `;
         document.querySelector('main').parentNode.appendChild(section);
         section.querySelector('#addDriverBtn').addEventListener('click', showAddDriverModal);
         return section;
@@ -649,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (driversLoading) driversLoading.classList.remove('hidden');
         if (driversEmpty) driversEmpty.classList.add('hidden');
         try {
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/drivers', {
+            const response = await fetch('http://localhost:3000/api/admin/drivers', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -685,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const driverRequests = await Promise.all(drivers.map(async driver => {
             try {
-                const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driver.id}/requests`, {
+                const response = await fetch(`http://localhost:3000/api/admin/drivers/${driver.id}/requests`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error(`Failed to fetch requests for driver ${driver.id}`);
@@ -741,7 +741,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     ${assignedRequests.map(req => `
                                         <div class="flex items-center space-x-2">
                                             <span class="text-sm text-gray-600">Request #${req.id}</span>
-                                            <span class="text-sm text-gray-600">Customer: ${req.user_name || 'N/A'}</span>
+                                            <span class="text-sm text-gray-600">Customer: ${req.username || 'N/A'}</span>
                                             <span class="text-sm text-gray-600">Status: ${req.status}</span>
                                             <button class="text-black hover:text-gray-600 text-sm view-request-details" data-id="${req.id}">
                                                 View
@@ -784,8 +784,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             <div class="bg-white rounded-xl border border-gray-100 p-6">
-                <div id="mapSection" class="hidden rounded-xl overflow-hidden border border-gray-200"></div>
-                <div class="table-responsive" id="locationsTableSection">
+                <div id="map" class="hidden rounded-xl overflow-hidden border border-gray-200"></div>
+                <div class="table-responsive" id="locationsTable">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -796,8 +796,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="driverLocationsListSection" class="bg-white divide-y divide-gray-200">
-                            <tr id="locationsLoadingSection">
+                        <tbody id="driverLocationsList" class="bg-white divide-y divide-gray-200">
+                            <tr id="locationsLoading">
                                 <td colspan="5" class="px-6 py-4 text-center text-gray-500">
                                     <div class="flex justify-center items-center space-x-2">
                                         <i class="fas fa-circle-notch fa-spin text-black"></i>
@@ -805,7 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     </div>
                                 </td>
                             </tr>
-                            <tr id="locationsEmptySection" class="hidden">
+                            <tr id="locationsEmpty" class="hidden">
                                 <td colspan="5" class="px-6 py-8 text-center">
                                     <div class="flex flex-col items-center justify-center text-gray-400">
                                         <i class="fas fa-map-marker-alt text-4xl mb-2"></i>
@@ -822,12 +822,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('main').parentNode.appendChild(section);
         section.querySelector('#refreshLocationsSection').addEventListener('click', loadDriverLocations);
         section.querySelector('#toggleMapViewSection').addEventListener('click', () => {
-            const mapSection = document.getElementById('mapSection');
-            const locationsTableSection = document.getElementById('locationsTableSection');
-            mapSection.classList.toggle('hidden');
-            locationsTableSection.classList.toggle('hidden');
-            if (!mapSection.classList.contains('hidden') && !map) {
-                initMap('mapSection');
+            const mapContainer = document.getElementById('map');
+            const locationsTable = document.getElementById('locationsTable');
+            mapContainer.classList.toggle('hidden');
+            locationsTable.classList.toggle('hidden');
+            if (!mapContainer.classList.contains('hidden') && !map) {
+                initMap('map');
                 loadDriverLocations();
             }
         });
@@ -906,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(e.target);
             const settings = Object.fromEntries(formData.entries());
             try {
-                const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/settings/pricing', {
+                const response = await fetch('http://localhost:3000/api/admin/settings/pricing', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({
@@ -930,7 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(e.target);
             const settings = Object.fromEntries(formData.entries());
             try {
-                const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/settings/system', {
+                const response = await fetch('http://localhost:3000/api/admin/settings/system', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({
@@ -956,7 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchSystemSettings() {
         showLoading();
         try {
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/settings', {
+            const response = await fetch('http://localhost:3000/api/admin/settings', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -990,34 +990,37 @@ document.addEventListener('DOMContentLoaded', () => {
     async function showAssignDriverModal(requestId) {
         showLoading();
         try {
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/drivers?available=true', {
+            const response = await fetch('http://localhost:3000/api/admin/drivers', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!response.ok) throw new Error('Failed to fetch available drivers');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to fetch drivers');
+            }
             const { data: drivers } = await response.json();
 
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
             modal.innerHTML = `
-                <div class="bg-white rounded-lg p-6 w-full max-w-md">
-                    <h3 class="text-lg font-semibold mb-4">Assign Driver to Request #${requestId}</h3>
-                    <form id="assignDriverForm">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium mb-1">Select Driver</label>
-                            <select name="driverId" class="w-full px-3 py-2 border rounded">
-                                <option value="">Select a driver</option>
-                                ${drivers.map(driver => `
-                                    <option value="${driver.id}">${driver.name || 'Unknown'} (${driver.vehicle_type || 'N/A'} - ${driver.vehicle_number || 'N/A'})</option>
-                                `).join('')}
-                            </select>
-                        </div>
-                        <div class="flex justify-end space-x-2">
-                            <button type="button" class="px-4 py-2 bg-gray-200 rounded cancel-modal">Cancel</button>
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Assign</button>
-                        </div>
-                    </form>
-                </div>
-            `;
+            <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Assign Driver to Request #${requestId}</h3>
+                <form id="assignDriverForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Driver</label>
+                        <select name="driverId" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select a driver</option>
+                            ${drivers.map(driver => `
+                                <option value="${driver.id}">${driver.name || 'Unknown'} (${driver.vehicle_type || 'N/A'} - ${driver.vehicle_number || 'N/A'})</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors duration-150 cancel-modal">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 hover:scale-105 transition transform duration-200">Assign</button>
+                    </div>
+                </form>
+            </div>
+        `;
             document.body.appendChild(modal);
 
             modal.querySelector('.cancel-modal').addEventListener('click', () => modal.remove());
@@ -1029,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 try {
-                    const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/requests/${requestId}/assign`, {
+                    const response = await fetch(`http://localhost:3000/api/admin/requests/${requestId}/assign`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1044,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     modal.remove();
                     showSuccessMessage('Driver assigned successfully!');
                     fetchDashboardData();
-                    if (document.querySelector('.nav-item.active span').textContent.toLowerCase() === 'ride-requests') {
+                    if (document.querySelector('.nav-item.active span')?.textContent.toLowerCase() === 'ride-requests') {
                         fetchRideRequests();
                     }
                 } catch (error) {
@@ -1053,12 +1056,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         } catch (error) {
-            console.error('Error fetching available drivers:', error);
-            showErrorMessage('Failed to load available drivers. Please try again.');
+            console.error('Error fetching drivers:', error);
+            showErrorMessage(error.message || 'Failed to load drivers. Please try again.');
         } finally {
             hideLoading();
         }
     }
+
     function showAddDriverModal() {
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
@@ -1109,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(e.target);
             const driverData = Object.fromEntries(formData.entries());
             try {
-                const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/drivers', {
+                const response = await fetch('http://localhost:3000/api/admin/drivers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({
@@ -1144,7 +1148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function showEditDriverModal(driverId) {
         showLoading();
         try {
-            const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driverId}`, {
+            const response = await fetch(`http://localhost:3000/api/admin/drivers/${driverId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -1212,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const formData = new FormData(e.target);
                 const driverData = Object.fromEntries(formData.entries());
                 try {
-                    const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driverId}`, {
+                    const response = await fetch(`http://localhost:3000/api/admin/drivers/${driverId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({
@@ -1253,7 +1257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function toggleDriverAvailability(driverId, currentAvailability) {
         showLoading();
         try {
-            const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driverId}`, {
+            const response = await fetch(`http://localhost:3000/api/admin/drivers/${driverId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ available: !currentAvailability })
@@ -1279,7 +1283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('Are you sure you want to remove this driver? This action cannot be undone.')) {
             showLoading();
             try {
-                const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driverId}`, {
+                const response = await fetch(`http://localhost:3000/api/admin/drivers/${driverId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1304,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function trackRide(requestId) {
         showLoading();
         try {
-            const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/requests/${requestId}`, {
+            const response = await fetch(`http://localhost:3000/api/admin/requests/${requestId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -1322,7 +1326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="bg-white rounded-lg p-6 w-full max-w-md">
                     <h3 class="text-lg font-semibold text-black mb-4">Track Ride #${requestId}</h3>
                     <div id="trackMap" class="h-64 mb-4 rounded-xl border border-gray-200"></div>
-                    <p><strong>User:</strong> ${data.user_name || 'Unknown'}</p>
+                    <p><strong>User:</strong> ${data.username || 'Unknown'}</p>
                     <p><strong>Driver:</strong> ${data.driver_name || 'Not assigned'}</p>
                     <p><strong>Status:</strong> ${data.status || 'N/A'}</p>
                     <p><strong>Pickup:</strong> ${data.pickup_location || 'N/A'}</p>
@@ -1344,7 +1348,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }).addTo(trackMap);
                     L.marker([lat, lng])
                         .addTo(trackMap)
-                        .bindPopup(`Ride #${data.id}<br>User: ${data.user_name || 'Unknown'}<br>Driver: ${data.driver_name || 'Not assigned'}`)
+                        .bindPopup(`Ride #${data.id}<br>User: ${data.username || 'Unknown'}<br>Driver: ${data.driver_name || 'Not assigned'}`)
                         .openPopup();
                 }
             }
@@ -1359,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function viewRequestDetails(requestId) {
         showLoading();
         try {
-            const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/requests/${requestId}`, {
+            const response = await fetch(`http://localhost:3000/api/admin/requests/${requestId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -1376,7 +1380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.innerHTML = `
                 <div class="bg-white rounded-lg p-6 w-full max-w-md">
                     <h3 class="text-lg font-semibold text-black mb-4">Ride Request #${requestId}</h3>
-                    <p><strong>User:</strong> ${data.user_name || 'Unknown'}</p>
+                    <p><strong>User:</strong> ${data.username || 'Unknown'}</p>
                     <p><strong>Gender:</strong> ${data.user_gender || 'N/A'}</p>
                     <p><strong>Driver:</strong> ${data.driver_name || 'Not assigned'}</p>
                     <p><strong>Pickup:</strong> ${data.pickup_location || 'N/A'}</p>
@@ -1412,7 +1416,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleLogout() {
         showLoading();
         try {
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/logout', {
+            const response = await fetch('http://localhost:3000/api/admin/logout', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -1434,6 +1438,7 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'on trip':
                 return 'bg-blue-100 text-blue-800';
             case 'offline':
+            case 'inactive':
                 return 'bg-gray-100 text-gray-800';
             case 'pending':
                 return 'bg-yellow-100 text-yellow-800';

@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">View Location</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Location</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
-
+        
         // Reattach event listeners for elements in the new DOM
         document.getElementById('cabRequestForm')?.addEventListener('submit', handleRideRequest);
         document.getElementById('viewAllRequests')?.addEventListener('click', (e) => {
@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <select id="filterStatus" class="px-3 py-1 text-sm border border-gray-300 rounded-lg">
                             <option value="all">All Statuses</option>
                             <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
+                            <option value="assigned">Assigned</option>
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
                         </select>
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">View Location</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Location</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
@@ -328,7 +328,11 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        return requests.map(req => `
+        return requests.map(req => {
+            const lat = req.driver && req.driver.latitude != null ? Number(req.driver.latitude) : null;
+            const lon = req.driver && req.driver.longitude != null ? Number(req.driver.longitude) : null;
+            const isValidLocation = lat != null && lon != null && !isNaN(lat) && !isNaN(lon);
+            return `
             <tr class="table-row">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-${req.id}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">${formatDate(req.request_time)}</td>
@@ -343,18 +347,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
                     ${req.driver && req.driver.phone 
                         ? `<a href="tel:${req.driver.phone}" class="text-blue-600 hover:text-blue-800">${req.driver.phone}</a>` 
-                        : '-'}
+                        : 'Not available'}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
-                    ${req.driver && req.driver.latitude && req.driver.longitude 
-                        ? `<a href="https://www.google.com/maps?q=${req.driver.latitude},${req.driver.longitude}" class="text-blue-600 hover:text-blue-800" target="_blank">View</a>` 
-                        : 'N/A'}
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Location">
+                    ${isValidLocation
+                        ? `<a href="https://www.google.com/maps?q=${lat},${lon}" class="text-blue-600 hover:text-blue-800" target="_blank">View (${lat.toFixed(4)}, ${lon.toFixed(4)})</a>` 
+                        : 'Not available'}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
                     ${getActionButton(req)}
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
     }
 
     function renderAllRequests(requests) {
@@ -368,7 +372,11 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        return requests.map(req => `
+        return requests.map(req => {
+            const lat = req.driver && req.driver.latitude != null ? Number(req.driver.latitude) : null;
+            const lon = req.driver && req.driver.longitude != null ? Number(req.driver.longitude) : null;
+            const isValidLocation = lat != null && lon != null && !isNaN(lat) && !isNaN(lon);
+            return `
             <tr class="table-row">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-${req.id}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">${formatDate(req.request_time)}</td>
@@ -383,22 +391,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
                     ${req.driver && req.driver.phone 
                         ? `<a href="tel:${req.driver.phone}" class="text-blue-600 hover:text-blue-800">${req.driver.phone}</a>` 
-                        : '-'}
+                        : 'Not available'}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
-                    ${req.driver && req.driver.latitude && req.driver.longitude 
-                        ? `<a href="https://www.google.com/maps?q=${req.driver.latitude},${req.driver.longitude}" class="text-blue-600 hover:text-blue-800" target="_blank">View</a>` 
-                        : 'N/A'}
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Location">
+                    ${isValidLocation
+                        ? `<a href="https://www.google.com/maps?q=${lat},${lon}" class="text-blue-600 hover:text-blue-800" target="_blank">View (${lat.toFixed(4)}, ${lon.toFixed(4)})</a>` 
+                        : 'Not available'}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
                     ${getActionButton(req)}
                 </td>
             </tr>
-        `).join('');
+        `}).join('');
     }
 
     function getActionButton(req) {
-        if (req.status === 'CONFIRMED' || req.status === 'ASSIGNED') {
+        if (req.status === 'ASSIGNED') {
             return `<button class="text-blue-600 hover:text-blue-900 track-ride" data-id="${req.id}">Track</button>`;
         } else if (req.status === 'COMPLETED') {
             return `<button class="text-blue-600 hover:text-blue-900 view-details" data-id="${req.id}">Details</button>`;
@@ -437,8 +445,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (status === 'all') return requests;
         
         const statusMap = {
-            'pending': ['PENDING', 'ASSIGNED'],
-            'confirmed': ['CONFIRMED'],
+            'pending': ['PENDING'],
+            'assigned': ['ASSIGNED'],
             'completed': ['COMPLETED'],
             'cancelled': ['CANCELLED']
         };
@@ -464,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/requests', {
+            const response = await fetch('http://localhost:3000/api/requests', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -477,7 +485,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const { data } = await response.json();
-            allRequests = data || [];
+            if (!data) {
+                console.error('No data received from API');
+                alert('No ride data available');
+                allRequests = [];
+            } else {
+                allRequests = data;
+            }
             
             // Update the current view with fresh data
             if (currentView === 'dashboard') {
@@ -487,13 +501,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error fetching requests:', error);
-            alert('Error fetching requests');
+            alert('Error fetching requests: ' + error.message);
         }
     }
 
     async function checkForDriverAssignment() {
         try {
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/requests', {
+            const response = await fetch('http://localhost:3000/api/requests', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -512,7 +526,16 @@ document.addEventListener('DOMContentLoaded', () => {
             newRequests.forEach(newReq => {
                 const oldReq = previousRequests.find(req => req.id === newReq.id);
                 if (oldReq && !oldReq.driver && newReq.driver && !notifiedAssignments.has(newReq.id)) {
-                    alert(`Driver Assigned!\nRide #RS-${newReq.id}\nDriver: ${newReq.driver.name}\nPhone: ${newReq.driver.phone}\nVehicle: ${newReq.driver.vehicle_number}`);
+                    const lat = newReq.driver && newReq.driver.latitude != null ? Number(newReq.driver.latitude) : null;
+                    const lon = newReq.driver && newReq.driver.longitude != null ? Number(newReq.driver.longitude) : null;
+                    const isValidLocation = lat != null && lon != null && !isNaN(lat) && !isNaN(lon);
+                    const location = isValidLocation 
+                        ? `Location: (${lat.toFixed(4)}, ${lon.toFixed(4)})`
+                        : 'Location: Not available';
+                    const phone = newReq.driver.phone 
+                        ? `Phone: ${newReq.driver.phone}`
+                        : 'Phone: Not available';
+                    alert(`Driver Assigned!\nRide #RS-${newReq.id}\nDriver: ${newReq.driver.name}\n${phone}\nVehicle: ${newReq.driver.vehicle_number}\n${location}`);
                     notifiedAssignments.add(newReq.id); // Mark as notified
                 }
             });
@@ -541,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const requestTime = document.getElementById('requestTime').value;
 
         try {
-            const response = await fetch('https://serverone-w2xc.onrender.com/api/requests', {
+            const response = await fetch('http://localhost:3000/api/requests', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -570,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Request error:', error);
-            alert('Error submitting request');
+            alert('Error submitting request: ' + error.message);
         }
     }
 
@@ -591,8 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatStatus(status) {
         const statusMap = {
             'PENDING': 'Pending',
-            'ASSIGNED': 'Confirmed',
-            'CONFIRMED': 'Confirmed',
+            'ASSIGNED': 'Assigned',
             'COMPLETED': 'Completed',
             'CANCELLED': 'Cancelled'
         };
@@ -601,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function trackRide(requestId) {
         try {
-            const response = await fetch(`https://serverone-w2xc.onrender.com/api/requests/${requestId}`, {
+            const response = await fetch(`http://localhost:3000/api/requests/${requestId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -609,22 +631,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const { data } = await response.json();
+                const lat = data.driver && data.driver.latitude != null ? Number(data.driver.latitude) : null;
+                const lon = data.driver && data.driver.longitude != null ? Number(data.driver.longitude) : null;
+                const isValidLocation = lat != null && lon != null && !isNaN(lat) && !isNaN(lon);
                 const driverInfo = data.driver ? 
-                    `Driver: ${data.driver.name}\nPhone: ${data.driver.phone}\nVehicle: ${data.driver.vehicle_number}` : 
-                    'Driver: Not assigned yet';
+                    `Driver: ${data.driver.name}\nPhone: ${data.driver.phone || 'Not available'}\nVehicle: ${data.driver.vehicle_number}\nLocation: ${isValidLocation ? `(${lat.toFixed(4)}, ${lon.toFixed(4)})` : 'Not available'}`
+                    : 'Driver: Not assigned yet';
                 alert(`Tracking ride #RS-${requestId}\n${driverInfo}\nStatus: ${data.status}`);
             } else {
-                alert('Error fetching ride details');
+                alert('Error fetching ride details: ' + (await response.text()));
             }
         } catch (error) {
             console.error('Error tracking ride:', error);
-            alert('Error tracking ride');
+            alert('Error tracking ride: ' + error.message);
         }
     }
 
     async function viewRideDetails(requestId) {
         try {
-            const response = await fetch(`https://serverone-w2xc.onrender.com/api/requests/${requestId}`, {
+            const response = await fetch(`http://localhost:3000/api/requests/${requestId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -632,28 +657,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const { data } = await response.json();
+                const lat = data.driver && data.driver.latitude != null ? Number(data.driver.latitude) : null;
+                const lon = data.driver && data.driver.longitude != null ? Number(data.driver.longitude) : null;
+                const isValidLocation = lat != null && lon != null && !isNaN(lat) && !isNaN(lon);
                 const driverInfo = data.driver ? 
-                    `Driver: ${data.driver.name}\nPhone: ${data.driver.phone}\nVehicle: ${data.driver.vehicle_number}` : 
-                    'Driver: Not assigned';
+                    `Driver: ${data.driver.name}\nPhone: ${data.driver.phone || 'Not available'}\nVehicle: ${data.driver.vehicle_number}\nLocation: ${isValidLocation ? `(${lat.toFixed(4)}, ${lon.toFixed(4)})` : 'Not available'}`
+                    : 'Driver: Not assigned';
                 alert(`Ride Details (#RS-${requestId})\n\n` +
                       `Pickup: ${data.pickup_location}\n` +
                       `Dropoff: ${data.dropoff_location}\n` +
                       `Date: ${new Date(data.request_time).toLocaleString()}\n` +
                       `Status: ${data.status}\n` +
-                      `Fare: ${data.fare ? '$' + data.fare : 'Not available'}\n` +
+                      `Fare: ${data.fare_amount ? '$' + data.fare_amount.toFixed(2) : 'Not available'}\n` +
                       `${driverInfo}`);
             } else {
-                alert('Error fetching ride details');
+                alert('Error fetching ride details: ' + (await response.text()));
             }
         } catch (error) {
             console.error('Error viewing ride details:', error);
-            alert('Error viewing ride details');
+            alert('Error viewing ride details: ' + error.message);
         }
     }
 
     async function bookAgain(requestId) {
         try {
-            const response = await fetch(`https://serverone-w2xc.onrender.com/api/requests/${requestId}`, {
+            const response = await fetch(`http://localhost:3000/api/requests/${requestId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -671,11 +699,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Scroll to the form
                 document.getElementById('cabRequestForm').scrollIntoView({ behavior: 'smooth' });
             } else {
-                alert('Error fetching previous ride details');
+                alert('Error fetching previous ride details: ' + (await response.text()));
             }
         } catch (error) {
             console.error('Error booking again:', error);
-            alert('Error booking again');
+            alert('Error booking again: ' + error.message);
         }
     }
 

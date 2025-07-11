@@ -462,64 +462,6 @@
                 </div>
             </div>
 
-            <!-- Driver Locations Section -->
-            <div class="card bg-white p-4 sm:p-6 rounded-xl border border-gray-100 mb-8" id="locationsSection">
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-                    <div>
-                        <h2 class="text-xl font-semibold text-black">Driver Locations</h2>
-                        <p class="text-sm text-gray-500 mt-1">Real-time tracking of active drivers</p>
-                    </div>
-                    <div class="flex space-x-2 mt-4 sm:mt-0">
-                        <button id="refreshLocations" class="text-sm bg-gray-100 hover:bg-gray-200 text-black px-3 py-1.5 rounded-lg flex items-center focus:outline-none">
-                            <i class="fas fa-sync-alt mr-1"></i> Refresh
-                        </button>
-                        <button id="toggleMapView" class="text-sm bg-black text-white hover:bg-gray-800 px-3 py-1.5 rounded-lg flex items-center focus:outline-none">
-                            <i class="fas fa-map mr-1"></i> Map View
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Map View -->
-                <div id="map" class="hidden rounded-xl overflow-hidden border border-gray-200"></div>
-                
-                <!-- Table View -->
-                <div class="table-responsive" id="locationsTable">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Update</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="driverLocationsList" class="bg-white divide-y divide-gray-200">
-                            <!-- Loading state -->
-                            <tr id="locationsLoading">
-                                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                                    <div class="flex justify-center items-center space-x-2">
-                                        <i class="fas fa-circle-notch fa-spin text-black"></i>
-                                        <span>Loading driver locations...</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <!-- Empty state (hidden by default) -->
-                            <tr id="locationsEmpty" class="hidden">
-                                <td colspan="5" class="px-6 py-8 text-center">
-                                    <div class="flex flex-col items-center justify-center text-gray-400">
-                                        <i class="fas fa-map-marker-alt text-4xl mb-2"></i>
-                                        <h4 class="font-medium text-gray-500">No active drivers</h4>
-                                        <p class="text-sm mt-1">Currently there are no drivers online</p>
-                                    </div>
-                                </td>
-                            </tr>
-                            <!-- Data will be inserted here dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <!-- Recent Requests Section -->
             <div class="card bg-white p-4 sm:p-6 rounded-xl border border-gray-100 mb-8">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">

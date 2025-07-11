@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://serverone-w2xc.onrender.com/api/drivers';
+const API_BASE_URL = 'https://vpmgt267-3000.inc1.devtunnels.ms/api/drivers';
 
 async function handleApiResponse(response) {
     const text = await response.text();
@@ -68,6 +68,8 @@ window.driverAuth = {
                     phone: data.driver.phone,
                     vehicle_type: data.driver.vehicle_type,
                     vehicle_number: data.driver.vehicle_number,
+                    license_number: data.driver.license_number,
+                    is_online: data.driver.is_online,
                     role: 'driver'
                 }
             };
@@ -278,6 +280,37 @@ window.driverAuth = {
             return await handleApiResponse(response);
         } catch (error) {
             console.error('Failed to update status:', error);
+            throw error;
+        }
+    },
+
+    async getNearbyRequests(latitude, longitude, radius = 5000) {
+        try {
+            const token = this.getToken();
+            let response = await fetch(`${API_BASE_URL}/nearby-requests?lat=${latitude}&lng=${longitude}&radius=${radius}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.status === 401) {
+                const newToken = await this.refreshToken();
+                response = await fetch(`${API_BASE_URL}/nearby-requests?lat=${latitude}&lng=${longitude}&radius=${radius}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${newToken}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+            }
+
+            return await handleApiResponse(response);
+        } catch (error) {
+            console.error('Failed to fetch nearby requests:', error);
             throw error;
         }
     }
