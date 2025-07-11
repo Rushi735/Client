@@ -472,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             }
 
-            const response = await fetch('http://localhost:3000/api/requests', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/requests', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function checkForDriverAssignment() {
         try {
-            const response = await fetch('http://localhost:3000/api/requests', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/requests', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -564,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const requestTime = document.getElementById('requestTime').value;
 
         try {
-            const response = await fetch('http://localhost:3000/api/requests', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/requests', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -623,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function trackRide(requestId) {
         try {
-            const response = await fetch(`http://localhost:3000/api/requests/${requestId}`, {
+            const response = await fetch(`https://serverone-w2xc.onrender.com/api/requests/${requestId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -649,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function viewRideDetails(requestId) {
         try {
-            const response = await fetch(`http://localhost:3000/api/requests/${requestId}`, {
+            const response = await fetch(`https://serverone-w2xc.onrender.com/api/requests/${requestId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -681,7 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function bookAgain(requestId) {
         try {
-            const response = await fetch(`http://localhost:3000/api/requests/${requestId}`, {
+            const response = await fetch(`https://serverone-w2xc.onrender.com/api/requests/${requestId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

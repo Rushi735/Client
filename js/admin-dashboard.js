@@ -161,10 +161,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoading();
         try {
             const [requestsRes, driversRes] = await Promise.all([
-                fetch('http://localhost:3000/api/admin/requests', {
+                fetch('https://serverone-w2xc.onrender.com/api/admin/requests', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }),
-                fetch('http://localhost:3000/api/admin/drivers', {
+                fetch('https://serverone-w2xc.onrender.com/api/admin/drivers', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
             ]);
@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (locationsLoading) locationsLoading.classList.remove('hidden');
 
         try {
-            const response = await fetch('http://localhost:3000/api/admin/drivers/locations', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/drivers/locations', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function exportDashboardData() {
         showLoading();
         try {
-            const response = await fetch('http://localhost:3000/api/admin/dashboard/export', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/dashboard/export', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) throw new Error('Failed to export dashboard');
@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
         section.querySelector('#exportRequests').addEventListener('click', async () => {
             try {
                 showLoading();
-                const response = await fetch('http://localhost:3000/api/admin/requests/export', {
+                const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/requests/export', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) {
@@ -494,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (requestsLoading) requestsLoading.classList.remove('hidden');
         if (requestsEmpty) requestsEmpty.classList.add('hidden');
         try {
-            const response = await fetch('http://localhost:3000/api/admin/requests', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/requests', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -649,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (driversLoading) driversLoading.classList.remove('hidden');
         if (driversEmpty) driversEmpty.classList.add('hidden');
         try {
-            const response = await fetch('http://localhost:3000/api/admin/drivers', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/drivers', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -685,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const driverRequests = await Promise.all(drivers.map(async driver => {
             try {
-                const response = await fetch(`http://localhost:3000/api/admin/drivers/${driver.id}/requests`, {
+                const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driver.id}/requests`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!response.ok) throw new Error(`Failed to fetch requests for driver ${driver.id}`);
@@ -906,7 +906,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(e.target);
             const settings = Object.fromEntries(formData.entries());
             try {
-                const response = await fetch('http://localhost:3000/api/admin/settings/pricing', {
+                const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/settings/pricing', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({
@@ -930,7 +930,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(e.target);
             const settings = Object.fromEntries(formData.entries());
             try {
-                const response = await fetch('http://localhost:3000/api/admin/settings/system', {
+                const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/settings/system', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({
@@ -956,7 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchSystemSettings() {
         showLoading();
         try {
-            const response = await fetch('http://localhost:3000/api/admin/settings', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/settings', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -990,7 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function showAssignDriverModal(requestId) {
         showLoading();
         try {
-            const response = await fetch('http://localhost:3000/api/admin/drivers', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/drivers', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -1032,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 try {
-                    const response = await fetch(`http://localhost:3000/api/admin/requests/${requestId}/assign`, {
+                    const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/requests/${requestId}/assign`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1113,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(e.target);
             const driverData = Object.fromEntries(formData.entries());
             try {
-                const response = await fetch('http://localhost:3000/api/admin/drivers', {
+                const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/drivers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({
@@ -1148,7 +1148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function showEditDriverModal(driverId) {
         showLoading();
         try {
-            const response = await fetch(`http://localhost:3000/api/admin/drivers/${driverId}`, {
+            const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driverId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -1216,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const formData = new FormData(e.target);
                 const driverData = Object.fromEntries(formData.entries());
                 try {
-                    const response = await fetch(`http://localhost:3000/api/admin/drivers/${driverId}`, {
+                    const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driverId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({
@@ -1257,7 +1257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function toggleDriverAvailability(driverId, currentAvailability) {
         showLoading();
         try {
-            const response = await fetch(`http://localhost:3000/api/admin/drivers/${driverId}`, {
+            const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driverId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ available: !currentAvailability })
@@ -1283,7 +1283,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('Are you sure you want to remove this driver? This action cannot be undone.')) {
             showLoading();
             try {
-                const response = await fetch(`http://localhost:3000/api/admin/drivers/${driverId}`, {
+                const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/drivers/${driverId}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -1308,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function trackRide(requestId) {
         showLoading();
         try {
-            const response = await fetch(`http://localhost:3000/api/admin/requests/${requestId}`, {
+            const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/requests/${requestId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -1363,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function viewRequestDetails(requestId) {
         showLoading();
         try {
-            const response = await fetch(`http://localhost:3000/api/admin/requests/${requestId}`, {
+            const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/requests/${requestId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (!response.ok) {
@@ -1416,7 +1416,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleLogout() {
         showLoading();
         try {
-            const response = await fetch('http://localhost:3000/api/admin/logout', {
+            const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/logout', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
