@@ -1172,7 +1172,7 @@
             // Start auto-refresh for requests
             startAutoRefresh: function() {
                 this.stopAutoRefresh(); // Clear any existing interval
-                this.refreshInterval = setInterval(() => this.loadAssignedRequests(), 30000); // Every 30 seconds
+                this.refreshInterval = setInterval(() => this.loadAssignedRequests(), 15000); // Every 30 seconds
             },
             
             // Stop auto-refresh

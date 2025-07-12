@@ -37,6 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Add driver locations refresh interval variable
+    let driverLocationsRefreshInterval = null;
+    let map, currentMarker;
+    const driverMarkers = new Map(); // To track driver markers for updates
+
     const contentSections = {
         'dashboard': document.querySelector('main'),
         'ride-requests': createRideRequestsSection(),
@@ -58,20 +63,35 @@ document.addEventListener('DOMContentLoaded', () => {
             Object.keys(contentSections).forEach(key => {
                 contentSections[key].style.display = key === target ? 'block' : 'none';
             });
+            
+            // Clear any existing refresh interval
+            if (driverLocationsRefreshInterval) {
+                clearInterval(driverLocationsRefreshInterval);
+                driverLocationsRefreshInterval = null;
+            }
+            
             if (target === 'ride-requests') fetchRideRequests();
             if (target === 'drivers') fetchAndDisplayDrivers();
-            if (target === 'driver-locations') loadDriverLocations();
+            if (target === 'driver-locations') {
+                loadDriverLocations();
+                // Start auto-refresh only when on driver-locations section
+                driverLocationsRefreshInterval = setInterval(loadDriverLocations, 15000);
+            }
             if (target === 'settings') fetchSystemSettings();
         });
     });
 
-    let map, currentMarker;
     function initMap(containerId = 'map') {
         if (map) map.remove();
         map = L.map(containerId).setView([51.505, -0.09], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 18,
+            minZoom: 3
         }).addTo(map);
+        
+        // Add scale control
+        L.control.scale().addTo(map);
     }
 
     fetchDashboardData();
@@ -111,6 +131,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const refreshDashboard = document.getElementById('refreshDashboard');
     if (refreshDashboard) refreshDashboard.addEventListener('click', fetchDashboardData);
+
+    // Add cleanup for the interval when leaving the page
+    window.addEventListener('beforeunload', () => {
+        if (driverLocationsRefreshInterval) {
+            clearInterval(driverLocationsRefreshInterval);
+        }
+    });
 
     function showLoading() {
         const loading = document.createElement('div');
@@ -203,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ridesChange) ridesChange.innerHTML = `<i class="fas fa-arrow-up mr-1 text-green-500"></i><span class="text-green-500">0% from last week</span>`;
         if (newRequests) newRequests.innerHTML = `<i class="fas fa-arrow-up mr-1 text-red-500"></i><span class="text-red-500">0 new in last hour</span>`;
     }
+
     function formatTime(timestamp) {
         if (!timestamp) return 'N/A';
         const date = new Date(timestamp);
@@ -247,6 +275,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            // Clear existing markers if any
+            if (map) {
+                driverMarkers.forEach(marker => map.removeLayer(marker));
+                driverMarkers.clear();
+            }
+
+            // Add new markers for each driver
             drivers.forEach(driver => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
@@ -279,8 +314,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     </td>
                 `;
                 if (locationsList) locationsList.appendChild(row);
+
+                // Add marker to map if available
+                if (map && driver.lat && driver.lng) {
+                    const lat = parseFloat(driver.lat);
+                    const lng = parseFloat(driver.lng);
+                    const marker = L.marker([lat, lng]).addTo(map)
+                        .bindPopup(`<b>${driver.name || 'Driver'}</b><br>${driver.vehicle_type || ''} ${driver.vehicle_number || ''}`);
+                    
+                    // Store marker reference for future updates
+                    driverMarkers.set(driver.id, marker);
+                    
+                    // If this is the first driver, center the map on them
+                    if (drivers.indexOf(driver) === 0) {
+                        map.setView([lat, lng], 13);
+                    }
+                }
             });
 
+            // Set up click handlers for view-on-map buttons
             document.querySelectorAll('.view-on-map').forEach(button => {
                 button.addEventListener('click', () => {
                     const lat = parseFloat(button.getAttribute('data-lat'));
@@ -295,6 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (map) {
                         map.setView([lat, lng], 15);
+                        // Clear existing current marker if any
                         if (currentMarker) map.removeLayer(currentMarker);
                         currentMarker = L.marker([lat, lng]).addTo(map)
                             .bindPopup(`<b>${name}</b>`)
@@ -535,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span>${req.user_name || 'Unknown'}</span>
                         </div>
                     </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.user_gender || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.pickup_location || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${req.dropoff_location || 'N/A'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">

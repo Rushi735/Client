@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let allRequests = [];
     let previousRequests = []; // For tracking driver assignments
     let notifiedAssignments = new Set(); // Track notified driver assignments
+    let map, currentMarker;
+    let mapRefreshInterval = null;
+    let currentDriverId = null;
 
     // Initialize the dashboard
     initDashboard();
@@ -301,6 +304,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     </table>
                 </div>
             </div>
+
+            <!-- Enhanced Map Modal -->
+            <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="bg-white rounded-lg p-6 w-full max-w-4xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Driver Location Tracking</h3>
+                        <button id="closeMapModal" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div id="driverMap" class="h-96 rounded-xl border border-gray-200"></div>
+                    <div class="mt-4 flex flex-col space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="text-sm font-medium text-gray-500">Driver Name</p>
+                                <p id="driverNameInfo" class="font-medium">-</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="text-sm font-medium text-gray-500">Vehicle</p>
+                                <p id="driverVehicleInfo" class="font-medium">-</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="text-sm font-medium text-gray-500">Status</p>
+                                <p id="driverStatusInfo" class="font-medium">-</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-600">
+                                <span id="lastUpdatedInfo">Last updated: -</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-500 mr-2">Auto-refresh:</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
 
         // Add event listeners for the new elements
@@ -314,7 +358,98 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchRequests();
         });
 
+        document.getElementById('closeMapModal')?.addEventListener('click', () => {
+            document.getElementById('mapModal').classList.add('hidden');
+            if (map) {
+                map.remove();
+                map = null;
+            }
+            if (mapRefreshInterval) {
+                clearInterval(mapRefreshInterval);
+                mapRefreshInterval = null;
+            }
+            currentDriverId = null;
+        });
+
+        document.getElementById('autoRefreshToggle')?.addEventListener('change', (e) => {
+            if (e.target.checked && currentDriverId) {
+                startMapRefresh(currentDriverId);
+            } else if (mapRefreshInterval) {
+                clearInterval(mapRefreshInterval);
+                mapRefreshInterval = null;
+            }
+        });
+
         addTableButtonListeners();
+    }
+
+    function initMap(lat, lng, driverName, driverId, requestId) {
+        if (map) map.remove();
+        
+        const mapElement = document.getElementById('driverMap');
+        mapElement.innerHTML = ''; // Clear previous map
+        
+        map = L.map(mapElement).setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        if (currentMarker) map.removeLayer(currentMarker);
+        currentMarker = L.marker([lat, lng]).addTo(map)
+            .bindPopup(`<b>${driverName}</b><br>Last updated: ${new Date().toLocaleTimeString()}`)
+            .openPopup();
+            
+        // Update driver info
+        const request = allRequests.find(req => req.id === parseInt(requestId));
+        if (request && request.driver) {
+            document.getElementById('driverNameInfo').textContent = request.driver.name || 'Unknown';
+            document.getElementById('driverVehicleInfo').textContent = 
+                `${request.driver.vehicle_type || 'N/A'} - ${request.driver.vehicle_number || 'N/A'}`;
+            document.getElementById('driverStatusInfo').textContent = 'On the way';
+            document.getElementById('lastUpdatedInfo').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+            
+        // Start auto-refresh if toggle is on
+        const autoRefresh = document.getElementById('autoRefreshToggle')?.checked;
+        if (autoRefresh && driverId) {
+            startMapRefresh(driverId);
+        }
+    }
+
+    async function updateDriverLocation(driverId) {
+        try {
+            const response = await fetch(`https://serverone-w2xc.onrender.com/api/drivers/${driverId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const { data } = await response.json();
+                const lat = data.latitude != null ? Number(data.latitude) : null;
+                const lng = data.longitude != null ? Number(data.longitude) : null;
+                
+                if (lat && lng && map && currentMarker) {
+                    currentMarker.setLatLng([lat, lng]);
+                    map.setView([lat, lng]);
+                    currentMarker.getPopup().setContent(
+                        `<b>${data.name || 'Driver'}</b><br>Last updated: ${new Date().toLocaleTimeString()}`
+                    );
+                    document.getElementById('lastUpdatedInfo').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                }
+            }
+        } catch (error) {
+            console.error('Error updating driver location:', error);
+        }
+    }
+
+    function startMapRefresh(driverId) {
+        if (mapRefreshInterval) {
+            clearInterval(mapRefreshInterval);
+        }
+        currentDriverId = driverId;
+        updateDriverLocation(driverId); // Initial update
+        mapRefreshInterval = setInterval(() => updateDriverLocation(driverId), 15000); // Update every 10 seconds
     }
 
     function renderRecentRequests(requests) {
@@ -330,8 +465,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return requests.map(req => {
             const lat = req.driver && req.driver.latitude != null ? Number(req.driver.latitude) : null;
-            const lon = req.driver && req.driver.longitude != null ? Number(req.driver.longitude) : null;
-            const isValidLocation = lat != null && lon != null && !isNaN(lat) && !isNaN(lon);
+            const lng = req.driver && req.driver.longitude != null ? Number(req.driver.longitude) : null;
+            const isValidLocation = lat != null && lng != null && !isNaN(lat) && !isNaN(lng);
+            const driverId = req.driver?.id || null;
             return `
             <tr class="table-row">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-${req.id}</td>
@@ -351,7 +487,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Location">
                     ${isValidLocation
-                        ? `<a href="https://www.google.com/maps?q=${lat},${lon}" class="text-blue-600 hover:text-blue-800" target="_blank">View (${lat.toFixed(4)}, ${lon.toFixed(4)})</a>` 
+                        ? `<a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" 
+                           data-lat="${lat}" data-lng="${lng}" data-name="${req.driver.name || 'Driver'}" 
+                           data-driver-id="${driverId}" data-request-id="${req.id}">View on Map</a>` 
                         : 'Not available'}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
@@ -374,8 +512,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return requests.map(req => {
             const lat = req.driver && req.driver.latitude != null ? Number(req.driver.latitude) : null;
-            const lon = req.driver && req.driver.longitude != null ? Number(req.driver.longitude) : null;
-            const isValidLocation = lat != null && lon != null && !isNaN(lat) && !isNaN(lon);
+            const lng = req.driver && req.driver.longitude != null ? Number(req.driver.longitude) : null;
+            const isValidLocation = lat != null && lng != null && !isNaN(lat) && !isNaN(lng);
+            const driverId = req.driver?.id || null;
             return `
             <tr class="table-row">
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-${req.id}</td>
@@ -395,7 +534,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Location">
                     ${isValidLocation
-                        ? `<a href="https://www.google.com/maps?q=${lat},${lon}" class="text-blue-600 hover:text-blue-800" target="_blank">View (${lat.toFixed(4)}, ${lon.toFixed(4)})</a>` 
+                        ? `<a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" 
+                           data-lat="${lat}" data-lng="${lng}" data-name="${req.driver.name || 'Driver'}" 
+                           data-driver-id="${driverId}" data-request-id="${req.id}">View on Map</a>` 
                         : 'Not available'}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
@@ -437,6 +578,21 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', (e) => {
                 const requestId = e.target.getAttribute('data-id');
                 bookAgain(requestId);
+            });
+        });
+
+        // View driver location buttons
+        document.querySelectorAll('.view-driver-location').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const lat = parseFloat(btn.getAttribute('data-lat'));
+                const lng = parseFloat(btn.getAttribute('data-lng'));
+                const name = btn.getAttribute('data-name');
+                const driverId = btn.getAttribute('data-driver-id');
+                const requestId = btn.getAttribute('data-request-id');
+                
+                document.getElementById('mapModal').classList.remove('hidden');
+                initMap(lat, lng, name, driverId, requestId);
             });
         });
     }

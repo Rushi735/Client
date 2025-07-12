@@ -7,6 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Add Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
     <style>
         :root {
             --primary: #4361ee;
@@ -115,6 +119,17 @@
             z-index: 50;
             max-width: 24rem;
             width: 90%;
+        }
+        /* Add styles for map modal */
+        #driverMap {
+            height: 400px;
+            width: 100%;
+            border-radius: 0.75rem;
+        }
+        .driver-info-card {
+            background-color: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
         }
     </style>
 </head>
@@ -338,7 +353,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">John Smith</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
-                                    <a href="https://www.google.com/maps?q=40.7128,-74.0060" class="text-blue-600 hover:text-blue-800" target="_blank">View</a>
+                                    <a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" data-lat="40.7128" data-lng="-74.0060" data-name="John Smith" data-driver-id="1" data-request-id="5842">View on Map</a>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
                                     <button class="text-blue-600 hover:text-blue-900">Track</button>
@@ -357,7 +372,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">Jane Doe</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
-                                    <a href="https://www.google.com/maps?q=40.7306,-73.9352" class="text-blue-600 hover:text-blue-800" target="_blank">View</a>
+                                    <a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" data-lat="40.7306" data-lng="-73.9352" data-name="Jane Doe" data-driver-id="2" data-request-id="5781">View on Map</a>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
                                     <button class="text-blue-600 hover:text-blue-900">Details</button>
@@ -404,6 +419,51 @@
     <!-- Notification Area -->
     <div id="notificationArea" class="notification"></div>
 
+    <!-- Map Modal -->
+    <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 w-full max-w-4xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Driver Location Tracking</h3>
+                <button id="closeMapModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="driverMap" class="h-96 rounded-xl border border-gray-200"></div>
+            <div class="mt-4 flex flex-col space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500">Driver Name</p>
+                        <p id="driverNameInfo" class="font-medium">-</p>
+                    </div>
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500">Vehicle</p>
+                        <p id="driverVehicleInfo" class="font-medium">-</p>
+                    </div>
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500">Status</p>
+                        <p id="driverStatusInfo" class="font-medium">-</p>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-600">
+                        <span id="lastUpdatedInfo">Last updated: -</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="text-sm text-gray-500 mr-2">Auto-refresh:</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""></script>
     <script src="./js/user-dashboard.js"></script>
 </body>
 </html>
