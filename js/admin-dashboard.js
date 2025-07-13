@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.add('active');
             Object.keys(contentSections).forEach(key => {
                 contentSections[key].style.display = key === target ? 'block' : 'none';
-            });
+            }
             
             // Clear any existing refresh interval
             if (driverLocationsRefreshInterval) {
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 initMap('map');
                 loadDriverLocations();
                 // Start auto-refresh only when on driver-locations section
-                driverLocationsRefreshInterval = setInterval(loadDriverLocations, 10000); // Refresh every 10 seconds
+                driverLocationsRefreshInterval = setInterval(loadDriverLocations, 30000); // Refresh every 10 seconds
             }
             if (target === 'settings') fetchSystemSettings();
         });
