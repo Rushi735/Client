@@ -73,16 +73,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (target === 'ride-requests') fetchRideRequests();
             if (target === 'drivers') fetchAndDisplayDrivers();
             if (target === 'driver-locations') {
+                initMap('map');
                 loadDriverLocations();
                 // Start auto-refresh only when on driver-locations section
-                driverLocationsRefreshInterval = setInterval(loadDriverLocations, 15000);
+                driverLocationsRefreshInterval = setInterval(loadDriverLocations, 10000); // Refresh every 10 seconds
             }
             if (target === 'settings') fetchSystemSettings();
         });
     });
 
     function initMap(containerId = 'map') {
-        if (map) map.remove();
+        if (map) {
+            map.remove();
+            driverMarkers.clear();
+        }
+        
         map = L.map(containerId).setView([51.505, -0.09], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -92,6 +97,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Add scale control
         L.control.scale().addTo(map);
+        
+        // Add layer control
+        const baseLayers = {
+            "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }),
+            "Satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            })
+        };
+        
+        L.control.layers(baseLayers).addTo(map);
     }
 
     fetchDashboardData();
@@ -281,6 +298,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 driverMarkers.clear();
             }
 
+            // Create a feature group to hold all markers
+            const markersGroup = L.featureGroup().addTo(map);
+            
             // Add new markers for each driver
             drivers.forEach(driver => {
                 const row = document.createElement('tr');
@@ -319,18 +339,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (map && driver.lat && driver.lng) {
                     const lat = parseFloat(driver.lat);
                     const lng = parseFloat(driver.lng);
-                    const marker = L.marker([lat, lng]).addTo(map)
-                        .bindPopup(`<b>${driver.name || 'Driver'}</b><br>${driver.vehicle_type || ''} ${driver.vehicle_number || ''}`);
+                    
+                    // Create custom icon based on driver status
+                    const icon = L.divIcon({
+                        className: 'driver-marker',
+                        html: `<div class="driver-icon ${driver.available ? 'available' : 'busy'}">
+                                 <i class="fas fa-car"></i>
+                               </div>`,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                    });
+                    
+                    const marker = L.marker([lat, lng], { icon }).addTo(map)
+                        .bindPopup(`<b>${driver.name || 'Driver'}</b><br>
+                                   ${driver.vehicle_type || ''} ${driver.vehicle_number || ''}<br>
+                                   Status: ${driver.status || 'Unknown'}<br>
+                                   Last update: ${formatTime(driver.lastUpdate)}`);
+                    
+                    // Add marker to feature group
+                    markersGroup.addLayer(marker);
                     
                     // Store marker reference for future updates
                     driverMarkers.set(driver.id, marker);
-                    
-                    // If this is the first driver, center the map on them
-                    if (drivers.indexOf(driver) === 0) {
-                        map.setView([lat, lng], 13);
-                    }
                 }
             });
+
+            // Fit map to show all markers
+            if (map && driverMarkers.size > 0) {
+                map.fitBounds(markersGroup.getBounds(), { padding: [50, 50] });
+            }
 
             // Set up click handlers for view-on-map buttons
             document.querySelectorAll('.view-on-map').forEach(button => {

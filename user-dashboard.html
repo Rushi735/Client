@@ -131,6 +131,26 @@
             padding: 0.75rem;
             border-radius: 0.5rem;
         }
+        /* Custom marker icons */
+        .driver-marker-icon {
+            background-color: #4361ee;
+            border-radius: 50%;
+            border: 2px solid white;
+            width: 20px;
+            height: 20px;
+        }
+        .user-marker-icon {
+            background-color: #10b981;
+            border-radius: 50%;
+            border: 2px solid white;
+            width: 20px;
+            height: 20px;
+        }
+        .route-line {
+            stroke: #4361ee;
+            stroke-width: 4;
+            stroke-dasharray: 10, 10;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -215,7 +235,7 @@
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div class="card bg-white p-6 rounded-xl border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
@@ -250,16 +270,16 @@
                 <div class="card bg-white p-6 rounded-xl border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-sm font-medium text-gray-500">Favorite Drivers</p>
-                            <h3 class="text-2xl font-bold mt-1">5</h3>
+                            <p class="text-sm font-medium text-gray-500">Completed Rides</p>
+                            <h3 class="text-2xl font-bold mt-1">45</h3>
                         </div>
-                        <div class="p-3 rounded-lg bg-purple-100 text-purple-600">
-                            <i class="fas fa-star"></i>
+                        <div class="p-3 rounded-lg bg-green-100 text-green-600">
+                            <i class="fas fa-check-circle"></i>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm text-gray-500">
-                        <i class="fas fa-user-friends mr-2"></i>
-                        <span>3 available now</span>
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        <span>This month: 8</span>
                     </div>
                 </div>
             </div>
@@ -423,7 +443,7 @@
     <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg p-6 w-full max-w-4xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Driver Location Tracking</h3>
+                <h3 class="text-lg font-semibold">Ride Tracking</h3>
                 <button id="closeMapModal" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
@@ -442,6 +462,20 @@
                     <div class="driver-info-card">
                         <p class="text-sm font-medium text-gray-500">Status</p>
                         <p id="driverStatusInfo" class="font-medium">-</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500">Your Location</p>
+                        <p id="userLocationInfo" class="font-medium">-</p>
+                    </div>
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500">Distance</p>
+                        <p id="distanceInfo" class="font-medium">-</p>
+                    </div>
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500">ETA</p>
+                        <p id="etaInfo" class="font-medium">-</p>
                     </div>
                 </div>
                 <div class="flex justify-between items-center">

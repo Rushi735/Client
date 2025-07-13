@@ -21,9 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let allRequests = [];
     let previousRequests = []; // For tracking driver assignments
     let notifiedAssignments = new Set(); // Track notified driver assignments
-    let map, currentMarker;
+    let map, currentMarker, userMarker, routeLine;
     let mapRefreshInterval = null;
     let currentDriverId = null;
+    let userLocationWatchId = null;
+    let userLocation = null;
 
     // Initialize the dashboard
     initDashboard();
@@ -41,6 +43,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Load initial data
         fetchRequests();
+        
+        // Start watching user location
+        startWatchingUserLocation();
 
         // Start auto-refresh
         setInterval(checkForDriverAssignment, 20000); // Check every 20 seconds
@@ -80,6 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Logout buttons
         document.getElementById('logoutDesktop')?.addEventListener('click', handleLogout);
         document.getElementById('logoutMobile')?.addEventListener('click', handleLogout);
+        
+        // Close map modal button
+        document.getElementById('closeMapModal')?.addEventListener('click', closeMapModal);
     }
 
     function switchView(target) {
@@ -152,16 +160,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="card bg-white p-6 rounded-xl border border-gray-100">
                     <div class="flex justify-between items-start">
                         <div>
-                            <p class="text-sm font-medium text-gray-500">Favorite Drivers</p>
-                            <h3 class="text-2xl font-bold mt-1">5</h3>
+                            <p class="text-sm font-medium text-gray-500">Completed Rides</p>
+                            <h3 class="text-2xl font-bold mt-1">${
+                                allRequests.filter(req => req.status === 'COMPLETED').length
+                            }</h3>
                         </div>
-                        <div class="p-3 rounded-lg bg-purple-100 text-purple-600">
-                            <i class="fas fa-star"></i>
+                        <div class="p-3 rounded-lg bg-green-100 text-green-600">
+                            <i class="fas fa-check-circle"></i>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm text-gray-500">
-                        <i class="fas fa-user-friends mr-2"></i>
-                        <span>3 available now</span>
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        <span>This month: ${allRequests.filter(req => {
+                            const reqDate = new Date(req.request_time);
+                            const now = new Date();
+                            return req.status === 'COMPLETED' && 
+                                   reqDate.getMonth() === now.getMonth() && 
+                                   reqDate.getFullYear() === now.getFullYear();
+                        }).length}</span>
                     </div>
                 </div>
             </div>
@@ -253,6 +269,21 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             showRideRequests();
         });
+        
+        // Add listeners to view driver location buttons
+        document.querySelectorAll('.view-driver-location').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const lat = parseFloat(btn.getAttribute('data-lat'));
+                const lng = parseFloat(btn.getAttribute('data-lng'));
+                const name = btn.getAttribute('data-name');
+                const driverId = btn.getAttribute('data-driver-id');
+                const requestId = btn.getAttribute('data-request-id');
+                
+                document.getElementById('mapModal').classList.remove('hidden');
+                initMap(lat, lng, name, driverId, requestId);
+            });
+        });
     }
 
     function showRideRequests() {
@@ -309,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
                 <div class="bg-white rounded-lg p-6 w-full max-w-4xl">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold">Driver Location Tracking</h3>
+                        <h3 class="text-lg font-semibold">Ride Tracking</h3>
                         <button id="closeMapModal" class="text-gray-500 hover:text-gray-700">
                             <i class="fas fa-times"></i>
                         </button>
@@ -317,17 +348,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div id="driverMap" class="h-96 rounded-xl border border-gray-200"></div>
                     <div class="mt-4 flex flex-col space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="driver-info-card">
                                 <p class="text-sm font-medium text-gray-500">Driver Name</p>
                                 <p id="driverNameInfo" class="font-medium">-</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="driver-info-card">
                                 <p class="text-sm font-medium text-gray-500">Vehicle</p>
                                 <p id="driverVehicleInfo" class="font-medium">-</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-lg">
+                            <div class="driver-info-card">
                                 <p class="text-sm font-medium text-gray-500">Status</p>
                                 <p id="driverStatusInfo" class="font-medium">-</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="driver-info-card">
+                                <p class="text-sm font-medium text-gray-500">Your Location</p>
+                                <p id="userLocationInfo" class="font-medium">-</p>
+                            </div>
+                            <div class="driver-info-card">
+                                <p class="text-sm font-medium text-gray-500">Distance</p>
+                                <p id="distanceInfo" class="font-medium">-</p>
+                            </div>
+                            <div class="driver-info-card">
+                                <p class="text-sm font-medium text-gray-500">ETA</p>
+                                <p id="etaInfo" class="font-medium">-</p>
                             </div>
                         </div>
                         <div class="flex justify-between items-center">
@@ -358,19 +403,6 @@ document.addEventListener('DOMContentLoaded', () => {
             fetchRequests();
         });
 
-        document.getElementById('closeMapModal')?.addEventListener('click', () => {
-            document.getElementById('mapModal').classList.add('hidden');
-            if (map) {
-                map.remove();
-                map = null;
-            }
-            if (mapRefreshInterval) {
-                clearInterval(mapRefreshInterval);
-                mapRefreshInterval = null;
-            }
-            currentDriverId = null;
-        });
-
         document.getElementById('autoRefreshToggle')?.addEventListener('change', (e) => {
             if (e.target.checked && currentDriverId) {
                 startMapRefresh(currentDriverId);
@@ -383,21 +415,72 @@ document.addEventListener('DOMContentLoaded', () => {
         addTableButtonListeners();
     }
 
-    function initMap(lat, lng, driverName, driverId, requestId) {
+    function initMap(driverLat, driverLng, driverName, driverId, requestId) {
         if (map) map.remove();
         
         const mapElement = document.getElementById('driverMap');
         mapElement.innerHTML = ''; // Clear previous map
         
-        map = L.map(mapElement).setView([lat, lng], 15);
+        // Create map centered between driver and user (if user location is available)
+        let centerLat = driverLat;
+        let centerLng = driverLng;
+        let zoomLevel = 15;
+        
+        if (userLocation) {
+            centerLat = (driverLat + userLocation.latitude) / 2;
+            centerLng = (driverLng + userLocation.longitude) / 2;
+            zoomLevel = 13; // Zoom out a bit to show both locations
+        }
+        
+        map = L.map(mapElement).setView([centerLat, centerLng], zoomLevel);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
+        // Add driver marker
         if (currentMarker) map.removeLayer(currentMarker);
-        currentMarker = L.marker([lat, lng]).addTo(map)
+        currentMarker = L.marker([driverLat, driverLng], {
+            icon: L.divIcon({
+                className: 'driver-marker-icon',
+                html: '<i class="fas fa-car text-white text-xs relative" style="top: -1px; left: 1px;"></i>',
+                iconSize: [20, 20]
+            })
+        }).addTo(map)
             .bindPopup(`<b>${driverName}</b><br>Last updated: ${new Date().toLocaleTimeString()}`)
             .openPopup();
+            
+        // Add user marker if location is available
+        if (userLocation) {
+            if (userMarker) map.removeLayer(userMarker);
+            userMarker = L.marker([userLocation.latitude, userLocation.longitude], {
+                icon: L.divIcon({
+                    className: 'user-marker-icon',
+                    html: '<i class="fas fa-user text-white text-xs relative" style="top: -1px;"></i>',
+                    iconSize: [20, 20]
+                })
+            }).addTo(map)
+                .bindPopup('<b>Your Location</b>');
+                
+            // Add line between driver and user
+            if (routeLine) map.removeLayer(routeLine);
+            routeLine = L.polyline(
+                [[userLocation.latitude, userLocation.longitude], [driverLat, driverLng]],
+                {color: '#4361ee', dashArray: '10, 10', className: 'route-line'}
+            ).addTo(map);
+            
+            // Calculate and display distance
+            const distance = calculateDistance(
+                userLocation.latitude, 
+                userLocation.longitude,
+                driverLat,
+                driverLng
+            );
+            document.getElementById('distanceInfo').textContent = `${distance.toFixed(1)} km`;
+            
+            // Estimate ETA (assuming average speed of 30 km/h)
+            const etaMinutes = Math.round((distance / 30) * 60);
+            document.getElementById('etaInfo').textContent = `${etaMinutes} min`;
+        }
             
         // Update driver info
         const request = allRequests.find(req => req.id === parseInt(requestId));
@@ -408,12 +491,31 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('driverStatusInfo').textContent = 'On the way';
             document.getElementById('lastUpdatedInfo').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
         }
+        
+        // Update user location info if available
+        if (userLocation) {
+            document.getElementById('userLocationInfo').textContent = 
+                `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}`;
+        }
             
         // Start auto-refresh if toggle is on
         const autoRefresh = document.getElementById('autoRefreshToggle')?.checked;
         if (autoRefresh && driverId) {
             startMapRefresh(driverId);
         }
+    }
+
+    function closeMapModal() {
+        document.getElementById('mapModal').classList.add('hidden');
+        if (map) {
+            map.remove();
+            map = null;
+        }
+        if (mapRefreshInterval) {
+            clearInterval(mapRefreshInterval);
+            mapRefreshInterval = null;
+        }
+        currentDriverId = null;
     }
 
     async function updateDriverLocation(driverId) {
@@ -430,11 +532,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lng = data.longitude != null ? Number(data.longitude) : null;
                 
                 if (lat && lng && map && currentMarker) {
+                    // Update driver marker
                     currentMarker.setLatLng([lat, lng]);
-                    map.setView([lat, lng]);
                     currentMarker.getPopup().setContent(
                         `<b>${data.name || 'Driver'}</b><br>Last updated: ${new Date().toLocaleTimeString()}`
                     );
+                    
+                    // Update route line if user location is available
+                    if (userLocation && routeLine) {
+                        routeLine.setLatLngs([
+                            [userLocation.latitude, userLocation.longitude],
+                            [lat, lng]
+                        ]);
+                        
+                        // Update distance and ETA
+                        const distance = calculateDistance(
+                            userLocation.latitude, 
+                            userLocation.longitude,
+                            lat,
+                            lng
+                        );
+                        document.getElementById('distanceInfo').textContent = `${distance.toFixed(1)} km`;
+                        const etaMinutes = Math.round((distance / 30) * 60);
+                        document.getElementById('etaInfo').textContent = `${etaMinutes} min`;
+                    }
+                    
+                    // Adjust map view to show both markers if possible
+                    if (userLocation) {
+                        const bounds = L.latLngBounds(
+                            [userLocation.latitude, userLocation.longitude],
+                            [lat, lng]
+                        );
+                        map.fitBounds(bounds, {padding: [50, 50]});
+                    } else {
+                        map.setView([lat, lng]);
+                    }
+                    
                     document.getElementById('lastUpdatedInfo').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
                 }
             }
@@ -449,7 +582,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentDriverId = driverId;
         updateDriverLocation(driverId); // Initial update
-        mapRefreshInterval = setInterval(() => updateDriverLocation(driverId), 15000); // Update every 10 seconds
+        mapRefreshInterval = setInterval(() => updateDriverLocation(driverId), 10000); // Update every 10 seconds
+    }
+
+    function startWatchingUserLocation() {
+        if (navigator.geolocation) {
+            userLocationWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    userLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    
+                    // Update user marker if map is open
+                    if (map && userMarker) {
+                        userMarker.setLatLng([userLocation.latitude, userLocation.longitude]);
+                        
+                        // Update route line if driver location is available
+                        if (currentMarker && routeLine) {
+                            const driverLatLng = currentMarker.getLatLng();
+                            routeLine.setLatLngs([
+                                [userLocation.latitude, userLocation.longitude],
+                                [driverLatLng.lat, driverLatLng.lng]
+                            ]);
+                            
+                            // Update distance and ETA
+                            const distance = calculateDistance(
+                                userLocation.latitude, 
+                                userLocation.longitude,
+                                driverLatLng.lat,
+                                driverLatLng.lng
+                            );
+                            document.getElementById('distanceInfo').textContent = `${distance.toFixed(1)} km`;
+                            const etaMinutes = Math.round((distance / 30) * 60);
+                            document.getElementById('etaInfo').textContent = `${etaMinutes} min`;
+                        }
+                        
+                        // Update user location info
+                        if (document.getElementById('userLocationInfo')) {
+                            document.getElementById('userLocationInfo').textContent = 
+                                `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}`;
+                        }
+                    }
+                },
+                (error) => {
+                    console.error('Error getting user location:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 10000,
+                    timeout: 5000
+                }
+            );
+        } else {
+            console.warn('Geolocation is not supported by this browser');
+        }
+    }
+
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        // Haversine formula to calculate distance between two points in km
+        const R = 6371; // Earth radius in km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
     }
 
     function renderRecentRequests(requests) {
@@ -866,6 +1067,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logout function
     function handleLogout(e) {
         e.preventDefault();
+        // Stop watching user location
+        if (userLocationWatchId) {
+            navigator.geolocation.clearWatch(userLocationWatchId);
+        }
         localStorage.clear();
         window.location.href = 'user-login.html';
     }
