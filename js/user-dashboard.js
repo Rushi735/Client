@@ -582,7 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentDriverId = driverId;
         updateDriverLocation(driverId); // Initial update
-        mapRefreshInterval = setInterval(() => updateDriverLocation(driverId), 10000); // Update every 10 seconds
+        mapRefreshInterval = setInterval(() => updateDriverLocation(driverId), 30000); // Update every 10 seconds
     }
 
     function startWatchingUserLocation() {
