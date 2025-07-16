@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 initMap('map');
                 loadDriverLocations();
                 // Start auto-refresh only when on driver-locations section
-                driverLocationsRefreshInterval = setInterval(loadDriverLocations, 10000); // Refresh every 10 seconds
+                driverLocationsRefreshInterval = setInterval(loadDriverLocations, 100000); // Refresh every 10 seconds
             }
             if (target === 'settings') fetchSystemSettings();
         });
