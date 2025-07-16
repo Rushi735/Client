@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.add('active');
             Object.keys(contentSections).forEach(key => {
                 contentSections[key].style.display = key === target ? 'block' : 'none';
-            }
+            });
             
             // Clear any existing refresh interval
             if (driverLocationsRefreshInterval) {
