@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startWatchingUserLocation();
 
         // Start auto-refresh
-        setInterval(checkForDriverAssignment, 20000); // Check every 20 seconds
+        setInterval(checkForDriverAssignment, 30000); // Check every 20 seconds
     }
 
     function setupEventListeners() {
