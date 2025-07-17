@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         startWatchingUserLocation();
 
         // Start auto-refresh
-        setInterval(checkForDriverAssignment, 30000); // Check every 20 seconds
+        setInterval(checkForDriverAssignment, 45000); // Check every 20 seconds
     }
 
     function setupEventListeners() {
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="#" class="text-sm text-blue-600 hover:text-blue-800" id="viewAllRequests">View All</a>
                 </div>
                 
-                <div class="table-responsive">
+                <div class="table-responsive overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -314,19 +314,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 
-                <div class="table-responsive">
-                    <table class="min-w-full divide-y divide-gray-200">
+                <div class="table-responsive overflow-x-auto">
+                    <table class="min-w-[1000px] divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Location</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Request ID</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Date & Time</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Pickup</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Dropoff</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Status</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Driver Name</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Driver Phone</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Driver Location</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Action</th>
                             </tr>
                         </thead>
                         <tbody id="fullRequestList" class="bg-white divide-y divide-gray-200">
@@ -338,14 +338,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <!-- Enhanced Map Modal -->
             <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-                <div class="bg-white rounded-lg p-6 w-full max-w-4xl">
+                <div class="bg-white rounded-lg p-4 w-full h-full max-w-4xl mx-2 sm:p-6 sm:mx-4">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold">Ride Tracking</h3>
                         <button id="closeMapModal" class="text-gray-500 hover:text-gray-700">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
-                    <div id="driverMap" class="h-96 rounded-xl border border-gray-200"></div>
+                    <div id="driverMap" class="w-full h-[calc(100%-6rem)] sm:h-[calc(100%-8rem)] rounded-xl border border-gray-200"></div>
                     <div class="mt-4 flex flex-col space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="driver-info-card">
@@ -411,6 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 mapRefreshInterval = null;
             }
         });
+
+        document.getElementById('closeMapModal')?.addEventListener('click', closeMapModal);
 
         addTableButtonListeners();
     }
@@ -503,6 +505,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (autoRefresh && driverId) {
             startMapRefresh(driverId);
         }
+
+        // Resize map to fit container
+        if (map) {
+            map.invalidateSize();
+        }
+
+        // Add resize listener
+        window.addEventListener('resize', () => {
+            if (map) {
+                map.invalidateSize();
+            }
+        });
     }
 
     function closeMapModal() {
@@ -582,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentDriverId = driverId;
         updateDriverLocation(driverId); // Initial update
-        mapRefreshInterval = setInterval(() => updateDriverLocation(driverId), 45000); // Update every 10 seconds
+        mapRefreshInterval = setInterval(() => updateDriverLocation(driverId), 10000); // Update every 10 seconds
     }
 
     function startWatchingUserLocation() {
@@ -671,29 +685,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const driverId = req.driver?.id || null;
             return `
             <tr class="table-row">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-${req.id}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">${formatDate(req.request_time)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">${req.pickup_location}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">${req.dropoff_location}</td>
-                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-label="Request ID">#RS-${req.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Date & Time">${formatDate(req.request_time)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Pickup">${req.pickup_location}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Dropoff">${req.dropoff_location}</td>
+                <td class="px-6 py-4 whitespace-nowrap" data-label="Status">
                     <span class="px-2 py-1 text-xs font-medium ride-status-${req.status.toLowerCase()} rounded-full">
                         ${formatStatus(req.status)}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Name">${req.driver ? req.driver.name : 'Not assigned'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Driver Name">${req.driver ? req.driver.name : 'Not assigned'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Driver Phone">
                     ${req.driver && req.driver.phone 
                         ? `<a href="tel:${req.driver.phone}" class="text-blue-600 hover:text-blue-800">${req.driver.phone}</a>` 
                         : 'Not available'}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Location">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Driver Location">
                     ${isValidLocation
                         ? `<a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" 
                            data-lat="${lat}" data-lng="${lng}" data-name="${req.driver.name || 'Driver'}" 
                            data-driver-id="${driverId}" data-request-id="${req.id}">View on Map</a>` 
                         : 'Not available'}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Action">
                     ${getActionButton(req)}
                 </td>
             </tr>
@@ -718,29 +732,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const driverId = req.driver?.id || null;
             return `
             <tr class="table-row">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-${req.id}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">${formatDate(req.request_time)}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">${req.pickup_location}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">${req.dropoff_location}</td>
-                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-label="Request ID">#RS-${req.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Date & Time">${formatDate(req.request_time)}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Pickup">${req.pickup_location}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Dropoff">${req.dropoff_location}</td>
+                <td class="px-6 py-4 whitespace-nowrap" data-label="Status">
                     <span class="px-2 py-1 text-xs font-medium ride-status-${req.status.toLowerCase()} rounded-full">
                         ${formatStatus(req.status)}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Name">${req.driver ? req.driver.name : 'Not assigned'}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Driver Name">${req.driver ? req.driver.name : 'Not assigned'}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Driver Phone">
                     ${req.driver && req.driver.phone 
                         ? `<a href="tel:${req.driver.phone}" class="text-blue-600 hover:text-blue-800">${req.driver.phone}</a>` 
                         : 'Not available'}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Location">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Driver Location">
                     ${isValidLocation
                         ? `<a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" 
                            data-lat="${lat}" data-lng="${lng}" data-name="${req.driver.name || 'Driver'}" 
                            data-driver-id="${driverId}" data-request-id="${req.id}">View on Map</a>` 
                         : 'Not available'}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Action">
                     ${getActionButton(req)}
                 </td>
             </tr>
