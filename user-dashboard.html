@@ -121,36 +121,54 @@
             width: 90%;
         }
         /* Add styles for map modal */
-        #driverMap {
-            height: 400px;
-            width: 100%;
-            border-radius: 0.75rem;
-        }
-        .driver-info-card {
-            background-color: #f8fafc;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-        }
-        /* Custom marker icons */
-        .driver-marker-icon {
-            background-color: #4361ee;
-            border-radius: 50%;
-            border: 2px solid white;
-            width: 20px;
-            height: 20px;
-        }
-        .user-marker-icon {
-            background-color: #10b981;
-            border-radius: 50%;
-            border: 2px solid white;
-            width: 20px;
-            height: 20px;
-        }
-        .route-line {
-            stroke: #4361ee;
-            stroke-width: 4;
-            stroke-dasharray: 10, 10;
-        }
+        ##driverMap {
+    height: clamp(250px, 40vh, 400px);
+    width: 100%;
+    border-radius: 0.75rem;
+}
+
+/* Driver Info Card */
+.driver-info-card {
+    background-color: #f8fafc;
+    padding: clamp(0.5rem, 2vw, 0.75rem);
+    border-radius: 0.5rem;
+}
+
+/* Custom marker icons */
+.driver-marker-icon,
+.user-marker-icon {
+    border-radius: 50%;
+    border: 2px solid white;
+    width: clamp(14px, 2vw, 20px);
+    height: clamp(14px, 2vw, 20px);
+}
+
+/* Driver icon color */
+.driver-marker-icon {
+    background-color: #4361ee;
+}
+
+/* User icon color */
+.user-marker-icon {
+    background-color: #10b981;
+}
+
+/* Route line */
+.route-line {
+    stroke: #4361ee;
+    stroke-width: clamp(2px, 0.5vw, 4px);
+    stroke-dasharray: 10, 10;
+}
+
+/* Optional: further tweaks for very small screens */
+@media screen and (max-width: 400px) {
+    #driverMap {
+        height: 250px;
+    }
+    .driver-info-card {
+        padding: 0.5rem;
+    }
+}
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
