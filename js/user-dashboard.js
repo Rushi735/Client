@@ -16,6 +16,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const dashboardTitle = document.querySelector('.mb-6 h1');
     const lastUpdated = document.querySelector('.mb-6 .text-sm');
     
+    // Location options for dropdowns
+    const locationOptions = [
+        'APS',
+        'SONAR INCLAVE',
+        'CHAN SINGH ENCLAVE',
+        'KSP',
+        'VASUDEV DWAR',
+        'GOLF GROUND',
+        'TASVIR SINGH DWAR',
+        'ARJUN GARH CHOWARAHA',
+        'RATAN SINGH MARG TJN',
+        'FORT KAMPTEE',
+        'GARURA BUS STOP',
+        'ASC PUMP HOUSE',
+        'TCP II',
+        'MAYUR VIHAR'
+    ];
+    
     // State
     let currentView = 'dashboard'; // 'dashboard' or 'requests'
     let allRequests = [];
@@ -48,7 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
         startWatchingUserLocation();
 
         // Start auto-refresh
-        setInterval(checkForDriverAssignment, 45000); // Check every 20 seconds
+        setInterval(checkForDriverAssignment, 45000); // Check every 45 seconds
+    }
+
+    function generateLocationOptions(selectedValue = '') {
+        return locationOptions.map(location => 
+            `<option value="${location}" ${selectedValue === location ? 'selected' : ''}>${location}</option>`
+        ).join('');
     }
 
     function setupEventListeners() {
@@ -199,9 +223,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-map-marker-alt text-gray-400"></i>
                             </div>
-                            <input type="text" id="pickupLocation" name="pickupLocation" 
-                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                   placeholder="Enter pickup address" required>
+                            <select id="pickupLocation" name="pickupLocation" 
+                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
+                                   required>
+                                <option value="">Select pickup location</option>
+                                ${generateLocationOptions()}
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400"></i>
+                            </div>
                         </div>
                     </div>
                     
@@ -211,9 +241,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-flag text-gray-400"></i>
                             </div>
-                            <input type="text" id="dropoffLocation" name="dropoffLocation" 
-                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                   placeholder="Where to?" required>
+                            <select id="dropoffLocation" name="dropoffLocation" 
+                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
+                                   required>
+                                <option value="">Select dropoff location</option>
+                                ${generateLocationOptions()}
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400"></i>
+                            </div>
                         </div>
                     </div>
                     
@@ -416,6 +452,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addTableButtonListeners();
     }
+
+    async function bookAgain(requestId) {
+        try {
+            const response = await fetch(`https://serverone-w2xc.onrender.com/api/requests/${requestId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const { data } = await response.json();
+                
+                // Switch to dashboard view first
+                showDashboard();
+                
+                // Wait for DOM to update, then fill the form
+                setTimeout(() => {
+                    const pickupSelect = document.getElementById('pickupLocation');
+                    const dropoffSelect = document.getElementById('dropoffLocation');
+                    
+                    if (pickupSelect && dropoffSelect) {
+                        // Set the selected values
+                        pickupSelect.value = data.pickup_location;
+                        dropoffSelect.value = data.dropoff_location;
+                        
+                        // Scroll to the form
+                        document.getElementById('cabRequestForm').scrollIntoView({ behavior: 'smooth' });
+                    }
+                }, 100);
+            } else {
+                alert('Error fetching previous ride details: ' + (await response.text()));
+            }
+        } catch (error) {
+            console.error('Error booking again:', error);
+            alert('Error booking again: ' + error.message);
+        }
+    }
+
+    // Rest of your existing functions remain the same...
+    // (All the other functions like initMap, closeMapModal, updateDriverLocation, etc.)
 
     function initMap(driverLat, driverLng, driverName, driverId, requestId) {
         if (map) map.remove();
@@ -1039,7 +1115,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       `Dropoff: ${data.dropoff_location}\n` +
                       `Date: ${new Date(data.request_time).toLocaleString()}\n` +
                       `Status: ${data.status}\n` +
-                      `Fare: ${data.fare_amount ? '$' + data.fare_amount.toFixed(2) : 'Not available'}\n` +
+                      `Fare: ${data.fare_amount ? ' + data.fare_amount.toFixed(2) : 'Not available'}\n` +
                       `${driverInfo}`);
             } else {
                 alert('Error fetching ride details: ' + (await response.text()));
@@ -1047,34 +1123,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error viewing ride details:', error);
             alert('Error viewing ride details: ' + error.message);
-        }
-    }
-
-    async function bookAgain(requestId) {
-        try {
-            const response = await fetch(`https://serverone-w2xc.onrender.com/api/requests/${requestId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (response.ok) {
-                const { data } = await response.json();
-                // Fill the form with previous ride details
-                document.getElementById('pickupLocation').value = data.pickup_location;
-                document.getElementById('dropoffLocation').value = data.dropoff_location;
-                
-                // Switch to dashboard view with form pre-filled
-                showDashboard();
-                
-                // Scroll to the form
-                document.getElementById('cabRequestForm').scrollIntoView({ behavior: 'smooth' });
-            } else {
-                alert('Error fetching previous ride details: ' + (await response.text()));
-            }
-        } catch (error) {
-            console.error('Error booking again:', error);
-            alert('Error booking again: ' + error.message);
         }
     }
 
