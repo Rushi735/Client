@@ -3,519 +3,438 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Dashboard | RideSwift</title>
+    <title>RideSwift | Premium Cab Booking</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Add Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""/>
     <style>
         :root {
             --primary: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary: #f8fafc;
+            --secondary: #3a0ca3;
+            --accent: #4cc9f0;
         }
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #f5f7fa;
+            background: #f8fafc;
         }
-        .sidebar {
-            transition: all 0.3s ease;
-        }
-        .nav-item.active {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary);
-            border-left: 3px solid var(--primary);
-        }
-        .nav-item:hover:not(.active) {
-            background-color: rgba(67, 97, 238, 0.05);
+        .hero-gradient {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6f0ff 100%);
         }
         .card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px rgba(67, 97, 238, 0.15);
         }
         .btn-primary {
             background: var(--primary);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-primary:hover {
-            background: var(--primary-dark);
+            background: var(--secondary);
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 8px 15px rgba(67, 97, 238, 0.3);
         }
-        .ride-status-pending {
-            background-color: #fef3c7;
-            color: #d97706;
+        .floating {
+            animation: floating 6s ease-in-out infinite;
         }
-        .ride-status-confirmed {
-            background-color: #dcfce7;
-            color: #16a34a;
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
-        .ride-status-completed {
-            background-color: #e0f2fe;
-            color: #0284c7;
-        }
-        .ride-status-cancelled {
-            background-color: #fee2e2;
-            color: #dc2626;
-        }
-        .map-container {
-            background-image: url('https://maps.googleapis.com/maps/api/staticmap?center=Brooklyn+Bridge,New+York,NY&zoom=13&size=600x300&maptype=roadmap&key=YOUR_API_KEY');
-            background-size: cover;
-            background-position: center;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        .new-request {
-            animation: highlight 2s ease;
-            background-color: rgba(67, 97, 238, 0.05);
-        }
-        @keyframes highlight {
-            0% { background-color: rgba(67, 97, 238, 0.2); }
-            100% { background-color: rgba(67, 97, 238, 0.05); }
-        }
-        @media (max-width: 768px) {
-            .table-responsive {
-                display: block;
-                width: 100%;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            .table-row {
-                display: flex;
-                flex-direction: column;
-                border-bottom: 1px solid #e2e8f0;
-                padding: 1rem 0;
-            }
-            .table-header {
-                display: none;
-            }
-            .table-cell {
-                display: flex;
-                justify-content: space-between;
-                padding: 0.5rem 1rem;
-            }
-            .table-cell:before {
-                content: attr(data-label);
-                font-weight: 600;
-                margin-right: 1rem;
-                color: #4a5568;
-            }
-        }
-        .notification {
+        /* Mobile Menu Overlay */
+        .mobile-menu-overlay {
             position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            z-index: 50;
-            max-width: 24rem;
-            width: 90%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 40;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease-in-out;
         }
-        /* Add styles for map modal */
-        ##driverMap {
-    height: clamp(250px, 40vh, 400px);
-    width: 100%;
-    border-radius: 0.75rem;
-}
-
-/* Driver Info Card */
-.driver-info-card {
-    background-color: #f8fafc;
-    padding: clamp(0.5rem, 2vw, 0.75rem);
-    border-radius: 0.5rem;
-}
-
-/* Custom marker icons */
-.driver-marker-icon,
-.user-marker-icon {
-    border-radius: 50%;
-    border: 2px solid white;
-    width: clamp(14px, 2vw, 20px);
-    height: clamp(14px, 2vw, 20px);
-}
-
-/* Driver icon color */
-.driver-marker-icon {
-    background-color: #4361ee;
-}
-
-/* User icon color */
-.user-marker-icon {
-    background-color: #10b981;
-}
-
-/* Route line */
-.route-line {
-    stroke: #4361ee;
-    stroke-width: clamp(2px, 0.5vw, 4px);
-    stroke-dasharray: 10, 10;
-}
-
-/* Optional: further tweaks for very small screens */
-@media screen and (max-width: 400px) {
-    #driverMap {
-        height: 250px;
-    }
-    .driver-info-card {
-        padding: 0.5rem;
-    }
-}
+        
+        .mobile-menu-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            background-color: #1a1a2e; /* Dark blue background */
+            color: white;
+        }
+        
+        .mobile-menu.open {
+            transform: translateX(0);
+        }
+        
+        .mobile-menu a {
+            color: #e2e8f0; /* Light gray text */
+            transition: all 0.2s ease;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: block;
+        }
+        
+        .mobile-menu a:hover {
+            color: white;
+            background-color: #4361ee; /* Primary blue */
+        }
+        
+        /* Close button styling */
+        #closeMenu {
+            color: #e2e8f0;
+            transition: all 0.2s ease;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        #closeMenu:hover {
+            color: white;
+            transform: rotate(90deg);
+        }
+        
+        .glow {
+            filter: drop-shadow(0 0 8px rgba(67, 97, 238, 0.3));
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            color: white;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+        /* Mobile menu specific styles */
+        .mobile-menu .btn-outline {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 8px 0;
+        }
+        .mobile-menu .btn-primary {
+            background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            margin: 8px 0;
+        }
+        
+        /* Select dropdown styles */
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: transparent;
+            color: #374151;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        select:focus {
+            outline: none;
+        }
+        
+        /* Add dropdown arrow */
+        .select-wrapper {
+            position: relative;
+        }
+        
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #6b7280;
+            font-size: 12px;
+        }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
-    <!-- Sidebar Navigation -->
-    <div class="sidebar w-64 bg-white border-r border-gray-200 flex-shrink-0 hidden md:block">
-        <div class="p-4 border-b border-gray-200 flex items-center space-x-2">
-            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                <i class="fas fa-car text-white"></i>
-            </div>
-            <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">RideSwift</span>
-        </div>
-        <div class="p-4">
-            <div class="flex items-center space-x-3 mb-6">
-                <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-10 h-10 rounded-full">
-                <div>
-                    <div class="font-medium">John Doe</div>
-                    <div class="text-xs text-gray-500">Premium Member</div>
+<body class="antialiased">
+    <!-- Navigation -->
+    <nav class="fixed w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <div class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center glow">
+                    <i class="fas fa-car text-white text-lg"></i>
                 </div>
+                <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">RideSwift</span>
             </div>
-            
-            <nav class="space-y-1">
-                <a href="#" class="nav-item active flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-home w-5 text-center"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-car w-5 text-center"></i>
-                    <span>Book Ride</span>
-                </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-history w-5 text-center"></i>
-                    <span>Ride History</span>
-                </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg" id="logoutDesktop">
-                    <i class="fas fa-sign-out-alt w-5 text-center"></i>
-                    <span>Logout</span>
-                </a>
-            </nav>
+            <div class="hidden lg:flex space-x-6 items-center">
+                <a href="#home" class="font-medium hover:text-blue-600 transition">Home</a>
+                <a href="#services" class="font-medium hover:text-blue-600 transition">Services</a>
+                <a href="#safety" class="font-medium hover:text-blue-600 transition">Safety</a>
+                <a href="user-login.html" class="px-4 py-2 font-medium rounded-lg hover:bg-blue-50 hover:text-blue-600 transition">User Login</a>
+                <a href="driver-login.html" class="px-4 py-2 font-medium rounded-lg hover:bg-blue-50 hover:text-blue-600 transition">Driver Login</a>
+                <a href="user-register.html" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition">Sign Up</a>
+            </div>
+            <button id="menuToggle" class="lg:hidden text-gray-600">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="mobile-menu-overlay"></div>
+
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="mobile-menu lg:hidden fixed top-0 right-0 h-full w-64 shadow-lg z-50 p-5">
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center">
+                    <i class="fas fa-car text-white text-lg"></i>
+                </div>
+                <span class="text-xl font-bold text-white">RideSwift</span>
+            </div>
+            <button id="closeMenu" class="text-gray-300 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="flex flex-col space-y-2">
+            <a href="#home" class="font-medium">Home</a>
+            <a href="#services" class="font-medium">Services</a>
+            <a href="#safety" class="font-medium">Safety</a>
+            <a href="user-login.html" class="btn-outline text-center">User Login</a>
+            <a href="driver-login.html" class="btn-outline text-center">Driver Login</a>
+            <a href="user-register.html" class="btn-primary text-white text-center">Sign Up</a>
         </div>
     </div>
-
-    <!-- Main Content -->
-    <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Top Navigation -->
-        <header class="bg-white border-b border-gray-200 flex items-center justify-between p-4">
-            <div class="flex items-center md:hidden">
-                <button class="text-gray-500 mr-4" id="mobileMenuButton">
-                    <i class="fas fa-bars text-xl"></i>
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="mobile-menu lg:hidden fixed top-0 right-0 h-full w-64 z-50 p-5">
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-xl font-bold text-white">RideSwift</span>
+                <button id="closeMenu" class="text-white">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                        <i class="fas fa-car text-white text-sm"></i>
-                    </div>
-                    <span class="font-bold text-blue-600">RideSwift</span>
-                </div>
             </div>
-            
-            <div class="relative max-w-md w-full mx-4 hidden md:block">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-gray-400"></i>
-                </div>
-                <input type="text" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Search...">
+            <div class="flex flex-col space-y-3">
+                <a href="#home" class="font-medium">Home</a>
+                <a href="#services" class="font-medium">Services</a>
+                <a href="#safety" class="font-medium">Safety</a>
+                <a href="user-login.html" class="font-medium">User Login</a>
+                <a href="driver-login.html" class="font-medium">Driver Login</a>
+                <a href="user-register.html" class="bg-white text-blue-600 font-medium text-center py-2 rounded-lg hover:bg-blue-50 transition">Sign Up</a>
             </div>
-            
-            <div class="flex items-center space-x-4">
-                <button class="p-2 rounded-full hover:bg-gray-100 relative" id="notificationsButton">
-                    <i class="fas fa-bell text-gray-600"></i>
-                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full hidden" id="notificationBadge"></span>
-                </button>
-                <div class="hidden md:flex items-center space-x-2">
-                    <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-8 h-8 rounded-full">
-                    <span class="font-medium">John</span>
-                </div>
-            </div>
-        </header>
+        </div>
+    </nav>
 
-        <!-- Dashboard Content -->
-        <main class="flex-1 overflow-y-auto p-4 md:p-6">
-            <div class="mb-6 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <div class="text-sm text-gray-500">Last updated: Just now</div>
+    <!-- Hero Section -->
+    <section id="home" class="hero-gradient pt-24 pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col lg:flex-row items-center">
+            <div class="lg:w-1/2 mb-10 lg:mb-0 text-center lg:text-left">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4 hero-section">
+                    Ride with <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Ease</span> and Comfort
+                </h1>
+                <p class="text-lg text-gray-600 mb-6 max-w-md mx-auto lg:mx-0">
+                    Book premium rides in seconds with RideSwift. Safe, reliable, and tailored to your needs.
+                </p>
+                <a href="user-register.html" class="btn-primary text-white px-6 py-3 rounded-lg font-medium inline-flex items-center space-x-2">
+                    <i class="fas fa-rocket"></i>
+                    <span>Start Riding Now</span>
+                </a>
             </div>
-
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Total Rides</p>
-                            <h3 class="text-2xl font-bold mt-1">47</h3>
-                        </div>
-                        <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
-                            <i class="fas fa-car-side"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-sm text-green-500">
-                        <i class="fas fa-arrow-up mr-1"></i>
-                        <span>12% from last month</span>
-                    </div>
-                </div>
-                
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Pending Requests</p>
-                            <h3 class="text-2xl font-bold mt-1">2</h3>
-                        </div>
-                        <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <span class="inline-block px-2 py-1 text-xs font-medium ride-status-pending rounded">Active</span>
-                    </div>
-                </div>
-                
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Completed Rides</p>
-                            <h3 class="text-2xl font-bold mt-1">45</h3>
-                        </div>
-                        <div class="p-3 rounded-lg bg-green-100 text-green-600">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-sm text-gray-500">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        <span>This month: 8</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quick Book Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card bg-white p-6 rounded-xl border border-gray-100 lg:col-span-2">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-semibold">Book a Ride</h2>
-                        <div class="flex space-x-2">
-                            <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg">Now</button>
-                            <button class="px-3 py-1 text-sm border border-gray-300 rounded-lg">Later</button>
-                        </div>
-                    </div>
-                    
-                    <form id="cabRequestForm" class="space-y-4">
-                        <div>
-                            <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-map-marker-alt text-gray-400"></i>
-                                </div>
-                                <input type="text" id="pickupLocation" name="pickupLocation" 
-                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                       placeholder="Enter pickup address" required>
+            <div class="lg:w-1/2 relative">
+                <div class="max-w-sm mx-auto lg:mr-0 lg:ml-auto">
+                    <div class="absolute -inset-4 bg-gradient-to-r from-blue-300 to-purple-300 rounded-xl blur-lg opacity-20 animate-float"></div>
+                    <div class="relative bg-white rounded-xl shadow-lg p-5">
+                        <div class="bg-gray-800 text-white p-3 rounded-t-lg flex justify-between items-center">
+                            <span class="text-sm font-medium">RideSwift App</span>
+                            <div class="flex space-x-1">
+                                <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
                             </div>
                         </div>
-                        
-                        <div>
-                            <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-1">Dropoff Location</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-flag text-gray-400"></i>
+                        <div class="p-4">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-600 mb-1">Pickup Location</label>
+                                <div class="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg">
+                                    <i class="fas fa-map-marker-alt text-blue-600"></i>
+                                    <select class="outline-none flex-grow text-sm bg-transparent">
+                                        <option value="">Select pickup location</option>
+                                        <option value="APS">APS</option>
+                                        <option value="SONAR INCLAVE">SONAR INCLAVE</option>
+                                        <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
+                                        <option value="KSP">KSP</option>
+                                        <option value="VASUDEV DWAR">VASUDEV DWAR</option>
+                                        <option value="GOLF GROUND">GOLF GROUND</option>
+                                        <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
+                                        <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
+                                        <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
+                                        <option value="FORT KAMPTEE">FORT KAMPTEE</option>
+                                        <option value="GARURA BUS STOP">GARURA BUS STOP</option>
+                                        <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
+                                        <option value="TCP II">TCP II</option>
+                                        <option value="MAYUR VIHAR">MAYUR VIHAR</option>
+                                    </select>
                                 </div>
-                                <input type="text" id="dropoffLocation" name="dropoffLocation" 
-                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                       placeholder="Where to?" required>
                             </div>
-                        </div>
-                        
-                        <div>
-                            <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-1">Schedule</label>
-                            <input type="datetime-local" id="requestTime" name="requestTime" 
-                                   class="w-full px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                   required>
-                        </div>
-                        
-                        <div class="pt-2">
-                            <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2">
-                                <i class="fas fa-car"></i>
-                                <span>Request Ride</span>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-600 mb-1">Destination</label>
+                                <div class="flex items-center space-x-2 p-2 border border-gray-200 rounded-lg">
+                                    <i class="fas fa-flag text-green-600"></i>
+                                    <select class="outline-none flex-grow text-sm bg-transparent">
+                                        <option value="">Select destination</option>
+                                        <option value="APS">APS</option>
+                                        <option value="SONAR INCLAVE">SONAR INCLAVE</option>
+                                        <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
+                                        <option value="KSP">KSP</option>
+                                        <option value="VASUDEV DWAR">VASUDEV DWAR</option>
+                                        <option value="GOLF GROUND">GOLF GROUND</option>
+                                        <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
+                                        <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
+                                        <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
+                                        <option value="FORT KAMPTEE">FORT KAMPTEE</option>
+                                        <option value="GARURA BUS STOP">GARURA BUS STOP</option>
+                                        <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
+                                        <option value="TCP II">TCP II</option>
+                                        <option value="MAYUR VIHAR">MAYUR VIHAR</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition">
+                                Find a Ride
                             </button>
                         </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Recent Requests Section -->
-            <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold">Recent Requests</h2>
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-800" id="viewAllRequests">View All</a>
-                </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">View Location</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="requestList" class="bg-white divide-y divide-gray-200">
-                            <tr class="table-row">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-5842</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">Today, 10:30 AM</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">123 Main St</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">Airport Terminal 2</td>
-                                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
-                                    <span class="px-2 py-1 text-xs font-medium ride-status-confirmed rounded-full">Confirmed</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
-                                    <a href="tel:+1234567890" class="text-blue-600 hover:text-blue-800">+1234567890</a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">John Smith</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
-                                    <a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" data-lat="40.7128" data-lng="-74.0060" data-name="John Smith" data-driver-id="1" data-request-id="5842">View on Map</a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
-                                    <button class="text-blue-600 hover:text-blue-900">Track</button>
-                                </td>
-                            </tr>
-                            <tr class="table-row">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-5781</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">Yesterday, 3:15 PM</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">456 Oak Ave</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">Central Mall</td>
-                                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
-                                    <span class="px-2 py-1 text-xs font-medium ride-status-completed rounded-full">Completed</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
-                                    <a href="tel:+1234567890" class="text-blue-600 hover:text-blue-800">+1234567890</a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">Jane Doe</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
-                                    <a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" data-lat="40.7306" data-lng="-73.9352" data-name="Jane Doe" data-driver-id="2" data-request-id="5781">View on Map</a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
-                                    <button class="text-blue-600 hover:text-blue-900">Details</button>
-                                </td>
-                            </tr>
-                            <tr class="table-row">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">userid-5723</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">Yesterday, 9:45 AM</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">789 Pine Rd</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">Business District</td>
-                                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
-                                    <span class="px-2 py-1 text-xs font-medium ride-status-cancelled rounded-full">Cancelled</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">Not assigned</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">Not assigned</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">N/A</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
-                                    <button class="text-blue-600 hover:text-blue-900">Book Again</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Mobile Bottom Navigation -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center p-2">
-        <a href="#" class="p-2 text-blue-600 flex flex-col items-center">
-            <i class="fas fa-home"></i>
-            <span class="text-xs mt-1">Home</span>
-        </a>
-        <a href="#" class="p-2 text-gray-500 flex flex-col items-center">
-            <i class="fas fa-history"></i>
-            <span class="text-xs mt-1">Ride History</span>
-        </a>
-        <a href="#" class="p-2 text-gray-500 flex flex-col items-center" id="logoutMobile">
-            <i class="fas fa-sign-out-alt"></i>
-            <span class="text-xs mt-1">Logout</span>
-        </a>
-    </div>
-
-    <!-- Notification Area -->
-    <div id="notificationArea" class="notification"></div>
-
-    <!-- Map Modal -->
-    <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg p-6 w-full max-w-4xl">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Ride Tracking</h3>
-                <button id="closeMapModal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div id="driverMap" class="h-96 rounded-xl border border-gray-200"></div>
-            <div class="mt-4 flex flex-col space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Driver Name</p>
-                        <p id="driverNameInfo" class="font-medium">-</p>
-                    </div>
-                    <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Vehicle</p>
-                        <p id="driverVehicleInfo" class="font-medium">-</p>
-                    </div>
-                    <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Status</p>
-                        <p id="driverStatusInfo" class="font-medium">-</p>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Your Location</p>
-                        <p id="userLocationInfo" class="font-medium">-</p>
-                    </div>
-                    <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Distance</p>
-                        <p id="distanceInfo" class="font-medium">-</p>
-                    </div>
-                    <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">ETA</p>
-                        <p id="etaInfo" class="font-medium">-</p>
-                    </div>
-                </div>
-                <div class="flex justify-between items-center">
-                    <div class="text-sm text-gray-600">
-                        <span id="lastUpdatedInfo">Last updated: -</span>
-                    </div>
-                    <div class="flex items-center">
-                        <span class="text-sm text-gray-500 mr-2">Auto-refresh:</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Add Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-      crossorigin=""></script>
-    <script src="./js/user-dashboard.js"></script>
+    <!-- Services Section -->
+    <section id="services" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12">
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-600 rounded-full mb-4">SERVICES</span>
+                <h2 class="text-2xl sm:text-3xl font-bold mb-3">Choose Your Ride</h2>
+                <p class="text-base text-gray-600 max-w-xl mx-auto">From budget-friendly to luxury, we have the perfect ride for you.</p>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card bg-white p-6 rounded-lg border border-gray-100">
+                    <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-car text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">RideSwift Go</h3>
+                    <p class="text-gray-600 text-sm">Affordable rides for daily commutes.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg border border-gray-100">
+                    <div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-star text-purple-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">RideSwift Premium</h3>
+                    <p class="text-gray-600 text-sm">Luxury vehicles for special occasions.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg border border-gray-100">
+                    <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-van-shuttle text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">RideSwift XL</h3>
+                    <p class="text-gray-600 text-sm">Spacious rides for groups or luggage.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Safety Section -->
+    <section id="safety" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12">
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-600 rounded-full mb-4">SAFETY</span>
+                <h2 class="text-2xl sm:text-3xl font-bold mb-3">Travel with Confidence</h2>
+                <p class="text-base text-gray-600 max-w-xl mx-auto">Your safety is our top priority with every ride.</p>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card bg-white p-6 rounded-lg border border-gray-100">
+                    <div class="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-shield-alt text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Verified Drivers</h3>
+                    <p class="text-gray-600 text-sm">Thorough background checks for all drivers.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg border border-gray-100">
+                    <div class="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-video text-purple-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Real-Time Tracking</h3>
+                    <p class="text-gray-600 text-sm">Monitor your ride with live updates.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg border border-gray-100">
+                    <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-exclamation-circle text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold mb-2">Emergency Support</h3>
+                    <p class="text-gray-600 text-sm">Instant help via our in-app feature.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+            <h2 class="text-2xl sm:text-3xl font-bold mb-4">Ready to Ride?</h2>
+            <p class="text-base mb-6 max-w-lg mx-auto">Join RideSwift today and experience seamless, safe, and premium rides.</p>
+            <a href="user-register.html" class="btn-primary text-white px-6 py-3 rounded-lg font-medium inline-flex items-center space-x-2">
+                <i class="fas fa-user-plus"></i>
+                <span>Sign Up Now</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center">
+                <div class="flex items-center space-x-2 mb-4 sm:mb-0">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                        <i class="fas fa-car text-white text-lg"></i>
+                    </div>
+                    <span class="text-lg font-bold">RideSwift</span>
+                </div>
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 text-sm">
+                    <a href="#" class="text-gray-400 hover:text-white transition">Privacy Policy</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Terms of Service</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition">Contact Us</a>
+                </div>
+            </div>
+            <div class="text-center text-gray-400 text-sm mt-6">© 2025 RideSwift Technologies. All rights reserved.</div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for Mobile Menu -->
+    <script>
+       const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('open');
+            mobileMenuOverlay.classList.toggle('open');
+            document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+        }
+
+        menuToggle.addEventListener('click', toggleMenu);
+        closeMenu.addEventListener('click', toggleMenu);
+        mobileMenuOverlay.addEventListener('click', toggleMenu);
+
+        // Close menu when clicking on links (except external ones)
+        document.querySelectorAll('#mobileMenu a').forEach(link => {
+            if (link.getAttribute('href').startsWith('#')) {
+                link.addEventListener('click', toggleMenu);
+            }
+        });
+    </script>
 </body>
+
 </html>
