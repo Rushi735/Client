@@ -320,9 +320,28 @@
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i class="fas fa-map-marker-alt text-gray-400"></i>
                                 </div>
-                                <input type="text" id="pickupLocation" name="pickupLocation" 
-                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                       placeholder="Enter pickup address" required>
+                                <select id="pickupLocation" name="pickupLocation" 
+                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
+                                       required>
+                                    <option value="">Select pickup location</option>
+                                    <option value="APS">APS</option>
+                                    <option value="SONAR INCLAVE">SONAR INCLAVE</option>
+                                    <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
+                                    <option value="KSP">KSP</option>
+                                    <option value="VASUDEV DWAR">VASUDEV DWAR</option>
+                                    <option value="GOLF GROUND">GOLF GROUND</option>
+                                    <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
+                                    <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
+                                    <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
+                                    <option value="FORT KAMPTEE">FORT KAMPTEE</option>
+                                    <option value="GARURA BUS STOP">GARURA BUS STOP</option>
+                                    <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
+                                    <option value="TCP II">TCP II</option>
+                                    <option value="MAYUR VIHAR">MAYUR VIHAR</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </div>
                             </div>
                         </div>
                         
@@ -332,9 +351,28 @@
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i class="fas fa-flag text-gray-400"></i>
                                 </div>
-                                <input type="text" id="dropoffLocation" name="dropoffLocation" 
-                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                       placeholder="Where to?" required>
+                                <select id="dropoffLocation" name="dropoffLocation" 
+                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
+                                       required>
+                                    <option value="">Select dropoff location</option>
+                                    <option value="APS">APS</option>
+                                    <option value="SONAR INCLAVE">SONAR INCLAVE</option>
+                                    <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
+                                    <option value="KSP">KSP</option>
+                                    <option value="VASUDEV DWAR">VASUDEV DWAR</option>
+                                    <option value="GOLF GROUND">GOLF GROUND</option>
+                                    <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
+                                    <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
+                                    <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
+                                    <option value="FORT KAMPTEE">FORT KAMPTEE</option>
+                                    <option value="GARURA BUS STOP">GARURA BUS STOP</option>
+                                    <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
+                                    <option value="TCP II">TCP II</option>
+                                    <option value="MAYUR VIHAR">MAYUR VIHAR</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </div>
                             </div>
                         </div>
                         
@@ -444,10 +482,6 @@
             <i class="fas fa-home"></i>
             <span class="text-xs mt-1">Home</span>
         </a>
-        <a href="#" class="p-2 text-gray-500 flex flex-col items-center">
-            <i class="fas fa-history"></i>
-            <span class="text-xs mt-1">Ride History</span>
-        </a>
         <a href="#" class="p-2 text-gray-500 flex flex-col items-center" id="logoutMobile">
             <i class="fas fa-sign-out-alt"></i>
             <span class="text-xs mt-1">Logout</span>
@@ -518,4 +552,8 @@
       crossorigin=""></script>
     <script src="./js/user-dashboard.js"></script>
 </body>
-</html>
+</html> flex-col items-center">
+            <i class="fas fa-history"></i>
+            <span class="text-xs mt-1">Ride History</span>
+        </a>
+        <a href="#" class="p-2 text-gray-500 flex
