@@ -3,470 +3,810 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RideSwift User Dashboard - Book rides, track requests, and manage your transportation needs">
+    <meta name="theme-color" content="#4361ee">
     <title>My Dashboard | RideSwift</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+    
+    <!-- Stylesheets -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Add Leaflet CSS -->
+    
+    <!-- Leaflet Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""/>
+      crossorigin="">
+    
+    <!-- Enhanced Styles -->
     <style>
         :root {
             --primary: #4361ee;
             --primary-dark: #3a56d4;
             --secondary: #f8fafc;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f5f7fa;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
+
+        /* Enhanced sidebar */
         .sidebar {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
         }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                position: fixed;
+                z-index: 40;
+                height: 100vh;
+            }
+        }
+
+        /* Navigation items */
+        .nav-item {
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         .nav-item.active {
             background-color: rgba(67, 97, 238, 0.1);
             color: var(--primary);
             border-left: 3px solid var(--primary);
         }
+
         .nav-item:hover:not(.active) {
             background-color: rgba(67, 97, 238, 0.05);
+            transform: translateX(2px);
         }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            background-color: var(--primary);
+            transition: width 0.2s ease;
+        }
+
+        .nav-item.active::before {
+            width: 3px;
+        }
+
+        /* Enhanced cards */
         .card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        .btn-primary {
-            background: var(--primary);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--gray-200);
+            background-color: white;
         }
-        .btn-primary:hover {
-            background: var(--primary-dark);
+
+        .card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(67, 97, 238, 0.3);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--gray-300);
         }
+
+        /* Enhanced buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Status badges */
         .ride-status-pending {
             background-color: #fef3c7;
             color: #d97706;
+            border: 1px solid #fde68a;
         }
-        .ride-status-confirmed {
+
+        .ride-status-assigned {
+            background-color: #dbeafe;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+
+        .ride-status-completed {
             background-color: #dcfce7;
             color: #16a34a;
+            border: 1px solid #bbf7d0;
         }
-        .ride-status-completed {
-            background-color: #e0f2fe;
-            color: #0284c7;
-        }
+
         .ride-status-cancelled {
             background-color: #fee2e2;
             color: #dc2626;
+            border: 1px solid #fecaca;
         }
-        .map-container {
-            background-image: url('https://maps.googleapis.com/maps/api/staticmap?center=Brooklyn+Bridge,New+York,NY&zoom=13&size=600x300&maptype=roadmap&key=YOUR_API_KEY');
-            background-size: cover;
-            background-position: center;
+
+        .ride-status-unknown {
+            background-color: var(--gray-100);
+            color: #6b7280;
+            border: 1px solid var(--gray-200);
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+        /* Enhanced table */
+        .table-responsive {
+            background-color: white;
+            border-radius: 0.75rem;
+            overflow: hidden;
         }
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+        .table-responsive table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        .new-request {
-            animation: highlight 2s ease;
-            background-color: rgba(67, 97, 238, 0.05);
+
+        .table-responsive th {
+            background-color: var(--gray-50);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            padding: 0.75rem 1.5rem;
+            text-align: left;
         }
-        @keyframes highlight {
-            0% { background-color: rgba(67, 97, 238, 0.2); }
-            100% { background-color: rgba(67, 97, 238, 0.05); }
+
+        .table-responsive td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            font-size: 0.875rem;
         }
+
+        .table-row:hover {
+            background-color: var(--gray-50);
+        }
+
+        /* Mobile table styles */
         @media (max-width: 768px) {
             .table-responsive {
                 display: block;
-                width: 100%;
                 overflow-x: auto;
+                white-space: nowrap;
                 -webkit-overflow-scrolling: touch;
             }
-            .table-row {
-                display: flex;
-                flex-direction: column;
-                border-bottom: 1px solid #e2e8f0;
-                padding: 1rem 0;
-            }
-            .table-header {
-                display: none;
-            }
-            .table-cell {
-                display: flex;
-                justify-content: space-between;
-                padding: 0.5rem 1rem;
-            }
-            .table-cell:before {
-                content: attr(data-label);
-                font-weight: 600;
-                margin-right: 1rem;
-                color: #4a5568;
+            
+            .table-responsive table {
+                min-width: 800px;
             }
         }
-        .notification {
+
+        /* Loading animations */
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1; 
+            }
+            50% { 
+                opacity: 0.5; 
+            }
+        }
+
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* New request highlight */
+        .new-request {
+            animation: highlight 3s ease-in-out;
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+
+        @keyframes highlight {
+            0% { 
+                background-color: rgba(67, 97, 238, 0.2); 
+                transform: scale(1.01);
+            }
+            100% { 
+                background-color: rgba(67, 97, 238, 0.05);
+                transform: scale(1);
+            }
+        }
+
+        /* Notification styles */
+        .notification-item {
+            transform: translateX(100%);
+            animation: slideIn 0.3s ease-out forwards;
+            box-shadow: var(--shadow-lg);
+        }
+
+        @keyframes slideIn {
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        /* Map styles */
+        #driverMap {
+            height: clamp(300px, 40vh, 500px);
+            width: 100%;
+            border-radius: 0.75rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .driver-info-card {
+            background-color: var(--gray-50);
+            padding: clamp(0.75rem, 2vw, 1rem);
+            border-radius: 0.5rem;
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s ease;
+        }
+
+        .driver-info-card:hover {
+            background-color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Custom marker icons */
+        .driver-marker-icon,
+        .user-marker-icon {
+            border-radius: 50%;
+            border: 2px solid white;
+            width: clamp(16px, 3vw, 24px);
+            height: clamp(16px, 3vw, 24px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .driver-marker-icon {
+            background-color: var(--primary);
+        }
+
+        .user-marker-icon {
+            background-color: var(--success);
+        }
+
+        /* Route line */
+        .route-line {
+            stroke: var(--primary);
+            stroke-width: clamp(2px, 0.5vw, 4px);
+            stroke-dasharray: 10, 10;
+            opacity: 0.8;
+        }
+
+        /* Form enhancements */
+        .form-group {
+            position: relative;
+        }
+
+        .form-input {
+            transition: all 0.2s ease;
+            border: 2px solid var(--gray-200);
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+            outline: none;
+        }
+
+        .form-input.error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        .form-error {
+            color: var(--error);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Enhanced dropdown */
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        /* Accessibility improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus styles */
+        button:focus,
+        a:focus,
+        input:focus,
+        select:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --gray-50: #1f2937;
+                --gray-100: #374151;
+                --gray-200: #4b5563;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+            
+            .card {
+                break-inside: avoid;
+                border: 1px solid #ccc;
+            }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High contrast mode */
+        @media (prefers-contrast: high) {
+            .card {
+                border: 2px solid #000;
+            }
+            
+            .btn-primary {
+                border: 2px solid #000;
+            }
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
             position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            z-index: 50;
-            max-width: 24rem;
-            width: 90%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
         }
-        /* Add styles for map modal */
-        ##driverMap {
-    height: clamp(250px, 40vh, 400px);
-    width: 100%;
-    border-radius: 0.75rem;
-}
 
-/* Driver Info Card */
-.driver-info-card {
-    background-color: #f8fafc;
-    padding: clamp(0.5rem, 2vw, 0.75rem);
-    border-radius: 0.5rem;
-}
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
-/* Custom marker icons */
-.driver-marker-icon,
-.user-marker-icon {
-    border-radius: 50%;
-    border: 2px solid white;
-    width: clamp(14px, 2vw, 20px);
-    height: clamp(14px, 2vw, 20px);
-}
-
-/* Driver icon color */
-.driver-marker-icon {
-    background-color: #4361ee;
-}
-
-/* User icon color */
-.user-marker-icon {
-    background-color: #10b981;
-}
-
-/* Route line */
-.route-line {
-    stroke: #4361ee;
-    stroke-width: clamp(2px, 0.5vw, 4px);
-    stroke-dasharray: 10, 10;
-}
-
-/* Optional: further tweaks for very small screens */
-@media screen and (max-width: 400px) {
-    #driverMap {
-        height: 250px;
-    }
-    .driver-info-card {
-        padding: 0.5rem;
-    }
-}
+        /* Responsive improvements */
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .btn-primary {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
-    <!-- Sidebar Navigation -->
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="text-center">
+            <div class="loading-spinner"></div>
+            <p class="mt-4 text-gray-600">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Enhanced Sidebar Navigation -->
     <div class="sidebar w-64 bg-white border-r border-gray-200 flex-shrink-0 hidden md:block">
         <div class="p-4 border-b border-gray-200 flex items-center space-x-2">
-            <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
-                <i class="fas fa-car text-white"></i>
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
+                <i class="fas fa-car text-white" aria-hidden="true"></i>
             </div>
             <span class="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">RideSwift</span>
         </div>
         <div class="p-4">
-            <div class="flex items-center space-x-3 mb-6">
-                <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-10 h-10 rounded-full">
-                <div>
-                    <div class="font-medium">John Doe</div>
+            <div class="flex items-center space-x-3 mb-6 p-3 bg-gray-50 rounded-lg">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" alt="User profile">
+                <div class="flex-1 min-w-0">
+                    <div class="font-medium text-gray-900 truncate">John Doe</div>
                     <div class="text-xs text-gray-500">Premium Member</div>
                 </div>
+                <div class="w-3 h-3 bg-green-400 rounded-full border border-white shadow-sm" title="Online"></div>
             </div>
             
-            <nav class="space-y-1">
-                <a href="#" class="nav-item active flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-home w-5 text-center"></i>
+            <nav class="space-y-1" role="navigation" aria-label="Main navigation">
+                <a href="#" class="nav-item active flex items-center space-x-3 px-3 py-3 rounded-lg group" role="menuitem">
+                    <i class="fas fa-home w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-car w-5 text-center"></i>
+                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-3 rounded-lg group" role="menuitem">
+                    <i class="fas fa-car w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
                     <span>Book Ride</span>
                 </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg">
-                    <i class="fas fa-history w-5 text-center"></i>
+                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-3 rounded-lg group" role="menuitem">
+                    <i class="fas fa-history w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
                     <span>Ride History</span>
                 </a>
-                <a href="#" class="nav-item flex items-center space-x-3 px-3 py-2 rounded-lg" id="logoutDesktop">
-                    <i class="fas fa-sign-out-alt w-5 text-center"></i>
-                    <span>Logout</span>
-                </a>
+                <div class="pt-4 mt-4 border-t border-gray-200">
+                    <a href="#" class="nav-item flex items-center space-x-3 px-3 py-3 rounded-lg text-red-600 hover:bg-red-50 group" id="logoutDesktop" role="menuitem">
+                        <i class="fas fa-sign-out-alt w-5 text-center group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
             </nav>
         </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        <!-- Top Navigation -->
-        <header class="bg-white border-b border-gray-200 flex items-center justify-between p-4">
-            <div class="flex items-center md:hidden">
-                <button class="text-gray-500 mr-4" id="mobileMenuButton">
-                    <i class="fas fa-bars text-xl"></i>
+        <!-- Enhanced Top Navigation -->
+        <header class="bg-white border-b border-gray-200 flex items-center justify-between p-4 shadow-sm">
+            <div class="flex items-center">
+                <!-- Mobile menu button -->
+                <button class="text-gray-500 mr-4 md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors" 
+                        id="mobileMenuButton" 
+                        aria-label="Open navigation menu"
+                        aria-expanded="false">
+                    <i class="fas fa-bars text-xl" aria-hidden="true"></i>
                 </button>
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                        <i class="fas fa-car text-white text-sm"></i>
+                
+                <!-- Mobile logo -->
+                <div class="flex items-center space-x-2 md:hidden">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center">
+                        <i class="fas fa-car text-white text-sm" aria-hidden="true"></i>
                     </div>
                     <span class="font-bold text-blue-600">RideSwift</span>
                 </div>
             </div>
             
-            <div class="relative max-w-md w-full mx-4 hidden md:block">
+            <!-- Search bar (desktop only) -->
+            <div class="relative max-w-md w-full mx-4 hidden lg:block">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <i class="fas fa-search text-gray-400"></i>
+                    <i class="fas fa-search text-gray-400" aria-hidden="true"></i>
                 </div>
-                <input type="text" class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Search...">
+                <input type="text" 
+                       class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
+                       placeholder="Search rides, locations..."
+                       aria-label="Search">
             </div>
             
+            <!-- Right side controls -->
             <div class="flex items-center space-x-4">
-                <button class="p-2 rounded-full hover:bg-gray-100 relative" id="notificationsButton">
-                    <i class="fas fa-bell text-gray-600"></i>
-                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full hidden" id="notificationBadge"></span>
+                <!-- Notifications -->
+                <button class="p-2 rounded-full hover:bg-gray-100 relative transition-colors no-print" 
+                        id="notificationsButton"
+                        aria-label="View notifications">
+                    <i class="fas fa-bell text-gray-600" aria-hidden="true"></i>
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full hidden" 
+                          id="notificationBadge" 
+                          aria-hidden="true"></span>
                 </button>
+                
+                <!-- Connection status -->
+                <div class="hidden sm:flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full" 
+                         id="connectionStatus" 
+                         title="Online"
+                         aria-hidden="true"></div>
+                    <span class="text-xs text-gray-500">Online</span>
+                </div>
+                
+                <!-- User profile (desktop) -->
                 <div class="hidden md:flex items-center space-x-2">
-                    <img src="https://randomuser.me/api/portraits/men/32.jpg" class="w-8 h-8 rounded-full">
-                    <span class="font-medium">John</span>
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" 
+                         class="w-8 h-8 rounded-full border border-gray-200" 
+                         alt="User profile">
+                    <span class="font-medium text-gray-700">John</span>
                 </div>
             </div>
         </header>
 
-        <!-- Dashboard Content -->
-        <main class="flex-1 overflow-y-auto p-4 md:p-6">
+        <!-- Enhanced Dashboard Content -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
             <div class="mb-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <div class="text-sm text-gray-500">Last updated: Just now</div>
+                <div class="text-sm text-gray-500">Last updated: <span id="lastUpdateTime">Just now</span></div>
             </div>
 
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
+            <!-- Enhanced Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="card p-6 rounded-xl hover:shadow-lg transition-all duration-300 group">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Rides</p>
-                            <h3 class="text-2xl font-bold mt-1">47</h3>
+                            <h3 class="text-2xl font-bold mt-1 text-gray-900">0</h3>
                         </div>
-                        <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
-                            <i class="fas fa-car-side"></i>
+                        <div class="p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors">
+                            <i class="fas fa-car-side text-lg" aria-hidden="true"></i>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm text-green-500">
-                        <i class="fas fa-arrow-up mr-1"></i>
-                        <span>12% from last month</span>
+                        <i class="fas fa-arrow-up mr-1" aria-hidden="true"></i>
+                        <span>0% from last month</span>
                     </div>
                 </div>
                 
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
+                <div class="card p-6 rounded-xl hover:shadow-lg transition-all duration-300 group">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Pending Requests</p>
-                            <h3 class="text-2xl font-bold mt-1">2</h3>
+                            <h3 class="text-2xl font-bold mt-1 text-gray-900">0</h3>
                         </div>
-                        <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600">
-                            <i class="fas fa-clock"></i>
+                        <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600 group-hover:bg-yellow-200 transition-colors">
+                            <i class="fas fa-clock text-lg" aria-hidden="true"></i>
                         </div>
                     </div>
                     <div class="mt-4">
-                        <span class="inline-block px-2 py-1 text-xs font-medium ride-status-pending rounded">Active</span>
+                        <span class="inline-block px-2 py-1 text-xs font-medium ride-status-pending rounded">
+                            None
+                        </span>
                     </div>
                 </div>
                 
-                <div class="card bg-white p-6 rounded-xl border border-gray-100">
+                <div class="card p-6 rounded-xl hover:shadow-lg transition-all duration-300 group">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Completed Rides</p>
-                            <h3 class="text-2xl font-bold mt-1">45</h3>
+                            <h3 class="text-2xl font-bold mt-1 text-gray-900">0</h3>
                         </div>
-                        <div class="p-3 rounded-lg bg-green-100 text-green-600">
-                            <i class="fas fa-check-circle"></i>
+                        <div class="p-3 rounded-lg bg-green-100 text-green-600 group-hover:bg-green-200 transition-colors">
+                            <i class="fas fa-check-circle text-lg" aria-hidden="true"></i>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm text-gray-500">
-                        <i class="fas fa-calendar-alt mr-2"></i>
-                        <span>This month: 8</span>
+                        <i class="fas fa-calendar-alt mr-2" aria-hidden="true"></i>
+                        <span>This month: 0</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Book Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card bg-white p-6 rounded-xl border border-gray-100 lg:col-span-2">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-semibold">Book a Ride</h2>
-                        <div class="flex space-x-2">
-                            <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg">Now</button>
-                            <button class="px-3 py-1 text-sm border border-gray-300 rounded-lg">Later</button>
-                        </div>
+            <!-- Enhanced Quick Book Section -->
+            <div class="card p-6 rounded-xl mb-8 hover:shadow-lg transition-all duration-300">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Book a Ride</h2>
+                    <div class="flex space-x-2">
+                        <button type="button" 
+                                class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm" 
+                                aria-pressed="true">
+                            <i class="fas fa-clock mr-1" aria-hidden="true"></i>
+                            Now
+                        </button>
+                        <button type="button" 
+                                class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" 
+                                disabled
+                                title="Coming soon">
+                            <i class="fas fa-calendar mr-1" aria-hidden="true"></i>
+                            Later
+                        </button>
                     </div>
-                    
-                    <form id="cabRequestForm" class="space-y-4">
-                        <div>
-                            <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-map-marker-alt text-gray-400"></i>
-                                </div>
-                                <select id="pickupLocation" name="pickupLocation" 
-                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
-                                       required>
-                                    <option value="">Select pickup location</option>
-                                    <option value="APS">APS</option>
-                                    <option value="SONAR INCLAVE">SONAR INCLAVE</option>
-                                    <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
-                                    <option value="KSP">KSP</option>
-                                    <option value="VASUDEV DWAR">VASUDEV DWAR</option>
-                                    <option value="GOLF GROUND">GOLF GROUND</option>
-                                    <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
-                                    <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
-                                    <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
-                                    <option value="FORT KAMPTEE">FORT KAMPTEE</option>
-                                    <option value="GARURA BUS STOP">GARURA BUS STOP</option>
-                                    <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
-                                    <option value="TCP II">TCP II</option>
-                                    <option value="MAYUR VIHAR">MAYUR VIHAR</option>
-                                </select>
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    <i class="fas fa-chevron-down text-gray-400"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-1">Dropoff Location</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-flag text-gray-400"></i>
-                                </div>
-                                <select id="dropoffLocation" name="dropoffLocation" 
-                                       class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
-                                       required>
-                                    <option value="">Select dropoff location</option>
-                                    <option value="APS">APS</option>
-                                    <option value="SONAR INCLAVE">SONAR INCLAVE</option>
-                                    <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
-                                    <option value="KSP">KSP</option>
-                                    <option value="VASUDEV DWAR">VASUDEV DWAR</option>
-                                    <option value="GOLF GROUND">GOLF GROUND</option>
-                                    <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
-                                    <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
-                                    <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
-                                    <option value="FORT KAMPTEE">FORT KAMPTEE</option>
-                                    <option value="GARURA BUS STOP">GARURA BUS STOP</option>
-                                    <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
-                                    <option value="TCP II">TCP II</option>
-                                    <option value="MAYUR VIHAR">MAYUR VIHAR</option>
-                                </select>
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    <i class="fas fa-chevron-down text-gray-400"></i>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-1">Schedule</label>
-                            <input type="datetime-local" id="requestTime" name="requestTime" 
-                                   class="w-full px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                                   required>
-                        </div>
-                        
-                        <div class="pt-2">
-                            <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2">
-                                <i class="fas fa-car"></i>
-                                <span>Request Ride</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Recent Requests Section -->
-            <div class="card bg-white p-6 rounded-xl border border-gray-100">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold">Recent Requests</h2>
-                    <a href="#" class="text-sm text-blue-600 hover:text-blue-800" id="viewAllRequests">View All</a>
                 </div>
                 
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                <form id="cabRequestForm" class="space-y-6" novalidate>
+                    <div class="form-group">
+                        <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Pickup Location <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-map-marker-alt text-gray-400" aria-hidden="true"></i>
+                            </div>
+                            <select id="pickupLocation" 
+                                    name="pickupLocation" 
+                                    class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" 
+                                    required 
+                                    aria-describedby="pickupLocation-error">
+                                <option value="">Select pickup location</option>
+                                <option value="APS">APS</option>
+                                <option value="SONAR INCLAVE">SONAR INCLAVE</option>
+                                <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
+                                <option value="KSP">KSP</option>
+                                <option value="VASUDEV DWAR">VASUDEV DWAR</option>
+                                <option value="GOLF GROUND">GOLF GROUND</option>
+                                <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
+                                <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
+                                <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
+                                <option value="FORT KAMPTEE">FORT KAMPTEE</option>
+                                <option value="GARURA BUS STOP">GARURA BUS STOP</option>
+                                <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
+                                <option value="TCP II">TCP II</option>
+                                <option value="MAYUR VIHAR">MAYUR VIHAR</option>
+                            </select>
+                        </div>
+                        <div id="pickupLocation-error" class="form-error mt-1 hidden" role="alert"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Dropoff Location <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-flag text-gray-400" aria-hidden="true"></i>
+                            </div>
+                            <select id="dropoffLocation" 
+                                    name="dropoffLocation" 
+                                    class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" 
+                                    required 
+                                    aria-describedby="dropoffLocation-error">
+                                <option value="">Select dropoff location</option>
+                                <option value="APS">APS</option>
+                                <option value="SONAR INCLAVE">SONAR INCLAVE</option>
+                                <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
+                                <option value="KSP">KSP</option>
+                                <option value="VASUDEV DWAR">VASUDEV DWAR</option>
+                                <option value="GOLF GROUND">GOLF GROUND</option>
+                                <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
+                                <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
+                                <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
+                                <option value="FORT KAMPTEE">FORT KAMPTEE</option>
+                                <option value="GARURA BUS STOP">GARURA BUS STOP</option>
+                                <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
+                                <option value="TCP II">TCP II</option>
+                                <option value="MAYUR VIHAR">MAYUR VIHAR</option>
+                            </select>
+                        </div>
+                        <div id="dropoffLocation-error" class="form-error mt-1 hidden" role="alert"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-2">
+                            Schedule <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-calendar-alt text-gray-400" aria-hidden="true"></i>
+                            </div>
+                            <input type="datetime-local" 
+                                   id="requestTime" 
+                                   name="requestTime" 
+                                   class="form-input w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 transition-all" 
+                                   required 
+                                   aria-describedby="requestTime-error requestTime-help">
+                        </div>
+                        <div id="requestTime-help" class="text-sm text-gray-500 mt-1">
+                            Select a time at least 15 minutes from now
+                        </div>
+                        <div id="requestTime-error" class="form-error mt-1 hidden" role="alert"></div>
+                    </div>
+                    
+                    <div class="pt-4">
+                        <button type="submit" 
+                                class="btn-primary w-full py-3 px-6 rounded-lg text-white font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                            <i class="fas fa-car" aria-hidden="true"></i>
+                            <span>Request Ride</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Enhanced Recent Requests Section -->
+            <div class="card p-6 rounded-xl hover:shadow-lg transition-all duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Recent Requests</h2>
+                    <button type="button" 
+                            class="text-sm text-blue-600 hover:text-blue-800 transition-colors px-3 py-1 rounded hover:bg-blue-50" 
+                            id="viewAllRequests">
+                        View All <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+                    </button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="min-w-full" role="table">
+                        <thead>
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">View Location</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Location</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                             </tr>
                         </thead>
                         <tbody id="requestList" class="bg-white divide-y divide-gray-200">
-                            <tr class="table-row">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-5842</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">Today, 10:30 AM</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">123 Main St</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">Airport Terminal 2</td>
-                                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
-                                    <span class="px-2 py-1 text-xs font-medium ride-status-confirmed rounded-full">Confirmed</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
-                                    <a href="tel:+1234567890" class="text-blue-600 hover:text-blue-800">+1234567890</a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">John Smith</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
-                                    <a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" data-lat="40.7128" data-lng="-74.0060" data-name="John Smith" data-driver-id="1" data-request-id="5842">View on Map</a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
-                                    <button class="text-blue-600 hover:text-blue-900">Track</button>
-                                </td>
-                            </tr>
-                            <tr class="table-row">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">#RS-5781</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">Yesterday, 3:15 PM</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">456 Oak Ave</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">Central Mall</td>
-                                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
-                                    <span class="px-2 py-1 text-xs font-medium ride-status-completed rounded-full">Completed</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">
-                                    <a href="tel:+1234567890" class="text-blue-600 hover:text-blue-800">+1234567890</a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">Jane Doe</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">
-                                    <a href="#" class="text-blue-600 hover:text-blue-800 view-driver-location" data-lat="40.7306" data-lng="-73.9352" data-name="Jane Doe" data-driver-id="2" data-request-id="5781">View on Map</a>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
-                                    <button class="text-blue-600 hover:text-blue-900">Details</button>
-                                </td>
-                            </tr>
-                            <tr class="table-row">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 table-cell" data-label="Request ID">userid-5723</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Date & Time">Yesterday, 9:45 AM</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Pickup">789 Pine Rd</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Dropoff">Business District</td>
-                                <td class="px-6 py-4 whitespace-nowrap table-cell" data-label="Status">
-                                    <span class="px-2 py-1 text-xs font-medium ride-status-cancelled rounded-full">Cancelled</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver Phone">Not assigned</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Driver">Not assigned</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="View Location">N/A</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 table-cell" data-label="Action">
-                                    <button class="text-blue-600 hover:text-blue-900">Book Again</button>
+                            <tr>
+                                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-car text-4xl text-gray-300 mb-3" aria-hidden="true"></i>
+                                        <p class="text-lg font-medium">No rides yet</p>
+                                        <p class="text-sm text-gray-400">Your ride history will appear here</p>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -476,84 +816,322 @@
         </main>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center p-2">
-        <a href="#" class="p-2 text-blue-600 flex flex-col items-center">
-            <i class="fas fa-home"></i>
+    <!-- Enhanced Mobile Bottom Navigation -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center p-2 shadow-lg no-print">
+        <a href="#" class="p-3 text-blue-600 flex flex-col items-center transition-colors hover:text-blue-800" aria-label="Home">
+            <i class="fas fa-home text-lg" aria-hidden="true"></i>
             <span class="text-xs mt-1">Home</span>
         </a>
-        <a href="#" class="p-2 text-gray-500 flex flex-col items-center" id="logoutMobile">
-            <i class="fas fa-sign-out-alt"></i>
+        <a href="#" class="p-3 text-gray-500 flex flex-col items-center transition-colors hover:text-gray-700" aria-label="History">
+            <i class="fas fa-history text-lg" aria-hidden="true"></i>
+            <span class="text-xs mt-1">History</span>
+        </a>
+        <a href="#" class="p-3 text-red-500 flex flex-col items-center transition-colors hover:text-red-700" id="logoutMobile" aria-label="Logout">
+            <i class="fas fa-sign-out-alt text-lg" aria-hidden="true"></i>
             <span class="text-xs mt-1">Logout</span>
         </a>
     </div>
 
-    <!-- Notification Area -->
-    <div id="notificationArea" class="notification"></div>
+    <!-- Enhanced Notification Area -->
+    <div id="notificationArea" class="fixed bottom-4 right-4 z-40 space-y-2 max-w-sm no-print"></div>
 
-    <!-- Map Modal -->
-    <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg p-6 w-full max-w-4xl">
+    <!-- Enhanced Map Modal -->
+    <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print" role="dialog" aria-labelledby="mapModalTitle" aria-modal="true">
+        <div class="bg-white rounded-lg p-4 w-full h-full max-w-5xl mx-2 sm:p-6 sm:mx-4 max-h-screen overflow-y-auto shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">Ride Tracking</h3>
-                <button id="closeMapModal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
+                <h3 id="mapModalTitle" class="text-lg font-semibold text-gray-900">Real-time Ride Tracking</h3>
+                <button id="closeMapModal" 
+                        class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors" 
+                        aria-label="Close map">
+                    <i class="fas fa-times text-lg" aria-hidden="true"></i>
                 </button>
             </div>
-            <div id="driverMap" class="h-96 rounded-xl border border-gray-200"></div>
-            <div class="mt-4 flex flex-col space-y-4">
+            
+            <div id="driverMap" class="w-full rounded-xl border-2 border-gray-200 shadow-inner" role="img" aria-label="Driver location map"></div>
+            
+            <div class="mt-6 space-y-4">
+                <!-- Driver Information Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Driver Name</p>
-                        <p id="driverNameInfo" class="font-medium">-</p>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Driver Name</p>
+                        <p id="driverNameInfo" class="font-semibold text-gray-900">-</p>
                     </div>
                     <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Vehicle</p>
-                        <p id="driverVehicleInfo" class="font-medium">-</p>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Vehicle</p>
+                        <p id="driverVehicleInfo" class="font-semibold text-gray-900">-</p>
                     </div>
                     <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Status</p>
-                        <p id="driverStatusInfo" class="font-medium">-</p>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Status</p>
+                        <p id="driverStatusInfo" class="font-semibold text-green-600">-</p>
                     </div>
                 </div>
+                
+                <!-- Location and ETA Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Your Location</p>
-                        <p id="userLocationInfo" class="font-medium">-</p>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Your Location</p>
+                        <p id="userLocationInfo" class="font-semibold text-gray-900 text-xs">-</p>
                     </div>
                     <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">Distance</p>
-                        <p id="distanceInfo" class="font-medium">-</p>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Distance</p>
+                        <p id="distanceInfo" class="font-semibold text-blue-600">-</p>
                     </div>
                     <div class="driver-info-card">
-                        <p class="text-sm font-medium text-gray-500">ETA</p>
-                        <p id="etaInfo" class="font-medium">-</p>
+                        <p class="text-sm font-medium text-gray-500 mb-1">ETA</p>
+                        <p id="etaInfo" class="font-semibold text-orange-600">-</p>
                     </div>
                 </div>
-                <div class="flex justify-between items-center">
+                
+                <!-- Controls -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-lg">
                     <div class="text-sm text-gray-600">
+                        <i class="fas fa-clock mr-1" aria-hidden="true"></i>
                         <span id="lastUpdatedInfo">Last updated: -</span>
                     </div>
-                    <div class="flex items-center">
-                        <span class="text-sm text-gray-500 mr-2">Auto-refresh:</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                        </label>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-500 mr-3">Auto-refresh:</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked aria-label="Toggle auto-refresh">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <button type="button" 
+                                class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                                onclick="if(window.state && window.state.currentDriverId) window.updateDriverLocation(window.state.currentDriverId)">
+                            <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>
+                            Refresh
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Add Leaflet JS -->
+    <!-- Mobile Sidebar Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden no-print"></div>
+
+    <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""></script>
+
+    <!-- Enhanced Service Worker Registration -->
+    <script>
+        // Register service worker for offline capability
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // Enhanced mobile menu functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            const sidebar = document.querySelector('.sidebar');
+            const mobileOverlay = document.getElementById('mobileOverlay');
+
+            const toggleMobileMenu = () => {
+                const isOpen = sidebar.classList.contains('active');
+                
+                if (isOpen) {
+                    sidebar.classList.remove('active');
+                    mobileOverlay.classList.add('hidden');
+                    mobileMenuButton.setAttribute('aria-expanded', 'false');
+                } else {
+                    sidebar.classList.add('active');
+                    mobileOverlay.classList.remove('hidden');
+                    mobileMenuButton.setAttribute('aria-expanded', 'true');
+                }
+            };
+
+            mobileMenuButton?.addEventListener('click', toggleMobileMenu);
+            mobileOverlay?.addEventListener('click', toggleMobileMenu);
+
+            // Close mobile menu on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                    toggleMobileMenu();
+                }
+            });
+
+            // Update connection status
+            const updateConnectionStatus = () => {
+                const statusElement = document.getElementById('connectionStatus');
+                const statusText = statusElement?.nextElementSibling;
+                
+                if (navigator.onLine) {
+                    statusElement?.classList.remove('bg-red-500');
+                    statusElement?.classList.add('bg-green-500');
+                    if (statusText) statusText.textContent = 'Online';
+                } else {
+                    statusElement?.classList.remove('bg-green-500');
+                    statusElement?.classList.add('bg-red-500');
+                    if (statusText) statusText.textContent = 'Offline';
+                }
+            };
+
+            window.addEventListener('online', updateConnectionStatus);
+            window.addEventListener('offline', updateConnectionStatus);
+            updateConnectionStatus();
+
+            // Update last update time periodically
+            const updateLastUpdateTime = () => {
+                const element = document.getElementById('lastUpdateTime');
+                if (element) {
+                    element.textContent = new Date().toLocaleTimeString();
+                }
+            };
+
+            setInterval(updateLastUpdateTime, 30000); // Update every 30 seconds
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Alt + D for Dashboard
+                if (e.altKey && e.key === 'd') {
+                    e.preventDefault();
+                    document.querySelector('.nav-item[href="#"]')?.click();
+                }
+                // Alt + H for History
+                if (e.altKey && e.key === 'h') {
+                    e.preventDefault();
+                    document.querySelector('.nav-item:nth-child(3)')?.click();
+                }
+            });
+
+            // Form auto-save to prevent data loss
+            const form = document.getElementById('cabRequestForm');
+            if (form) {
+                const saveFormData = () => {
+                    const formData = new FormData(form);
+                    const data = {};
+                    for (let [key, value] of formData.entries()) {
+                        data[key] = value;
+                    }
+                    try {
+                        localStorage.setItem('unsavedRideRequest', JSON.stringify(data));
+                    } catch (e) {
+                        // Handle localStorage errors silently
+                    }
+                };
+
+                const restoreFormData = () => {
+                    try {
+                        const saved = localStorage.getItem('unsavedRideRequest');
+                        if (saved) {
+                            const data = JSON.parse(saved);
+                            Object.keys(data).forEach(key => {
+                                const element = form.elements[key];
+                                if (element && data[key]) {
+                                    element.value = data[key];
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        // Handle errors silently
+                    }
+                };
+
+                const clearSavedData = () => {
+                    try {
+                        localStorage.removeItem('unsavedRideRequest');
+                    } catch (e) {
+                        // Handle errors silently
+                    }
+                };
+
+                // Save form data on input
+                form.addEventListener('input', saveFormData);
+                
+                // Restore on page load
+                restoreFormData();
+                
+                // Clear on successful submission
+                form.addEventListener('submit', () => {
+                    setTimeout(clearSavedData, 1000);
+                });
+            }
+
+            // Enhanced accessibility
+            let lastFocusedElement = null;
+            
+            // Track focus for modal management
+            document.addEventListener('focusin', (e) => {
+                lastFocusedElement = e.target;
+            });
+
+            // Trap focus in modals
+            document.addEventListener('keydown', (e) => {
+                const modal = document.querySelector('[role="dialog"]:not(.hidden)');
+                if (modal && e.key === 'Tab') {
+                    const focusableElements = modal.querySelectorAll(
+                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                    );
+                    const firstElement = focusableElements[0];
+                    const lastElement = focusableElements[focusableElements.length - 1];
+
+                    if (e.shiftKey && document.activeElement === firstElement) {
+                        e.preventDefault();
+                        lastElement.focus();
+                    } else if (!e.shiftKey && document.activeElement === lastElement) {
+                        e.preventDefault();
+                        firstElement.focus();
+                    }
+                }
+            });
+
+            // Skip to main content link
+            const skipLink = document.createElement('a');
+            skipLink.href = '#main-content';
+            skipLink.textContent = 'Skip to main content';
+            skipLink.className = 'sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white p-2 rounded z-50';
+            document.body.insertBefore(skipLink, document.body.firstChild);
+
+            // Add main content id
+            const main = document.querySelector('main');
+            if (main) {
+                main.id = 'main-content';
+            }
+        });
+
+        // Global error boundary
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Global error:', { msg, url, lineNo, columnNo, error });
+            // Could send to error reporting service here
+            return false;
+        };
+
+        // Performance monitoring
+        window.addEventListener('load', () => {
+            if ('performance' in window) {
+                const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+                console.log('Page load time:', loadTime + 'ms');
+                
+                // Could send performance metrics to analytics service here
+                if (loadTime > 3000) {
+                    console.warn('Slow page load detected:', loadTime + 'ms');
+                }
+            }
+        });
+
+        // Memory usage monitoring (if available)
+        if ('memory' in performance) {
+            setInterval(() => {
+                const memory = performance.memory;
+                if (memory.usedJSHeapSize > memory.jsHeapSizeLimit * 0.9) {
+                    console.warn('High memory usage detected');
+                }
+            }, 30000);
+        }
+    </script>
+
+    <!-- Load main dashboard script -->
     <script src="./js/user-dashboard.js"></script>
 </body>
-</html> flex-col items-center">
-            <i class="fas fa-history"></i>
-            <span class="text-xs mt-1">Ride History</span>
-        </a>
-        <a href="#" class="p-2 text-gray-500 flex
+</html>
