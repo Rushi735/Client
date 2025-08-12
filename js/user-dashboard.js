@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enhanced location options with validation
     const locationOptions = [
         'APS',
-        'SONAR INCLAVE', 
-        'CHAN SINGH ENCLAVE',
+        'SONAR ENCLAVE', 
+        'CHAIN SINGH ENCLAVE',
         'KSP',
         'VASUDEV DWAR',
         'GOLF GROUND',
@@ -1834,3 +1834,4 @@ document.addEventListener('DOMContentLoaded', () => {
         showNotification('No internet connection', 'warning', 0); // Persistent warning
     });
 });
+
