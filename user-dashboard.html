@@ -479,6 +479,37 @@
                 justify-content: center;
             }
         }
+        
+        .contact-us {
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
+    max-width: 300px;
+}
+
+.contact-us h3 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+.contact-us p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.contact-us a {
+    color: #006400; /* Dark green for military look */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.contact-us a:hover {
+    text-decoration: underline;
+}
+
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -527,6 +558,13 @@
                         <span>Logout</span>
                     </a>
                 </div>
+                <div class="contact-us">
+                  <h3>Contact Us</h3>
+                  <p><strong>Control Cell: <br> Sub Santosh</strong>  <br> 512 ASC </p>
+                  
+                  <p><strong>Phone:</strong> <a href="tel:9086439489">9086439489</a></p>
+                </div>
+
             </nav>
         </div>
     </div>
@@ -722,10 +760,10 @@
                                     class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" 
                                     required 
                                     aria-describedby="dropoffLocation-error">
-                                <option value="">Select dropoff location</option>
+                                <option value="">Select Dropoff Location</option>
                                 <option value="APS">APS</option>
-                                <option value="SONAR INCLAVE">SONAR INCLAVE</option>
-                                <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
+                                <option value="SONAR INCLAVE">SONAR ENCLAVE</option>
+                                <option value="CHAN SINGH ENCLAVE">CHAIN SINGH ENCLAVE</option>
                                 <option value="KSP">KSP</option>
                                 <option value="VASUDEV DWAR">VASUDEV DWAR</option>
                                 <option value="GOLF GROUND">GOLF GROUND</option>
@@ -902,6 +940,11 @@
                             <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>
                             Refresh
                         </button>
+                        
+                        
+     
+
+                        
                     </div>
                 </div>
             </div>
