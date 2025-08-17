@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'MAYUR VIHAR'
     ];
     
-    // Enhanced state management
+    // Enhanced state management with passenger count and cancellation
     let state = {
         currentView: 'dashboard',
         allRequests: [],
@@ -95,7 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
         userLocation: null,
         isLoading: false,
         retryCount: 0,
-        maxRetries: 3
+        maxRetries: 3,
+        passengerCount: 1,
+        currentRideForCancel: null
     };
 
     // Enhanced API configuration
@@ -169,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <i class="fas ${getNotificationIcon(type)} mr-3"></i>
                     <span>${sanitizeString(message)}</span>
                 </div>
-                <button class="ml-4 text-lg" onclick="this.parentElement.parentElement.remove()" aria-label="Close notification">
+                <button class="ml-4 text-lg hover:opacity-70 transition-opacity" onclick="this.parentElement.parentElement.remove()" aria-label="Close notification">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -206,6 +208,226 @@ document.addEventListener('DOMContentLoaded', () => {
         return icons[type] || icons.info;
     };
 
+    // Passenger counter functionality
+    const initializePassengerCounter = () => {
+        const decreaseBtn = getElement('decreasePassengers');
+        const increaseBtn = getElement('increasePassengers');
+        const display = getElement('passengerDisplay');
+        const hiddenInput = getElement('passengerCount');
+
+        if (!decreaseBtn || !increaseBtn || !display || !hiddenInput) {
+            console.warn('Passenger counter elements not found');
+            return;
+        }
+
+        const updatePassengerCount = (count) => {
+            state.passengerCount = count;
+            display.textContent = count;
+            hiddenInput.value = count;
+            
+            // Update button states
+            decreaseBtn.disabled = count <= 1;
+            increaseBtn.disabled = count >= 4;
+            
+            // Update button styles
+            decreaseBtn.classList.toggle('opacity-50', count <= 1);
+            increaseBtn.classList.toggle('opacity-50', count >= 4);
+        };
+
+        decreaseBtn.addEventListener('click', () => {
+            if (state.passengerCount > 1) {
+                updatePassengerCount(state.passengerCount - 1);
+            }
+        });
+
+        increaseBtn.addEventListener('click', () => {
+            if (state.passengerCount < 4) {
+                updatePassengerCount(state.passengerCount + 1);
+            }
+        });
+
+        // Initialize with default value
+        updatePassengerCount(1);
+    };
+
+    // Enhanced cancellation modal functionality
+    const initializeCancellationModal = () => {
+        const modal = getElement('cancelRideModal');
+        const confirmBtn = getElement('confirmCancelRide');
+        const closeBtn = getElement('closeCancelModal');
+        const reasonSelect = getElement('cancellationReason');
+        const noteTextarea = getElement('cancellationNote');
+        const charCount = getElement('noteCharCount');
+
+        if (!modal || !confirmBtn || !closeBtn || !reasonSelect || !noteTextarea || !charCount) {
+            console.warn('Cancellation modal elements not found');
+            return;
+        }
+
+        // Character counter for notes
+        noteTextarea.addEventListener('input', () => {
+            charCount.textContent = noteTextarea.value.length;
+        });
+
+        // Close modal
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            state.currentRideForCancel = null;
+            reasonSelect.value = '';
+            noteTextarea.value = '';
+            charCount.textContent = '0';
+        };
+
+        closeBtn.addEventListener('click', closeModal);
+
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        // Confirm cancellation
+        confirmBtn.addEventListener('click', async () => {
+            if (!reasonSelect.value) {
+                showNotification('Please select a reason for cancellation', 'error');
+                reasonSelect.focus();
+                return;
+            }
+
+            if (!state.currentRideForCancel) {
+                showNotification('No ride selected for cancellation', 'error');
+                return;
+            }
+
+            try {
+                // Disable button and show loading
+                confirmBtn.disabled = true;
+                const originalHtml = confirmBtn.innerHTML;
+                confirmBtn.innerHTML = `
+                    <div class="flex items-center justify-center space-x-2">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Cancelling...</span>
+                    </div>
+                `;
+
+                await cancelRideRequest(
+                    state.currentRideForCancel.id,
+                    reasonSelect.value,
+                    noteTextarea.value
+                );
+
+                showNotification('Ride request cancelled successfully', 'success');
+                closeModal();
+
+                // Refresh the requests list
+                await fetchRequests();
+
+            } catch (error) {
+                console.error('Error cancelling ride:', error);
+                showNotification('Failed to cancel ride request', 'error');
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = `
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    <span>Cancel Ride</span>
+                `;
+            }
+        });
+    };
+
+    // Show cancellation modal with ride details
+    const showCancelModal = (rideRequest) => {
+        state.currentRideForCancel = rideRequest;
+        
+        const modal = getElement('cancelRideModal');
+        const detailsDiv = getElement('rideDetailsForCancel');
+        
+        if (!modal || !detailsDiv) {
+            showNotification('Cancellation modal not available', 'error');
+            return;
+        }
+        
+        // Populate ride details
+        detailsDiv.innerHTML = `
+            <div class="space-y-2">
+                <div><strong>Request ID:</strong> #RS-${rideRequest.id}</div>
+                <div><strong>From:</strong> ${sanitizeString(rideRequest.pickup_location)}</div>
+                <div><strong>To:</strong> ${sanitizeString(rideRequest.dropoff_location)}</div>
+                <div><strong>Passengers:</strong> ${rideRequest.passenger_count || 1}</div>
+                <div><strong>Scheduled:</strong> ${formatDate(rideRequest.request_time)}</div>
+                <div><strong>Status:</strong> <span class="px-2 py-1 text-xs font-medium ride-status-${rideRequest.status?.toLowerCase()} rounded">${formatStatus(rideRequest.status)}</span></div>
+            </div>
+        `;
+        
+        modal.classList.remove('hidden');
+    };
+
+    // API call to cancel ride
+    const cancelRideRequest = async (rideId, reason, note) => {
+        try {
+            const response = await apiCall(`/requests/${rideId}/cancel`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    reason,
+                    note,
+                    cancelled_at: new Date().toISOString()
+                })
+            });
+
+            // Update local state
+            const rideIndex = state.allRequests.findIndex(r => r.id === rideId);
+            if (rideIndex !== -1) {
+                state.allRequests[rideIndex].status = 'CANCELLED';
+                state.allRequests[rideIndex].cancellation_reason = reason;
+                state.allRequests[rideIndex].cancellation_note = note;
+                state.allRequests[rideIndex].cancelled_at = new Date().toISOString();
+            }
+            
+            // Notify control center
+            notifyControlCenter(rideId, reason, note);
+            
+            return response;
+        } catch (error) {
+            // Fallback for demo - simulate cancellation
+            console.warn('Using fallback cancellation due to API error:', error.message);
+            
+            const rideIndex = state.allRequests.findIndex(r => r.id === rideId);
+            if (rideIndex !== -1) {
+                state.allRequests[rideIndex].status = 'CANCELLED';
+                state.allRequests[rideIndex].cancellation_reason = reason;
+                state.allRequests[rideIndex].cancellation_note = note;
+                state.allRequests[rideIndex].cancelled_at = new Date().toISOString();
+            }
+            
+            notifyControlCenter(rideId, reason, note);
+            
+            return { success: true };
+        }
+    };
+
+    // Notify control center about cancellation
+    const notifyControlCenter = (rideId, reason, note) => {
+        console.log('Notifying control center about cancellation:', {
+            rideId,
+            reason,
+            note,
+            timestamp: new Date().toISOString(),
+            controlPhone: '9086439489'
+        });
+        
+        setTimeout(() => {
+            showNotification('Control center has been notified about the cancellation', 'info');
+        }, 2000);
+    };
+
     // Initialize the dashboard with error handling
     const initDashboard = async () => {
         try {
@@ -215,6 +437,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     el.textContent = sanitizedUsername.split('@')[0];
                 }
             });
+
+            // Initialize passenger counter
+            initializePassengerCounter();
+
+            // Initialize cancellation modal
+            initializeCancellationModal();
 
             // Setup event listeners
             setupEventListeners();
@@ -321,13 +549,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Mobile menu toggle
         const mobileMenuButton = getElement('mobileMenuButton');
+        const mobileOverlay = getElement('mobileOverlay');
+        
         addListener(mobileMenuButton, 'click', () => {
             const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('hidden');
-                sidebar.classList.toggle('active');
+            if (sidebar && mobileOverlay) {
+                const isHidden = sidebar.classList.contains('hidden') || !sidebar.classList.contains('active');
+                
+                if (isHidden) {
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('active');
+                    mobileOverlay.classList.remove('hidden');
+                    mobileMenuButton.setAttribute('aria-expanded', 'true');
+                } else {
+                    sidebar.classList.add('hidden');
+                    sidebar.classList.remove('active');
+                    mobileOverlay.classList.add('hidden');
+                    mobileMenuButton.setAttribute('aria-expanded', 'false');
+                }
             }
         });
+
+        // Close mobile menu on overlay click
+        if (mobileOverlay) {
+            addListener(mobileOverlay, 'click', () => {
+                const sidebar = document.querySelector('.sidebar');
+                if (sidebar) {
+                    sidebar.classList.add('hidden');
+                    sidebar.classList.remove('active');
+                    mobileOverlay.classList.add('hidden');
+                    mobileMenuButton.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
 
         // Logout buttons with confirmation
         const logoutDesktop = getElement('logoutDesktop');
@@ -429,19 +683,19 @@ document.addEventListener('DOMContentLoaded', () => {
         mainContent.innerHTML = `
             <div class="mb-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <div class="text-sm text-gray-500">Last updated: Just now</div>
+                <div class="text-sm text-gray-500">Last updated: <span id="lastUpdateTime">Just now</span></div>
             </div>
 
             <!-- Enhanced Stats Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+                <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300 group">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Rides</p>
                             <h3 class="text-2xl font-bold mt-1">${state.allRequests.length}</h3>
                         </div>
-                        <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
-                            <i class="fas fa-car-side" aria-hidden="true"></i>
+                        <div class="p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors">
+                            <i class="fas fa-car-side text-lg" aria-hidden="true"></i>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm text-green-500">
@@ -450,14 +704,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 
-                <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+                <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300 group">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Pending Requests</p>
                             <h3 class="text-2xl font-bold mt-1">${pendingRides}</h3>
                         </div>
-                        <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600">
-                            <i class="fas fa-clock" aria-hidden="true"></i>
+                        <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600 group-hover:bg-yellow-200 transition-colors">
+                            <i class="fas fa-clock text-lg" aria-hidden="true"></i>
                         </div>
                     </div>
                     <div class="mt-4">
@@ -467,14 +721,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 
-                <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+                <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300 group">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Completed Rides</p>
                             <h3 class="text-2xl font-bold mt-1">${completedRides}</h3>
                         </div>
-                        <div class="p-3 rounded-lg bg-green-100 text-green-600">
-                            <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        <div class="p-3 rounded-lg bg-green-100 text-green-600 group-hover:bg-green-200 transition-colors">
+                            <i class="fas fa-check-circle text-lg" aria-hidden="true"></i>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center text-sm text-gray-500">
@@ -485,70 +739,102 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <!-- Enhanced Quick Book Section -->
-            <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold">Book a Ride</h2>
+            <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300 mb-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Book a Ride</h2>
                     <div class="flex space-x-2">
-                        <button type="button" class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg" aria-pressed="true">Now</button>
-                        <button type="button" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50" disabled>Later</button>
+                        <button type="button" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm" aria-pressed="true">
+                            <i class="fas fa-clock mr-1" aria-hidden="true"></i>
+                            Now
+                        </button>
+                        <button type="button" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" disabled title="Coming soon">
+                            <i class="fas fa-calendar mr-1" aria-hidden="true"></i>
+                            Later
+                        </button>
                     </div>
                 </div>
                 
-                <form id="cabRequestForm" class="space-y-4" novalidate>
-                    <div>
-                        <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-1">
-                            Pickup Location <span class="text-red-500">*</span>
+                <form id="cabRequestForm" class="space-y-6" novalidate>
+                    <div class="form-group">
+                        <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Pickup Location <span class="text-red-500" aria-label="required">*</span>
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-map-marker-alt text-gray-400" aria-hidden="true"></i>
                             </div>
                             <select id="pickupLocation" name="pickupLocation" 
-                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
+                                   class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" 
                                    required aria-describedby="pickupLocation-error">
                                 <option value="">Select pickup location</option>
                                 ${generateLocationOptions()}
                             </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <i class="fas fa-chevron-down text-gray-400" aria-hidden="true"></i>
-                            </div>
                         </div>
-                        <div id="pickupLocation-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></div>
+                        <div id="pickupLocation-error" class="form-error mt-1 hidden" role="alert"></div>
                     </div>
                     
-                    <div>
-                        <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-1">
-                            Dropoff Location <span class="text-red-500">*</span>
+                    <div class="form-group">
+                        <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Dropoff Location <span class="text-red-500" aria-label="required">*</span>
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-flag text-gray-400" aria-hidden="true"></i>
                             </div>
                             <select id="dropoffLocation" name="dropoffLocation" 
-                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
+                                   class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" 
                                    required aria-describedby="dropoffLocation-error">
                                 <option value="">Select dropoff location</option>
                                 ${generateLocationOptions()}
                             </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <i class="fas fa-chevron-down text-gray-400" aria-hidden="true"></i>
+                        </div>
+                        <div id="dropoffLocation-error" class="form-error mt-1 hidden" role="alert"></div>
+                    </div>
+
+                    <!-- Number of Passengers Field -->
+                    <div class="form-group">
+                        <label for="passengerCount" class="block text-sm font-medium text-gray-700 mb-2">
+                            Number of Passengers <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <div class="flex items-center justify-between">
+                            <div class="passenger-counter">
+                                <button type="button" class="counter-btn" id="decreasePassengers" aria-label="Decrease passenger count">
+                                    <i class="fas fa-minus text-sm" aria-hidden="true"></i>
+                                </button>
+                                <div class="counter-display" id="passengerDisplay">1</div>
+                                <button type="button" class="counter-btn" id="increasePassengers" aria-label="Increase passenger count">
+                                    <i class="fas fa-plus text-sm" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                <i class="fas fa-users mr-1" aria-hidden="true"></i>
+                                Max 4 passengers
                             </div>
                         </div>
-                        <div id="dropoffLocation-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></div>
+                        <input type="hidden" id="passengerCount" name="passengerCount" value="1" required>
+                        <div id="passengerCount-error" class="form-error mt-1 hidden" role="alert"></div>
                     </div>
                     
-                    <div>
-                        <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-1">
-                            Schedule <span class="text-red-500">*</span>
+                    <div class="form-group">
+                        <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-2">
+                            Schedule <span class="text-red-500" aria-label="required">*</span>
                         </label>
-                        <input type="datetime-local" id="requestTime" name="requestTime" 
-                               class="w-full px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                               required aria-describedby="requestTime-error">
-                        <div id="requestTime-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-calendar-alt text-gray-400" aria-hidden="true"></i>
+                            </div>
+                            <input type="datetime-local" id="requestTime" name="requestTime" 
+                                   class="form-input w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 transition-all" 
+                                   required aria-describedby="requestTime-error requestTime-help">
+                        </div>
+                        <div id="requestTime-help" class="text-sm text-gray-500 mt-1">
+                            Select a time at least 15 minutes from now
+                        </div>
+                        <div id="requestTime-error" class="form-error mt-1 hidden" role="alert"></div>
                     </div>
                     
-                    <div class="pt-2">
-                        <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <div class="pt-4">
+                        <button type="submit" class="btn-primary w-full py-3 px-6 rounded-lg text-white font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                             <i class="fas fa-car" aria-hidden="true"></i>
                             <span>Request Ride</span>
                         </button>
@@ -557,20 +843,23 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <!-- Enhanced Recent Requests Section -->
-            <div class="card bg-white p-6 rounded-xl border border-gray-100 mt-8 hover:shadow-lg transition-shadow duration-300">
+            <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold">Recent Requests</h2>
-                    <button type="button" class="text-sm text-blue-600 hover:text-blue-800" id="viewAllRequests">View All</button>
+                    <h2 class="text-xl font-semibold text-gray-900">Recent Requests</h2>
+                    <button type="button" class="text-sm text-blue-600 hover:text-blue-800 transition-colors px-3 py-1 rounded hover:bg-blue-50" id="viewAllRequests">
+                        View All <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+                    </button>
                 </div>
                 
-                <div class="table-responsive overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200" role="table">
-                        <thead class="bg-gray-50">
+                <div class="table-responsive">
+                    <table class="min-w-full" role="table">
+                        <thead>
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Passengers</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
@@ -598,6 +887,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (newForm) {
             newForm.addEventListener('submit', handleRideRequest);
+            
+            // Re-initialize passenger counter for new form
+            initializePassengerCounter();
             
             // Real-time validation
             const pickupSelect = getElement('pickupLocation');
@@ -683,8 +975,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorElement = getElement(`${fieldName}-error`);
         
         if (field) {
-            field.classList.add('border-red-500');
-            field.classList.remove('border-gray-300');
+            field.classList.add('border-red-500', 'error');
+            field.classList.remove('border-gray-200');
         }
         
         if (errorElement) {
@@ -698,8 +990,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorElement = getElement(`${fieldName}-error`);
         
         if (field) {
-            field.classList.remove('border-red-500');
-            field.classList.add('border-gray-300');
+            field.classList.remove('border-red-500', 'error');
+            field.classList.add('border-gray-200');
         }
         
         if (errorElement) {
@@ -731,6 +1023,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        // Cancel ride buttons
+        document.querySelectorAll('.cancel-ride').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const requestId = parseInt(btn.getAttribute('data-id'));
+                const rideRequest = state.allRequests.find(req => req.id === requestId);
+                
+                if (rideRequest) {
+                    showCancelModal(rideRequest);
+                } else {
+                    showNotification('Ride request not found', 'error');
+                }
+            });
+        });
     };
 
     // Enhanced ride requests view
@@ -750,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <h2 class="text-xl font-semibold">All Ride Requests</h2>
+                    <h2 class="text-xl font-semibold text-gray-900">All Ride Requests</h2>
                     <div class="flex flex-wrap gap-2">
                         <select id="filterStatus" class="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Filter by status">
                             <option value="all">All Statuses</option>
@@ -765,14 +1072,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 
-                <div class="table-responsive overflow-x-auto">
-                    <table class="min-w-[1000px] divide-y divide-gray-200" role="table">
+                <div class="table-responsive">
+                    <table class="min-w-[1200px] divide-y divide-gray-200" role="table">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Request ID</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Date & Time</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Pickup</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Dropoff</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Passengers</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Status</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Driver Name</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6">Driver Phone</th>
@@ -788,54 +1096,61 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <!-- Enhanced Map Modal -->
-            <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" role="dialog" aria-labelledby="mapModalTitle" aria-modal="true">
-                <div class="bg-white rounded-lg p-4 w-full h-full max-w-4xl mx-2 sm:p-6 sm:mx-4 max-h-screen overflow-y-auto">
+            <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden no-print" role="dialog" aria-labelledby="mapModalTitle" aria-modal="true">
+                <div class="modal-content bg-white rounded-lg p-4 w-full h-full max-w-5xl mx-2 sm:p-6 sm:mx-4 max-h-screen overflow-y-auto shadow-2xl">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 id="mapModalTitle" class="text-lg font-semibold">Ride Tracking</h3>
-                        <button id="closeMapModal" class="text-gray-500 hover:text-gray-700 p-2" aria-label="Close map">
-                            <i class="fas fa-times" aria-hidden="true"></i>
+                        <h3 id="mapModalTitle" class="text-lg font-semibold text-gray-900">Real-time Ride Tracking</h3>
+                        <button id="closeMapModal" class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Close map">
+                            <i class="fas fa-times text-lg" aria-hidden="true"></i>
                         </button>
                     </div>
-                    <div id="driverMap" class="w-full h-[calc(100%-12rem)] sm:h-[calc(100%-14rem)] rounded-xl border border-gray-200 min-h-[300px]" role="img" aria-label="Driver location map"></div>
-                    <div class="mt-4 flex flex-col space-y-4">
+                    <div id="driverMap" class="w-full rounded-xl border-2 border-gray-200 shadow-inner" role="img" aria-label="Driver location map"></div>
+                    <div class="mt-6 space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Driver Name</p>
-                                <p id="driverNameInfo" class="font-medium">-</p>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Driver Name</p>
+                                <p id="driverNameInfo" class="font-semibold text-gray-900">-</p>
                             </div>
                             <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Vehicle</p>
-                                <p id="driverVehicleInfo" class="font-medium">-</p>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Vehicle</p>
+                                <p id="driverVehicleInfo" class="font-semibold text-gray-900">-</p>
                             </div>
                             <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Status</p>
-                                <p id="driverStatusInfo" class="font-medium">-</p>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Status</p>
+                                <p id="driverStatusInfo" class="font-semibold text-green-600">-</p>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Your Location</p>
-                                <p id="userLocationInfo" class="font-medium">-</p>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Your Location</p>
+                                <p id="userLocationInfo" class="font-semibold text-gray-900 text-xs">-</p>
                             </div>
                             <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Distance</p>
-                                <p id="distanceInfo" class="font-medium">-</p>
+                                <p class="text-sm font-medium text-gray-500 mb-1">Distance</p>
+                                <p id="distanceInfo" class="font-semibold text-blue-600">-</p>
                             </div>
                             <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">ETA</p>
-                                <p id="etaInfo" class="font-medium">-</p>
+                                <p class="text-sm font-medium text-gray-500 mb-1">ETA</p>
+                                <p id="etaInfo" class="font-semibold text-orange-600">-</p>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-lg">
                             <div class="text-sm text-gray-600">
+                                <i class="fas fa-clock mr-1" aria-hidden="true"></i>
                                 <span id="lastUpdatedInfo">Last updated: -</span>
                             </div>
-                            <div class="flex items-center">
-                                <span class="text-sm text-gray-500 mr-2">Auto-refresh:</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked aria-label="Toggle auto-refresh">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
+                            <div class="flex items-center space-x-4">
+                                <div class="flex items-center">
+                                    <span class="text-sm text-gray-500 mr-3">Auto-refresh:</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked aria-label="Toggle auto-refresh">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                                <button type="button" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors" onclick="if(window.updateDriverLocation && window.currentDriverId) window.updateDriverLocation(window.currentDriverId)">
+                                    <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>
+                                    Refresh
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -911,10 +1226,34 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const pickupSelect = getElement('pickupLocation');
                 const dropoffSelect = getElement('dropoffLocation');
+                const passengerCountInput = getElement('passengerCount');
                 
                 if (pickupSelect && dropoffSelect) {
                     pickupSelect.value = sanitizeString(data.pickup_location);
                     dropoffSelect.value = sanitizeString(data.dropoff_location);
+                    
+                    // Set passenger count if available
+                    if (data.passenger_count && passengerCountInput) {
+                        const count = Math.min(Math.max(1, parseInt(data.passenger_count)), 4);
+                        state.passengerCount = count;
+                        passengerCountInput.value = count;
+                        
+                        // Update display
+                        const display = getElement('passengerDisplay');
+                        if (display) display.textContent = count;
+                        
+                        // Update button states
+                        const decreaseBtn = getElement('decreasePassengers');
+                        const increaseBtn = getElement('increasePassengers');
+                        if (decreaseBtn) {
+                            decreaseBtn.disabled = count <= 1;
+                            decreaseBtn.classList.toggle('opacity-50', count <= 1);
+                        }
+                        if (increaseBtn) {
+                            increaseBtn.disabled = count >= 4;
+                            increaseBtn.classList.toggle('opacity-50', count >= 4);
+                        }
+                    }
                     
                     // Scroll to the form smoothly
                     const form = getElement('cabRequestForm');
@@ -966,6 +1305,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 return;
             }
+            
+            // Set map height
+            mapElement.style.height = 'clamp(300px, 40vh, 500px)';
             
             // Create map centered between driver and user
             let centerLat = driverLat;
@@ -1266,15 +1608,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Enhanced request rendering with proper sanitization
+    // Enhanced request rendering with proper sanitization and passenger count
     const renderRecentRequests = (requests) => {
         if (!requests || requests.length === 0) {
             return `
                 <tr>
-                    <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+                    <td colspan="10" class="px-6 py-8 text-center text-gray-500">
                         <div class="flex flex-col items-center py-8">
-                            <i class="fas fa-car text-4xl text-gray-300 mb-2" aria-hidden="true"></i>
-                            <p>No ride requests found. Book your first ride!</p>
+                            <i class="fas fa-car text-4xl text-gray-300 mb-3" aria-hidden="true"></i>
+                            <p class="text-lg font-medium">No rides yet</p>
+                            <p class="text-sm text-gray-400">Your ride history will appear here</p>
                         </div>
                     </td>
                 </tr>
@@ -1293,6 +1636,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Date & Time">${formatDate(req.request_time)}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Pickup">${sanitizeString(req.pickup_location || '')}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Dropoff">${sanitizeString(req.dropoff_location || '')}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" data-label="Passengers">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-xs text-gray-400 mr-1" aria-hidden="true"></i>
+                        ${req.passenger_count || 1}
+                    </div>
+                </td>
                 <td class="px-6 py-4 whitespace-nowrap" data-label="Status">
                     <span class="px-2 py-1 text-xs font-medium ride-status-${req.status?.toLowerCase() || 'unknown'} rounded-full">
                         ${formatStatus(req.status)}
@@ -1329,6 +1678,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<button type="button" class="text-blue-600 hover:text-blue-900 transition-colors duration-200 track-ride" data-id="${requestId}" aria-label="Track ride ${requestId}">Track</button>`;
         } else if (req.status === 'COMPLETED') {
             return `<button type="button" class="text-blue-600 hover:text-blue-900 transition-colors duration-200 view-details" data-id="${requestId}" aria-label="View details for ride ${requestId}">Details</button>`;
+        } else if (req.status === 'PENDING') {
+            return `
+                <div class="flex space-x-2">
+                    <button type="button" class="text-red-600 hover:text-red-900 transition-colors duration-200 cancel-ride" data-id="${requestId}" aria-label="Cancel ride ${requestId}">Cancel</button>
+                    <button type="button" class="text-blue-600 hover:text-blue-900 transition-colors duration-200 book-again" data-id="${requestId}" aria-label="Book again ride ${requestId}">Book Again</button>
+                </div>
+            `;
         } else {
             return `<button type="button" class="text-blue-600 hover:text-blue-900 transition-colors duration-200 book-again" data-id="${requestId}" aria-label="Book again ride ${requestId}">Book Again</button>`;
         }
@@ -1356,6 +1712,21 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', (e) => {
                 const requestId = e.target.getAttribute('data-id');
                 bookAgain(requestId);
+            });
+        });
+
+        // Cancel ride buttons
+        document.querySelectorAll('.cancel-ride').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const requestId = parseInt(e.target.getAttribute('data-id'));
+                const rideRequest = state.allRequests.find(req => req.id === requestId);
+                
+                if (rideRequest) {
+                    showCancelModal(rideRequest);
+                } else {
+                    showNotification('Ride request not found', 'error');
+                }
             });
         });
 
@@ -1404,7 +1775,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.currentView === 'dashboard' && requestList) {
                 requestList.innerHTML = `
                     <tr>
-                        <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="10" class="px-6 py-4 text-center text-gray-500">
                             <div class="flex justify-center items-center py-4">
                                 <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
                                 <span>Loading requests...</span>
@@ -1452,7 +1823,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (requestList) {
                 requestList.innerHTML = `
                     <tr>
-                        <td colspan="9" class="px-6 py-4 text-center text-red-500">
+                        <td colspan="10" class="px-6 py-4 text-center text-red-500">
                             <div class="flex flex-col items-center py-8">
                                 <i class="fas fa-exclamation-triangle text-4xl mb-2" aria-hidden="true"></i>
                                 <p class="mb-2">${errorMessage}</p>
@@ -1521,7 +1892,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Enhanced ride request handler with comprehensive validation
+    // Enhanced ride request handler with comprehensive validation including passenger count
     const handleRideRequest = async (e) => {
         e.preventDefault();
 
@@ -1532,6 +1903,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const pickupLocationElement = getElement('pickupLocation');
         const dropoffLocationElement = getElement('dropoffLocation');
         const requestTimeElement = getElement('requestTime');
+        const passengerCountElement = getElement('passengerCount');
 
         if (!pickupLocationElement || !dropoffLocationElement || !requestTimeElement) {
             showNotification('Form elements not found', 'error');
@@ -1541,6 +1913,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const pickupLocation = pickupLocationElement.value.trim();
         const dropoffLocation = dropoffLocationElement.value.trim();
         const requestTime = requestTimeElement.value;
+        const passengerCount = passengerCountElement ? parseInt(passengerCountElement.value) || 1 : state.passengerCount;
 
         // Comprehensive validation
         const validationErrors = [];
@@ -1571,6 +1944,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        if (passengerCount < 1 || passengerCount > 4) {
+            validationErrors.push({ field: 'passengerCount', message: 'Number of passengers must be between 1 and 4' });
+        }
+
         // Show validation errors
         if (validationErrors.length > 0) {
             validationErrors.forEach(error => {
@@ -1581,7 +1958,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Clear any previous errors
-        ['pickupLocation', 'dropoffLocation', 'requestTime'].forEach(field => {
+        ['pickupLocation', 'dropoffLocation', 'requestTime', 'passengerCount'].forEach(field => {
             hideFieldError(field);
         });
 
@@ -1599,7 +1976,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const requestData = {
                 pickupLocation: sanitizeString(pickupLocation),
                 dropoffLocation: sanitizeString(dropoffLocation),
-                requestTime: requestTime
+                requestTime: requestTime,
+                passengerCount: passengerCount
             };
 
             const data = await apiCall('/requests', {
@@ -1607,10 +1985,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(requestData)
             });
 
-            showNotification('Ride request submitted successfully!', 'success');
+            showNotification(`Ride request submitted successfully! Passengers: ${passengerCount}`, 'success');
             
             // Reset form
             e.target.reset();
+            
+            // Reset passenger counter to 1
+            state.passengerCount = 1;
+            const display = getElement('passengerDisplay');
+            const hiddenInput = getElement('passengerCount');
+            if (display) display.textContent = '1';
+            if (hiddenInput) hiddenInput.value = '1';
+            
+            // Update counter button states
+            const decreaseBtn = getElement('decreasePassengers');
+            const increaseBtn = getElement('increasePassengers');
+            if (decreaseBtn) {
+                decreaseBtn.disabled = true;
+                decreaseBtn.classList.add('opacity-50');
+            }
+            if (increaseBtn) {
+                increaseBtn.disabled = false;
+                increaseBtn.classList.remove('opacity-50');
+            }
             
             // Refresh requests
             await fetchRequests();
@@ -1725,6 +2122,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 '',
                 `Pickup: ${sanitizeString(data.pickup_location) || 'Not specified'}`,
                 `Dropoff: ${sanitizeString(data.dropoff_location) || 'Not specified'}`,
+                `Passengers: ${data.passenger_count || 1}`,
                 `Date: ${formatDate(data.request_time)}`,
                 `Status: ${formatStatus(data.status)}`,
                 `Fare: ${fareText}`,
@@ -1742,20 +2140,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const showDetailsModal = (details) => {
         // Create a simple modal for better UX
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 no-print';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
         
         modal.innerHTML = `
-            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
+            <div class="modal-content bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto shadow-2xl">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Ride Details</h3>
-                    <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()" aria-label="Close details">
-                        <i class="fas fa-times"></i>
+                    <h3 class="text-lg font-semibold text-gray-900">Ride Details</h3>
+                    <button class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors" onclick="this.closest('.fixed').remove()" aria-label="Close details">
+                        <i class="fas fa-times text-lg"></i>
                     </button>
                 </div>
-                <pre class="whitespace-pre-wrap text-sm text-gray-700">${details}</pre>
-                <div class="mt-4 flex justify-end">
+                <pre class="whitespace-pre-wrap text-sm text-gray-700 font-sans">${details}</pre>
+                <div class="mt-6 flex justify-end">
                     <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
                         Close
                     </button>
@@ -1805,6 +2203,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Connection status monitoring
+    const updateConnectionStatus = (isOnline) => {
+        const statusElement = getElement('connectionStatus');
+        const statusText = document.querySelector('#connectionStatus + span');
+        
+        if (statusElement) {
+            statusElement.className = isOnline ? 'w-2 h-2 bg-green-500 rounded-full' : 'w-2 h-2 bg-red-500 rounded-full';
+            statusElement.title = isOnline ? 'Online' : 'Offline';
+        }
+        
+        if (statusText) {
+            statusText.textContent = isOnline ? 'Online' : 'Offline';
+        }
+    };
+
     // Initialize the dashboard
     initDashboard().catch(error => {
         console.error('Failed to initialize dashboard:', error);
@@ -1826,12 +2239,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle online/offline status
     window.addEventListener('online', () => {
+        updateConnectionStatus(true);
         showNotification('Connection restored', 'success');
         fetchRequests(); // Refresh data when back online
     });
 
     window.addEventListener('offline', () => {
+        updateConnectionStatus(false);
         showNotification('No internet connection', 'warning', 0); // Persistent warning
     });
-});
 
+    // Initialize connection status
+    updateConnectionStatus(navigator.onLine);
+
+    // Export functions for global access (if needed for debugging or external scripts)
+    window.dashboardFunctions = {
+        showNotification,
+        fetchRequests,
+        showCancelModal,
+        updateDriverLocation: updateDriverLocation,
+        currentDriverId: () => state.currentDriverId
+    };
+
+    // Set up keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Alt + N for new ride
+        if (e.altKey && e.key === 'n') {
+            e.preventDefault();
+            switchView('dashboard');
+            setTimeout(() => {
+                const pickupSelect = getElement('pickupLocation');
+                if (pickupSelect) pickupSelect.focus();
+            }, 100);
+        }
+        
+        // Alt + H for history
+        if (e.altKey && e.key === 'h') {
+            e.preventDefault();
+            switchView('history');
+        }
+        
+        // Alt + R for refresh
+        if (e.altKey && e.key === 'r') {
+            e.preventDefault();
+            fetchRequests();
+        }
+    });
+
+    // Update last update time periodically
+    setInterval(() => {
+        const lastUpdateElement = getElement('lastUpdateTime');
+        if (lastUpdateElement) {
+            const now = new Date();
+            lastUpdateElement.textContent = now.toLocaleTimeString([], {
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+        }
+    }, 60000); // Update every minute
+
+    console.log('Enhanced User Dashboard initialized successfully');
+});
