@@ -153,27 +153,6 @@
             box-shadow: none;
         }
 
-        /* Cancel button styles */
-        .btn-cancel {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-cancel:hover {
-            background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
-        }
-
-        .btn-cancel:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
         /* Status badges */
         .ride-status-pending {
             background-color: #fef3c7;
@@ -305,100 +284,54 @@
             }
         }
 
-        /* Passenger count styles */
-        .passenger-counter {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        /* Map styles */
+        #driverMap {
+            height: clamp(300px, 40vh, 500px);
+            width: 100%;
+            border-radius: 0.75rem;
+            border: 1px solid var(--gray-200);
         }
 
-        .counter-btn {
-            width: 2.5rem;
-            height: 2.5rem;
+        .driver-info-card {
+            background-color: var(--gray-50);
+            padding: clamp(0.75rem, 2vw, 1rem);
             border-radius: 0.5rem;
-            border: 2px solid var(--gray-200);
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            border: 1px solid var(--gray-200);
             transition: all 0.2s ease;
         }
 
-        .counter-btn:hover:not(:disabled) {
-            border-color: var(--primary);
-            background-color: rgba(67, 97, 238, 0.05);
+        .driver-info-card:hover {
+            background-color: white;
+            box-shadow: var(--shadow-sm);
         }
 
-        .counter-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        /* Custom marker icons */
+        .driver-marker-icon,
+        .user-marker-icon {
+            border-radius: 50%;
+            border: 2px solid white;
+            width: clamp(16px, 3vw, 24px);
+            height: clamp(16px, 3vw, 24px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
         }
 
-        .counter-display {
-            min-width: 3rem;
-            text-align: center;
-            font-weight: 600;
-            font-size: 1.1rem;
+        .driver-marker-icon {
+            background-color: var(--primary);
         }
 
-        /* Modal styles */
-        .modal-backdrop {
-            backdrop-filter: blur(4px);
-            animation: fadeIn 0.2s ease-out;
+        .user-marker-icon {
+            background-color: var(--success);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .modal-content {
-            animation: slideUp 0.3s ease-out;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(1rem) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* Contact us styles */
-        .contact-us {
-            background-color: #f5f5f5;
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 6px;
-            font-family: Arial, sans-serif;
-            max-width: 300px;
-        }
-
-        .contact-us h3 {
-            margin-top: 0;
-            color: #2c3e50;
-        }
-
-        .contact-us p {
-            margin: 5px 0;
-            font-size: 14px;
-        }
-
-        .contact-us a {
-            color: #006400; 
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .contact-us a:hover {
-            text-decoration: underline;
+        /* Route line */
+        .route-line {
+            stroke: var(--primary);
+            stroke-width: clamp(2px, 0.5vw, 4px);
+            stroke-dasharray: 10, 10;
+            opacity: 0.8;
         }
 
         /* Form enhancements */
@@ -436,6 +369,147 @@
             background-size: 1.5em 1.5em;
             padding-right: 2.5rem;
         }
+
+        /* Accessibility improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus styles */
+        button:focus,
+        a:focus,
+        input:focus,
+        select:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --gray-50: #1f2937;
+                --gray-100: #374151;
+                --gray-200: #4b5563;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                font-size: 12pt;
+                line-height: 1.4;
+            }
+            
+            .card {
+                break-inside: avoid;
+                border: 1px solid #ccc;
+            }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* High contrast mode */
+        @media (prefers-contrast: high) {
+            .card {
+                border: 2px solid #000;
+            }
+            
+            .btn-primary {
+                border: 2px solid #000;
+            }
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid var(--gray-200);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .btn-primary {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        .contact-us {
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
+    max-width: 300px;
+}
+
+.contact-us h3 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+.contact-us p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+.contact-us a {
+    color: #006400; /* Dark green for military look */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.contact-us a:hover {
+    text-decoration: underline;
+}
+
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -560,7 +634,7 @@
         </header>
 
         <!-- Enhanced Dashboard Content -->
-        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50" id="main-content">
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
             <div class="mb-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
                 <div class="text-sm text-gray-500">Last updated: <span id="lastUpdateTime">Just now</span></div>
@@ -572,7 +646,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Rides</p>
-                            <h3 class="text-2xl font-bold mt-1 text-gray-900" id="totalRidesCount">0</h3>
+                            <h3 class="text-2xl font-bold mt-1 text-gray-900">0</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors">
                             <i class="fas fa-car-side text-lg" aria-hidden="true"></i>
@@ -588,7 +662,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Pending Requests</p>
-                            <h3 class="text-2xl font-bold mt-1 text-gray-900" id="pendingRequestsCount">0</h3>
+                            <h3 class="text-2xl font-bold mt-1 text-gray-900">0</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600 group-hover:bg-yellow-200 transition-colors">
                             <i class="fas fa-clock text-lg" aria-hidden="true"></i>
@@ -605,7 +679,7 @@
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Completed Rides</p>
-                            <h3 class="text-2xl font-bold mt-1 text-gray-900" id="completedRidesCount">0</h3>
+                            <h3 class="text-2xl font-bold mt-1 text-gray-900">0</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-green-100 text-green-600 group-hover:bg-green-200 transition-colors">
                             <i class="fas fa-check-circle text-lg" aria-hidden="true"></i>
@@ -613,7 +687,7 @@
                     </div>
                     <div class="mt-4 flex items-center text-sm text-gray-500">
                         <i class="fas fa-calendar-alt mr-2" aria-hidden="true"></i>
-                        <span>This month: <span id="monthlyCompletedCount">0</span></span>
+                        <span>This month: 0</span>
                     </div>
                 </div>
             </div>
@@ -655,6 +729,39 @@
                                     aria-describedby="pickupLocation-error">
                                 <option value="">Select pickup location</option>
                                 <option value="APS">APS</option>
+                                <option value="SONAR INCLAVE">SONAR INCLAVE</option>
+                                <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
+                                <option value="KSP">KSP</option>
+                                <option value="VASUDEV DWAR">VASUDEV DWAR</option>
+                                <option value="GOLF GROUND">GOLF GROUND</option>
+                                <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
+                                <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
+                                <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
+                                <option value="FORT KAMPTEE">FORT KAMPTEE</option>
+                                <option value="GARURA BUS STOP">GARURA BUS STOP</option>
+                                <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
+                                <option value="TCP II">TCP II</option>
+                                <option value="MAYUR VIHAR">MAYUR VIHAR</option>
+                            </select>
+                        </div>
+                        <div id="pickupLocation-error" class="form-error mt-1 hidden" role="alert"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Dropoff Location <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-flag text-gray-400" aria-hidden="true"></i>
+                            </div>
+                            <select id="dropoffLocation" 
+                                    name="dropoffLocation" 
+                                    class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" 
+                                    required 
+                                    aria-describedby="dropoffLocation-error">
+                                <option value="">Select Dropoff Location</option>
+                                <option value="APS">APS</option>
                                 <option value="SONAR INCLAVE">SONAR ENCLAVE</option>
                                 <option value="CHAN SINGH ENCLAVE">CHAIN SINGH ENCLAVE</option>
                                 <option value="KSP">KSP</option>
@@ -671,30 +778,6 @@
                             </select>
                         </div>
                         <div id="dropoffLocation-error" class="form-error mt-1 hidden" role="alert"></div>
-                    </div>
-
-                    <!-- Number of Passengers Field -->
-                    <div class="form-group">
-                        <label for="passengerCount" class="block text-sm font-medium text-gray-700 mb-2">
-                            Number of Passengers <span class="text-red-500" aria-label="required">*</span>
-                        </label>
-                        <div class="flex items-center justify-between">
-                            <div class="passenger-counter">
-                                <button type="button" class="counter-btn" id="decreasePassengers" aria-label="Decrease passenger count">
-                                    <i class="fas fa-minus text-sm" aria-hidden="true"></i>
-                                </button>
-                                <div class="counter-display" id="passengerDisplay">1</div>
-                                <button type="button" class="counter-btn" id="increasePassengers" aria-label="Increase passenger count">
-                                    <i class="fas fa-plus text-sm" aria-hidden="true"></i>
-                                </button>
-                            </div>
-                            <div class="text-sm text-gray-500">
-                                <i class="fas fa-users mr-1" aria-hidden="true"></i>
-                                Max 4 passengers
-                            </div>
-                        </div>
-                        <input type="hidden" id="passengerCount" name="passengerCount" value="1" required>
-                        <div id="passengerCount-error" class="form-error mt-1 hidden" role="alert"></div>
                     </div>
                     
                     <div class="form-group">
@@ -747,7 +830,6 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Passengers</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
@@ -757,7 +839,7 @@
                         </thead>
                         <tbody id="requestList" class="bg-white divide-y divide-gray-200">
                             <tr>
-                                <td colspan="10" class="px-6 py-8 text-center text-gray-500">
+                                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <i class="fas fa-car text-4xl text-gray-300 mb-3" aria-hidden="true"></i>
                                         <p class="text-lg font-medium">No rides yet</p>
@@ -791,65 +873,80 @@
     <!-- Enhanced Notification Area -->
     <div id="notificationArea" class="fixed bottom-4 right-4 z-40 space-y-2 max-w-sm no-print"></div>
 
-    <!-- Ride Cancellation Confirmation Modal -->
-    <div id="cancelRideModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden no-print" role="dialog" aria-labelledby="cancelModalTitle" aria-modal="true">
-        <div class="modal-content bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
-            <div class="flex items-center mb-4">
-                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
-                    <i class="fas fa-exclamation-triangle text-red-600 text-xl" aria-hidden="true"></i>
-                </div>
-                <div>
-                    <h3 id="cancelModalTitle" class="text-lg font-semibold text-gray-900">Cancel Ride Request</h3>
-                    <p class="text-sm text-gray-500">This action cannot be undone</p>
-                </div>
+    <!-- Enhanced Map Modal -->
+    <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print" role="dialog" aria-labelledby="mapModalTitle" aria-modal="true">
+        <div class="bg-white rounded-lg p-4 w-full h-full max-w-5xl mx-2 sm:p-6 sm:mx-4 max-h-screen overflow-y-auto shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="mapModalTitle" class="text-lg font-semibold text-gray-900">Real-time Ride Tracking</h3>
+                <button id="closeMapModal" 
+                        class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors" 
+                        aria-label="Close map">
+                    <i class="fas fa-times text-lg" aria-hidden="true"></i>
+                </button>
             </div>
             
-            <div class="mb-6">
-                <p class="text-gray-700 mb-4">Are you sure you want to cancel this ride request?</p>
-                <div id="rideDetailsForCancel" class="bg-gray-50 p-4 rounded-lg text-sm">
-                    <!-- Ride details will be populated here -->
-                </div>
-                
-                <div class="mt-4">
-                    <label for="cancellationReason" class="block text-sm font-medium text-gray-700 mb-2">
-                        Reason for cancellation <span class="text-red-500">*</span>
-                    </label>
-                    <select id="cancellationReason" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
-                        <option value="">Select a reason</option>
-                        <option value="change_of_plans">Change of plans</option>
-                        <option value="emergency">Emergency situation</option>
-                        <option value="found_alternative">Found alternative transport</option>
-                        <option value="wrong_booking">Wrong booking details</option>
-                        <option value="driver_delay">Driver taking too long</option>
-                        <option value="other">Other reason</option>
-                    </select>
-                </div>
-
-                <div class="mt-3">
-                    <label for="cancellationNote" class="block text-sm font-medium text-gray-700 mb-2">
-                        Additional notes (optional)
-                    </label>
-                    <textarea id="cancellationNote" 
-                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" 
-                              rows="3" 
-                              placeholder="Please provide any additional details..."
-                              maxlength="200"></textarea>
-                    <div class="text-xs text-gray-500 mt-1">
-                        <span id="noteCharCount">0</span>/200 characters
+            <div id="driverMap" class="w-full rounded-xl border-2 border-gray-200 shadow-inner" role="img" aria-label="Driver location map"></div>
+            
+            <div class="mt-6 space-y-4">
+                <!-- Driver Information Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500 mb-1">Driver Name</p>
+                        <p id="driverNameInfo" class="font-semibold text-gray-900">-</p>
+                    </div>
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500 mb-1">Vehicle</p>
+                        <p id="driverVehicleInfo" class="font-semibold text-gray-900">-</p>
+                    </div>
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500 mb-1">Status</p>
+                        <p id="driverStatusInfo" class="font-semibold text-green-600">-</p>
                     </div>
                 </div>
-            </div>
-            
-            <div class="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:space-x-3">
-                <button id="confirmCancelRide" 
-                        class="btn-cancel flex-1 py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-                    <i class="fas fa-times" aria-hidden="true"></i>
-                    <span>Cancel Ride</span>
-                </button>
-                <button id="closeCancelModal" 
-                        class="flex-1 py-3 px-4 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-                    Keep Ride
-                </button>
+                
+                <!-- Location and ETA Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500 mb-1">Your Location</p>
+                        <p id="userLocationInfo" class="font-semibold text-gray-900 text-xs">-</p>
+                    </div>
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500 mb-1">Distance</p>
+                        <p id="distanceInfo" class="font-semibold text-blue-600">-</p>
+                    </div>
+                    <div class="driver-info-card">
+                        <p class="text-sm font-medium text-gray-500 mb-1">ETA</p>
+                        <p id="etaInfo" class="font-semibold text-orange-600">-</p>
+                    </div>
+                </div>
+                
+                <!-- Controls -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="text-sm text-gray-600">
+                        <i class="fas fa-clock mr-1" aria-hidden="true"></i>
+                        <span id="lastUpdatedInfo">Last updated: -</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center">
+                            <span class="text-sm text-gray-500 mr-3">Auto-refresh:</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked aria-label="Toggle auto-refresh">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <button type="button" 
+                                class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                                onclick="if(window.state && window.state.currentDriverId) window.updateDriverLocation(window.state.currentDriverId)">
+                            <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>
+                            Refresh
+                        </button>
+                        
+                        
+     
+
+                        
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -858,939 +955,226 @@
     <div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden no-print"></div>
 
     <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""></script>
+
+    <!-- Enhanced Service Worker Registration -->
     <script>
-        // Global state management
-        let dashboardState = {
-            currentView: 'dashboard',
-            allRequests: [],
-            passengerCount: 1,
-            currentRideForCancel: null,
-            stats: {
-                totalRides: 0,
-                pendingRequests: 0,
-                completedRides: 0,
-                monthlyCompleted: 0
-            }
-        };
-
-        // Mock API configuration (replace with your actual API endpoints)
-        const API_CONFIG = {
-            baseURL: 'https://serverone-w2xc.onrender.com/api',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer demo-token' // Replace with actual token
-            },
-            controlCenter: {
-                phone: '9086439489',
-                name: 'Sub Santosh',
-                unit: '512 ASC'
-            }
-        };
-
-        // Utility functions
-        function sanitizeString(str) {
-            return str ? str.replace(/[<>&"']/g, '') : '';
-        }
-
-        function showNotification(message, type = 'info', duration = 5000) {
-            const notificationArea = document.getElementById('notificationArea');
-            if (!notificationArea) return;
-
-            const notification = document.createElement('div');
-            notification.className = `notification-item p-4 rounded-lg shadow-lg mb-4 ${getNotificationClass(type)}`;
-            notification.setAttribute('role', 'alert');
-            notification.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <i class="fas ${getNotificationIcon(type)} mr-3"></i>
-                        <span>${sanitizeString(message)}</span>
-                    </div>
-                    <button class="ml-4 text-lg hover:opacity-70 transition-opacity" onclick="this.parentElement.parentElement.remove()" aria-label="Close notification">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-
-            notificationArea.appendChild(notification);
-
-            if (duration > 0) {
-                setTimeout(() => {
-                    if (notification.parentElement) {
-                        notification.remove();
-                    }
-                }, duration);
-            }
-        }
-
-        function getNotificationClass(type) {
-            const classes = {
-                success: 'bg-green-100 text-green-800 border border-green-300',
-                error: 'bg-red-100 text-red-800 border border-red-300',
-                warning: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
-                info: 'bg-blue-100 text-blue-800 border border-blue-300'
-            };
-            return classes[type] || classes.info;
-        }
-
-        function getNotificationIcon(type) {
-            const icons = {
-                success: 'fa-check-circle',
-                error: 'fa-exclamation-circle',
-                warning: 'fa-exclamation-triangle',
-                info: 'fa-info-circle'
-            };
-            return icons[type] || icons.info;
-        }
-
-        // Generate unique request ID
-        function generateRequestId() {
-            const timestamp = Date.now();
-            const random = Math.floor(Math.random() * 1000);
-            return timestamp + '' + random.toString().padStart(3, '0');
-        }
-
-        // Update stats display
-        function updateStatsDisplay() {
-            document.getElementById('totalRidesCount').textContent = dashboardState.stats.totalRides;
-            document.getElementById('pendingRequestsCount').textContent = dashboardState.stats.pendingRequests;
-            document.getElementById('completedRidesCount').textContent = dashboardState.stats.completedRides;
-            document.getElementById('monthlyCompletedCount').textContent = dashboardState.stats.monthlyCompleted;
-        }
-
-        // Calculate stats from requests
-        function calculateStats() {
-            const requests = dashboardState.allRequests;
-            const now = new Date();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
-
-            dashboardState.stats = {
-                totalRides: requests.length,
-                pendingRequests: requests.filter(r => ['PENDING', 'ASSIGNED'].includes(r.status)).length,
-                completedRides: requests.filter(r => r.status === 'COMPLETED').length,
-                monthlyCompleted: requests.filter(r => {
-                    const reqDate = new Date(r.created_at);
-                    return r.status === 'COMPLETED' && 
-                           reqDate.getMonth() === currentMonth && 
-                           reqDate.getFullYear() === currentYear;
-                }).length
-            };
-
-            updateStatsDisplay();
-        }
-
-        // Passenger counter functionality
-        function initializePassengerCounter() {
-            const decreaseBtn = document.getElementById('decreasePassengers');
-            const increaseBtn = document.getElementById('increasePassengers');
-            const display = document.getElementById('passengerDisplay');
-            const hiddenInput = document.getElementById('passengerCount');
-
-            function updatePassengerCount(count) {
-                dashboardState.passengerCount = count;
-                display.textContent = count;
-                hiddenInput.value = count;
-                
-                // Update button states
-                decreaseBtn.disabled = count <= 1;
-                increaseBtn.disabled = count >= 4;
-            }
-
-            decreaseBtn.addEventListener('click', () => {
-                if (dashboardState.passengerCount > 1) {
-                    updatePassengerCount(dashboardState.passengerCount - 1);
-                }
-            });
-
-            increaseBtn.addEventListener('click', () => {
-                if (dashboardState.passengerCount < 4) {
-                    updatePassengerCount(dashboardState.passengerCount + 1);
-                }
-            });
-
-            // Initialize with default value
-            updatePassengerCount(1);
-        }
-
-        // Ride cancellation functionality
-        function initializeCancellationModal() {
-            const modal = document.getElementById('cancelRideModal');
-            const confirmBtn = document.getElementById('confirmCancelRide');
-            const closeBtn = document.getElementById('closeCancelModal');
-            const reasonSelect = document.getElementById('cancellationReason');
-            const noteTextarea = document.getElementById('cancellationNote');
-            const charCount = document.getElementById('noteCharCount');
-
-            // Character counter for notes
-            noteTextarea.addEventListener('input', () => {
-                charCount.textContent = noteTextarea.value.length;
-            });
-
-            // Close modal
-            function closeModal() {
-                modal.classList.add('hidden');
-                dashboardState.currentRideForCancel = null;
-                reasonSelect.value = '';
-                noteTextarea.value = '';
-                charCount.textContent = '0';
-            }
-
-            closeBtn.addEventListener('click', closeModal);
-
-            // Close on backdrop click
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                }
-            });
-
-            // Confirm cancellation
-            confirmBtn.addEventListener('click', async () => {
-                if (!reasonSelect.value) {
-                    showNotification('Please select a reason for cancellation', 'error');
-                    return;
-                }
-
-                if (!dashboardState.currentRideForCancel) {
-                    showNotification('No ride selected for cancellation', 'error');
-                    return;
-                }
-
-                try {
-                    // Disable button and show loading
-                    confirmBtn.disabled = true;
-                    const originalHtml = confirmBtn.innerHTML;
-                    confirmBtn.innerHTML = `
-                        <div class="flex items-center justify-center space-x-2">
-                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Cancelling...</span>
-                        </div>
-                    `;
-
-                    await cancelRideRequest(
-                        dashboardState.currentRideForCancel.id,
-                        reasonSelect.value,
-                        noteTextarea.value
-                    );
-
-                    showNotification('Ride request cancelled successfully', 'success');
-                    closeModal();
-
-                    // Refresh the requests list
-                    loadDashboardData();
-
-                } catch (error) {
-                    console.error('Error cancelling ride:', error);
-                    showNotification('Failed to cancel ride request', 'error');
-                } finally {
-                    confirmBtn.disabled = false;
-                    confirmBtn.innerHTML = `
-                        <i class="fas fa-times" aria-hidden="true"></i>
-                        <span>Cancel Ride</span>
-                    `;
-                }
-            });
-        }
-
-        // Show cancellation modal with ride details
-        function showCancelModal(rideRequest) {
-            dashboardState.currentRideForCancel = rideRequest;
-            
-            const modal = document.getElementById('cancelRideModal');
-            const detailsDiv = document.getElementById('rideDetailsForCancel');
-            
-            // Populate ride details
-            detailsDiv.innerHTML = `
-                <div class="space-y-2">
-                    <div><strong>Request ID:</strong> #RS-${rideRequest.id}</div>
-                    <div><strong>From:</strong> ${sanitizeString(rideRequest.pickup_location)}</div>
-                    <div><strong>To:</strong> ${sanitizeString(rideRequest.dropoff_location)}</div>
-                    <div><strong>Passengers:</strong> ${rideRequest.passenger_count || 1}</div>
-                    <div><strong>Scheduled:</strong> ${new Date(rideRequest.request_time).toLocaleString()}</div>
-                    <div><strong>Status:</strong> <span class="px-2 py-1 text-xs font-medium ride-status-${rideRequest.status?.toLowerCase()} rounded">${rideRequest.status}</span></div>
-                </div>
-            `;
-            
-            modal.classList.remove('hidden');
-        }
-
-        // API call to cancel ride
-        async function cancelRideRequest(rideId, reason, note) {
-            try {
-                // First notify control center
-                await notifyControlCenter(rideId, reason, note);
-                
-                // Simulate API call to backend - replace with actual API endpoint
-                const response = await fetch(`${API_CONFIG.baseURL}/rides/${rideId}/cancel`, {
-                    method: 'POST',
-                    headers: API_CONFIG.headers,
-                    body: JSON.stringify({
-                        reason: reason,
-                        note: note,
-                        cancelled_at: new Date().toISOString(),
-                        user_id: 'demo-user-123' // Replace with actual user ID
+        // Register service worker for offline capability
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
                     })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to cancel ride');
-                }
-
-                // Update local state
-                const rideIndex = dashboardState.allRequests.findIndex(r => r.id === rideId);
-                if (rideIndex !== -1) {
-                    dashboardState.allRequests[rideIndex].status = 'CANCELLED';
-                    dashboardState.allRequests[rideIndex].cancellation_reason = reason;
-                    dashboardState.allRequests[rideIndex].cancellation_note = note;
-                    dashboardState.allRequests[rideIndex].cancelled_at = new Date().toISOString();
-                }
-
-                return { success: true };
-                
-            } catch (error) {
-                console.error('Error in cancelRideRequest:', error);
-                // Fallback to local update for demo purposes
-                return new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        const success = Math.random() > 0.1; // 90% success rate for demo
-                        
-                        if (success) {
-                            const rideIndex = dashboardState.allRequests.findIndex(r => r.id === rideId);
-                            if (rideIndex !== -1) {
-                                dashboardState.allRequests[rideIndex].status = 'CANCELLED';
-                                dashboardState.allRequests[rideIndex].cancellation_reason = reason;
-                                dashboardState.allRequests[rideIndex].cancellation_note = note;
-                                dashboardState.allRequests[rideIndex].cancelled_at = new Date().toISOString();
-                            }
-                            resolve({ success: true });
-                        } else {
-                            reject(new Error('Failed to cancel ride'));
-                        }
-                    }, 1500);
-                });
-            }
-        }
-
-        // Notify control center about cancellation
-        async function notifyControlCenter(rideId, reason, note) {
-            const rideDetails = dashboardState.allRequests.find(r => r.id === rideId);
-            const notificationData = {
-                type: 'RIDE_CANCELLATION',
-                rideId: rideId,
-                reason: reason,
-                note: note,
-                timestamp: new Date().toISOString(),
-                userDetails: {
-                    name: 'John Doe', // Replace with actual user name
-                    phone: 'USER_PHONE' // Replace with actual user phone
-                },
-                rideDetails: rideDetails ? {
-                    pickup: rideDetails.pickup_location,
-                    dropoff: rideDetails.dropoff_location,
-                    scheduledTime: rideDetails.request_time,
-                    passengers: rideDetails.passenger_count
-                } : null,
-                controlCenter: API_CONFIG.controlCenter
-            };
-
-            try {
-                // Send SMS/notification to control center
-                const response = await fetch(`${API_CONFIG.baseURL}/notifications/control-center`, {
-                    method: 'POST',
-                    headers: API_CONFIG.headers,
-                    body: JSON.stringify(notificationData)
-                });
-
-                if (response.ok) {
-                    console.log('Control center notified successfully');
-                    // Show success notification after delay
-                    setTimeout(() => {
-                        showNotification(`Control center (${API_CONFIG.controlCenter.phone}) has been notified about the cancellation`, 'info', 8000);
-                    }, 2000);
-                } else {
-                    console.warn('Failed to notify control center via API');
-                    // Fallback notification
-                    setTimeout(() => {
-                        showNotification('Please inform control center about the cancellation if needed', 'warning', 10000);
-                    }, 2000);
-                }
-            } catch (error) {
-                console.error('Error notifying control center:', error);
-                // Fallback for demo - show notification that would normally be sent
-                setTimeout(() => {
-                    showNotification(`Control center (${API_CONFIG.controlCenter.phone}) needs to be notified about ride #RS-${rideId} cancellation`, 'warning', 10000);
-                }, 2000);
-            }
-        }
-
-        // Enhanced form submission with passenger count
-        function initializeFormSubmission() {
-            const form = document.getElementById('cabRequestForm');
-            
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                // Clear previous errors
-                clearFormErrors();
-
-                const formData = new FormData(form);
-                const rideData = {
-                    pickupLocation: formData.get('pickupLocation'),
-                    dropoffLocation: formData.get('dropoffLocation'),
-                    passengerCount: parseInt(formData.get('passengerCount')),
-                    requestTime: formData.get('requestTime')
-                };
-
-                // Validate form
-                const validation = validateRideForm(rideData);
-                if (!validation.isValid) {
-                    displayFormErrors(validation.errors);
-                    return;
-                }
-
-                // Show loading state
-                const submitButton = form.querySelector('button[type="submit"]');
-                const originalButtonContent = submitButton.innerHTML;
-                submitButton.disabled = true;
-                submitButton.innerHTML = `
-                    <div class="flex items-center justify-center space-x-2">
-                        <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        <span>Requesting Ride...</span>
-                    </div>
-                `;
-
-                try {
-                    await submitRideRequest(rideData);
-                    
-                    // Success
-                    showNotification('Ride request submitted successfully!', 'success');
-                    form.reset();
-                    initializePassengerCounter(); // Reset passenger counter
-                    
-                    // Refresh dashboard data
-                    loadDashboardData();
-                    
-                } catch (error) {
-                    console.error('Error submitting ride request:', error);
-                    showNotification('Failed to submit ride request. Please try again.', 'error');
-                } finally {
-                    // Restore button
-                    submitButton.disabled = false;
-                    submitButton.innerHTML = originalButtonContent;
-                }
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
             });
         }
 
-        // Validate ride form
-        function validateRideForm(data) {
-            const errors = {};
-            let isValid = true;
-
-            if (!data.pickupLocation) {
-                errors.pickupLocation = 'Please select a pickup location';
-                isValid = false;
-            }
-
-            if (!data.dropoffLocation) {
-                errors.dropoffLocation = 'Please select a dropoff location';
-                isValid = false;
-            }
-
-            if (data.pickupLocation === data.dropoffLocation && data.pickupLocation) {
-                errors.dropoffLocation = 'Dropoff location must be different from pickup location';
-                isValid = false;
-            }
-
-            if (!data.passengerCount || data.passengerCount < 1 || data.passengerCount > 4) {
-                errors.passengerCount = 'Number of passengers must be between 1 and 4';
-                isValid = false;
-            }
-
-            if (!data.requestTime) {
-                errors.requestTime = 'Please select a date and time';
-                isValid = false;
-            } else {
-                const requestTime = new Date(data.requestTime);
-                const now = new Date();
-                const minTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
-
-                if (requestTime < minTime) {
-                    errors.requestTime = 'Request time must be at least 15 minutes from now';
-                    isValid = false;
-                }
-            }
-
-            return { isValid, errors };
-        }
-
-        // Clear form errors
-        function clearFormErrors() {
-            const errorElements = document.querySelectorAll('.form-error');
-            errorElements.forEach(el => {
-                el.classList.add('hidden');
-                el.textContent = '';
-            });
-
-            const inputElements = document.querySelectorAll('.form-input');
-            inputElements.forEach(el => {
-                el.classList.remove('error');
-            });
-        }
-
-        // Display form errors
-        function displayFormErrors(errors) {
-            Object.keys(errors).forEach(fieldName => {
-                const input = document.getElementById(fieldName);
-                const errorElement = document.getElementById(`${fieldName}-error`);
-                
-                if (input && errorElement) {
-                    input.classList.add('error');
-                    errorElement.textContent = errors[fieldName];
-                    errorElement.classList.remove('hidden');
-                }
-            });
-        }
-
-        // Submit ride request
-        async function submitRideRequest(rideData) {
-            try {
-                // Generate unique request ID
-                const requestId = generateRequestId();
-                
-                // Create ride request object
-                const rideRequest = {
-                    id: requestId,
-                    pickup_location: rideData.pickupLocation,
-                    dropoff_location: rideData.dropoffLocation,
-                    passenger_count: rideData.passengerCount,
-                    request_time: rideData.requestTime,
-                    status: 'PENDING',
-                    created_at: new Date().toISOString(),
-                    user_id: 'demo-user-123', // Replace with actual user ID
-                    driver_name: null,
-                    driver_phone: null,
-                    driver_location: null
-                };
-
-                // Submit to backend API
-                const response = await fetch(`${API_CONFIG.baseURL}/rides`, {
-                    method: 'POST',
-                    headers: API_CONFIG.headers,
-                    body: JSON.stringify(rideRequest)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to submit ride request');
-                }
-
-                // Add to local state
-                dashboardState.allRequests.unshift(rideRequest);
-                
-                // Notify control center about new request
-                await notifyControlCenterNewRequest(rideRequest);
-
-                return rideRequest;
-                
-            } catch (error) {
-                console.error('Error in submitRideRequest:', error);
-                
-                // Fallback for demo purposes
-                return new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        const success = Math.random() > 0.05; // 95% success rate for demo
-                        
-                        if (success) {
-                            const requestId = generateRequestId();
-                            const rideRequest = {
-                                id: requestId,
-                                pickup_location: rideData.pickupLocation,
-                                dropoff_location: rideData.dropoffLocation,
-                                passenger_count: rideData.passengerCount,
-                                request_time: rideData.requestTime,
-                                status: 'PENDING',
-                                created_at: new Date().toISOString(),
-                                user_id: 'demo-user-123',
-                                driver_name: null,
-                                driver_phone: null,
-                                driver_location: null
-                            };
-
-                            dashboardState.allRequests.unshift(rideRequest);
-                            resolve(rideRequest);
-                        } else {
-                            reject(new Error('Failed to submit ride request'));
-                        }
-                    }, 2000);
-                });
-            }
-        }
-
-        // Notify control center about new ride request
-        async function notifyControlCenterNewRequest(rideRequest) {
-            const notificationData = {
-                type: 'NEW_RIDE_REQUEST',
-                rideId: rideRequest.id,
-                timestamp: new Date().toISOString(),
-                userDetails: {
-                    name: 'John Doe', // Replace with actual user name
-                    phone: 'USER_PHONE' // Replace with actual user phone
-                },
-                rideDetails: {
-                    pickup: rideRequest.pickup_location,
-                    dropoff: rideRequest.dropoff_location,
-                    scheduledTime: rideRequest.request_time,
-                    passengers: rideRequest.passenger_count
-                },
-                controlCenter: API_CONFIG.controlCenter
-            };
-
-            try {
-                const response = await fetch(`${API_CONFIG.baseURL}/notifications/control-center`, {
-                    method: 'POST',
-                    headers: API_CONFIG.headers,
-                    body: JSON.stringify(notificationData)
-                });
-
-                if (response.ok) {
-                    console.log('Control center notified about new request');
-                    setTimeout(() => {
-                        showNotification(`Control center has been notified about your ride request #RS-${rideRequest.id}`, 'info', 6000);
-                    }, 1000);
-                }
-            } catch (error) {
-                console.error('Error notifying control center about new request:', error);
-                setTimeout(() => {
-                    showNotification(`Your request #RS-${rideRequest.id} is being processed`, 'info', 6000);
-                }, 1000);
-            }
-        }
-
-        // Render requests table
-        function renderRequestsTable() {
-            const tbody = document.getElementById('requestList');
-            
-            if (dashboardState.allRequests.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="10" class="px-6 py-8 text-center text-gray-500">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-car text-4xl text-gray-300 mb-3" aria-hidden="true"></i>
-                                <p class="text-lg font-medium">No rides yet</p>
-                                <p class="text-sm text-gray-400">Your ride history will appear here</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            // Show only recent requests (last 5)
-            const recentRequests = dashboardState.allRequests.slice(0, 5);
-            
-            tbody.innerHTML = recentRequests.map(request => `
-                <tr class="table-row transition-colors hover:bg-gray-50" data-request-id="${request.id}">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="text-sm font-medium text-gray-900">#RS-${request.id}</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${new Date(request.request_time).toLocaleDateString()}</div>
-                        <div class="text-sm text-gray-500">${new Date(request.request_time).toLocaleTimeString()}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-sm text-gray-900 max-w-xs truncate" title="${sanitizeString(request.pickup_location)}">
-                            ${sanitizeString(request.pickup_location)}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-sm text-gray-900 max-w-xs truncate" title="${sanitizeString(request.dropoff_location)}">
-                            ${sanitizeString(request.dropoff_location)}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="flex items-center text-sm text-gray-900">
-                            <i class="fas fa-users mr-1 text-gray-400" aria-hidden="true"></i>
-                            ${request.passenger_count || 1}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs font-medium ride-status-${request.status?.toLowerCase() || 'unknown'} rounded">
-                            ${request.status || 'UNKNOWN'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">${request.driver_name || '-'}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">
-                            ${request.driver_phone ? `<a href="tel:${request.driver_phone}" class="text-blue-600 hover:text-blue-800">${request.driver_phone}</a>` : '-'}
-                        </div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <div class="text-sm text-gray-900 max-w-xs truncate">${request.driver_location || '-'}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        ${getActionButtons(request)}
-                    </td>
-                </tr>
-            `).join('');
-
-            // Add event listeners for action buttons
-            addActionButtonListeners();
-        }
-
-        // Get action buttons based on ride status
-        function getActionButtons(request) {
-            switch (request.status) {
-                case 'PENDING':
-                case 'ASSIGNED':
-                    return `
-                        <button onclick="showCancelModal(${JSON.stringify(request).replace(/"/g, '&quot;')})" 
-                                class="text-red-600 hover:text-red-900 px-3 py-1 rounded border border-red-300 hover:bg-red-50 transition-colors text-xs">
-                            <i class="fas fa-times mr-1" aria-hidden="true"></i>
-                            Cancel
-                        </button>
-                    `;
-                case 'CANCELLED':
-                    return `
-                        <span class="text-xs text-gray-400">
-                            <i class="fas fa-ban mr-1" aria-hidden="true"></i>
-                            Cancelled
-                        </span>
-                    `;
-                case 'COMPLETED':
-                    return `
-                        <span class="text-xs text-green-600">
-                            <i class="fas fa-check mr-1" aria-hidden="true"></i>
-                            Completed
-                        </span>
-                    `;
-                default:
-                    return '<span class="text-xs text-gray-400">-</span>';
-            }
-        }
-
-        // Add event listeners for action buttons
-        function addActionButtonListeners() {
-            // Event listeners are handled by onclick attributes in getActionButtons
-            // This function is kept for future enhancements
-        }
-
-        // Load dashboard data
-        async function loadDashboardData() {
-            try {
-                // Show loading state
-                document.getElementById('lastUpdateTime').textContent = 'Loading...';
-                
-                // Fetch data from API
-                const response = await fetch(`${API_CONFIG.baseURL}/rides/user/demo-user-123`, {
-                    headers: API_CONFIG.headers
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    dashboardState.allRequests = data.rides || [];
-                } else {
-                    console.warn('Failed to fetch ride data from API, using mock data');
-                    // Use existing data or mock data for demo
-                }
-
-                // Calculate and update stats
-                calculateStats();
-                
-                // Render requests table
-                renderRequestsTable();
-                
-                // Update last update time
-                document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString();
-                
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
-                
-                // Use mock data for demo
-                if (dashboardState.allRequests.length === 0) {
-                    // Add some mock data for demonstration
-                    dashboardState.allRequests = [];
-                }
-                
-                calculateStats();
-                renderRequestsTable();
-                document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString();
-            }
-        }
-
-        // Initialize mobile menu
-        function initializeMobileMenu() {
-            const menuButton = document.getElementById('mobileMenuButton');
+        // Enhanced mobile menu functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
             const sidebar = document.querySelector('.sidebar');
-            const overlay = document.getElementById('mobileOverlay');
+            const mobileOverlay = document.getElementById('mobileOverlay');
 
-            function toggleMenu() {
-                sidebar.classList.toggle('active');
-                overlay.classList.toggle('hidden');
-                
+            const toggleMobileMenu = () => {
                 const isOpen = sidebar.classList.contains('active');
-                menuButton.setAttribute('aria-expanded', isOpen);
-            }
+                
+                if (isOpen) {
+                    sidebar.classList.remove('active');
+                    mobileOverlay.classList.add('hidden');
+                    mobileMenuButton.setAttribute('aria-expanded', 'false');
+                } else {
+                    sidebar.classList.add('active');
+                    mobileOverlay.classList.remove('hidden');
+                    mobileMenuButton.setAttribute('aria-expanded', 'true');
+                }
+            };
 
-            function closeMenu() {
-                sidebar.classList.remove('active');
-                overlay.classList.add('hidden');
-                menuButton.setAttribute('aria-expanded', 'false');
-            }
+            mobileMenuButton?.addEventListener('click', toggleMobileMenu);
+            mobileOverlay?.addEventListener('click', toggleMobileMenu);
 
-            menuButton.addEventListener('click', toggleMenu);
-            overlay.addEventListener('click', closeMenu);
-
-            // Close menu on escape key
+            // Close mobile menu on escape key
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && sidebar.classList.contains('active')) {
-                    closeMenu();
+                    toggleMobileMenu();
                 }
             });
-        }
 
-        // Initialize logout functionality
-        function initializeLogout() {
-            const logoutButtons = document.querySelectorAll('#logoutDesktop, #logoutMobile');
-            
-            logoutButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
+            // Update connection status
+            const updateConnectionStatus = () => {
+                const statusElement = document.getElementById('connectionStatus');
+                const statusText = statusElement?.nextElementSibling;
+                
+                if (navigator.onLine) {
+                    statusElement?.classList.remove('bg-red-500');
+                    statusElement?.classList.add('bg-green-500');
+                    if (statusText) statusText.textContent = 'Online';
+                } else {
+                    statusElement?.classList.remove('bg-green-500');
+                    statusElement?.classList.add('bg-red-500');
+                    if (statusText) statusText.textContent = 'Offline';
+                }
+            };
+
+            window.addEventListener('online', updateConnectionStatus);
+            window.addEventListener('offline', updateConnectionStatus);
+            updateConnectionStatus();
+
+            // Update last update time periodically
+            const updateLastUpdateTime = () => {
+                const element = document.getElementById('lastUpdateTime');
+                if (element) {
+                    element.textContent = new Date().toLocaleTimeString();
+                }
+            };
+
+            setInterval(updateLastUpdateTime, 30000); // Update every 30 seconds
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Alt + D for Dashboard
+                if (e.altKey && e.key === 'd') {
                     e.preventDefault();
-                    
-                    if (confirm('Are you sure you want to logout?')) {
-                        showNotification('Logging out...', 'info');
-                        
-                        setTimeout(() => {
-                            // Clear local data
-                            dashboardState = {
-                                currentView: 'dashboard',
-                                allRequests: [],
-                                passengerCount: 1,
-                                currentRideForCancel: null
-                            };
-                            
-                            // Redirect to login page
-                            window.location.href = '/login'; // Replace with actual login URL
-                        }, 1000);
+                    document.querySelector('.nav-item[href="#"]')?.click();
+                }
+                // Alt + H for History
+                if (e.altKey && e.key === 'h') {
+                    e.preventDefault();
+                    document.querySelector('.nav-item:nth-child(3)')?.click();
+                }
+            });
+
+            // Form auto-save to prevent data loss
+            const form = document.getElementById('cabRequestForm');
+            if (form) {
+                const saveFormData = () => {
+                    const formData = new FormData(form);
+                    const data = {};
+                    for (let [key, value] of formData.entries()) {
+                        data[key] = value;
                     }
+                    try {
+                        localStorage.setItem('unsavedRideRequest', JSON.stringify(data));
+                    } catch (e) {
+                        // Handle localStorage errors silently
+                    }
+                };
+
+                const restoreFormData = () => {
+                    try {
+                        const saved = localStorage.getItem('unsavedRideRequest');
+                        if (saved) {
+                            const data = JSON.parse(saved);
+                            Object.keys(data).forEach(key => {
+                                const element = form.elements[key];
+                                if (element && data[key]) {
+                                    element.value = data[key];
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        // Handle errors silently
+                    }
+                };
+
+                const clearSavedData = () => {
+                    try {
+                        localStorage.removeItem('unsavedRideRequest');
+                    } catch (e) {
+                        // Handle errors silently
+                    }
+                };
+
+                // Save form data on input
+                form.addEventListener('input', saveFormData);
+                
+                // Restore on page load
+                restoreFormData();
+                
+                // Clear on successful submission
+                form.addEventListener('submit', () => {
+                    setTimeout(clearSavedData, 1000);
                 });
-            });
-        }
-
-        // Initialize notifications
-        function initializeNotifications() {
-            const notificationButton = document.getElementById('notificationsButton');
-            const badge = document.getElementById('notificationBadge');
-            
-            // Show/hide notification badge based on pending requests
-            function updateNotificationBadge() {
-                const pendingCount = dashboardState.stats.pendingRequests;
-                if (pendingCount > 0) {
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
-                }
             }
 
-            notificationButton.addEventListener('click', () => {
-                // Toggle notifications panel (implement as needed)
-                showNotification('Notifications feature coming soon!', 'info');
+            // Enhanced accessibility
+            let lastFocusedElement = null;
+            
+            // Track focus for modal management
+            document.addEventListener('focusin', (e) => {
+                lastFocusedElement = e.target;
             });
 
-            // Update badge when stats change
-            setInterval(updateNotificationBadge, 1000);
-        }
+            // Trap focus in modals
+            document.addEventListener('keydown', (e) => {
+                const modal = document.querySelector('[role="dialog"]:not(.hidden)');
+                if (modal && e.key === 'Tab') {
+                    const focusableElements = modal.querySelectorAll(
+                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                    );
+                    const firstElement = focusableElements[0];
+                    const lastElement = focusableElements[focusableElements.length - 1];
 
-        // Initialize datetime input with current time + 15 minutes
-        function initializeDateTimeInput() {
-            const dateTimeInput = document.getElementById('requestTime');
-            const now = new Date();
-            const minTime = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutes from now
-            
-            // Set minimum datetime
-            dateTimeInput.min = minTime.toISOString().slice(0, 16);
-            
-            // Set default value to 30 minutes from now
-            const defaultTime = new Date(now.getTime() + 30 * 60 * 1000);
-            dateTimeInput.value = defaultTime.toISOString().slice(0, 16);
-        }
-
-        // Auto-refresh functionality
-        function initializeAutoRefresh() {
-            let refreshInterval;
-            
-            function startAutoRefresh() {
-                refreshInterval = setInterval(() => {
-                    loadDashboardData();
-                }, 30000); // Refresh every 30 seconds
-            }
-
-            function stopAutoRefresh() {
-                if (refreshInterval) {
-                    clearInterval(refreshInterval);
-                    refreshInterval = null;
-                }
-            }
-
-            // Start auto-refresh
-            startAutoRefresh();
-
-            // Stop auto-refresh when page is hidden, start when visible
-            document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    stopAutoRefresh();
-                } else {
-                    startAutoRefresh();
+                    if (e.shiftKey && document.activeElement === firstElement) {
+                        e.preventDefault();
+                        lastElement.focus();
+                    } else if (!e.shiftKey && document.activeElement === lastElement) {
+                        e.preventDefault();
+                        firstElement.focus();
+                    }
                 }
             });
-        }
 
-        // Main initialization function
-        function initializeDashboard() {
-            try {
-                // Initialize all components
-                initializePassengerCounter();
-                initializeCancellationModal();
-                initializeFormSubmission();
-                initializeMobileMenu();
-                initializeLogout();
-                initializeNotifications();
-                initializeDateTimeInput();
-                initializeAutoRefresh();
+            // Skip to main content link
+            const skipLink = document.createElement('a');
+            skipLink.href = '#main-content';
+            skipLink.textContent = 'Skip to main content';
+            skipLink.className = 'sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white p-2 rounded z-50';
+            document.body.insertBefore(skipLink, document.body.firstChild);
 
-                // Load initial data
-                loadDashboardData();
-
-                // Show welcome message
-                setTimeout(() => {
-                    showNotification('Welcome to RideSwift Dashboard! 🚗', 'success', 4000);
-                }, 500);
-
-                console.log('Dashboard initialized successfully');
-            } catch (error) {
-                console.error('Error initializing dashboard:', error);
-                showNotification('There was an error loading the dashboard. Please refresh the page.', 'error');
+            // Add main content id
+            const main = document.querySelector('main');
+            if (main) {
+                main.id = 'main-content';
             }
-        }
-
-        // Initialize when DOM is loaded
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeDashboard);
-        } else {
-            initializeDashboard();
-        }
-
-        // Global error handler
-        window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
-            showNotification('An unexpected error occurred. Please try again.', 'error');
         });
 
-        // Handle unhandled promise rejections
-        window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
-            showNotification('An error occurred while processing your request.', 'error');
+        // Global error boundary
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            console.error('Global error:', { msg, url, lineNo, columnNo, error });
+            // Could send to error reporting service here
+            return false;
+        };
+
+        // Performance monitoring
+        window.addEventListener('load', () => {
+            if ('performance' in window) {
+                const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+                console.log('Page load time:', loadTime + 'ms');
+                
+                // Could send performance metrics to analytics service here
+                if (loadTime > 3000) {
+                    console.warn('Slow page load detected:', loadTime + 'ms');
+                }
+            }
         });
+
+        // Memory usage monitoring (if available)
+        if ('memory' in performance) {
+            setInterval(() => {
+                const memory = performance.memory;
+                if (memory.usedJSHeapSize > memory.jsHeapSizeLimit * 0.9) {
+                    console.warn('High memory usage detected');
+                }
+            }, 30000);
+        }
     </script>
+
+    <!-- Load main dashboard script -->
+    <script src="./js/user-dashboard.js"></script>
 </body>
 </html>
