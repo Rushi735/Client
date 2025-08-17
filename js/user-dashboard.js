@@ -58,7 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = getElement('cabRequestForm');
     const requestList = getElement('requestList');
     const mainContent = document.querySelector('main');
-    const dashboardTitle = document.querySelector('h1');
+    const dashboardTitle = document.querySelector('.mb-6 h1');
+    const lastUpdated = document.querySelector('.mb-6 .text-sm');
     
     // Enhanced location options with validation
     const locationOptions = [
@@ -156,15 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Enhanced notification system
     const showNotification = (message, type = 'info', duration = 5000) => {
-        let notificationArea = getElement('notificationArea');
-        
-        // Create notification area if it doesn't exist
-        if (!notificationArea) {
-            notificationArea = document.createElement('div');
-            notificationArea.id = 'notificationArea';
-            notificationArea.className = 'fixed bottom-4 right-4 z-40 space-y-2 max-w-sm no-print';
-            document.body.appendChild(notificationArea);
-        }
+        const notificationArea = getElement('notificationArea');
+        if (!notificationArea) return;
 
         const notification = document.createElement('div');
         notification.className = `notification-item p-4 rounded-lg shadow-lg mb-4 ${getNotificationClass(type)}`;
@@ -212,29 +206,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return icons[type] || icons.info;
     };
 
-    // Update username in UI
-    const updateUsernameInUI = () => {
-        const displayName = sanitizedUsername.split('@')[0] || 'User';
-        
-        // Update all instances of username
-        document.querySelectorAll('.font-medium').forEach(el => {
-            if (el.textContent === 'John' || el.textContent === 'John Doe') {
-                el.textContent = displayName;
-            }
-        });
-        
-        // Update profile sections
-        const profileElements = document.querySelectorAll('img[alt*="profile"]');
-        profileElements.forEach(el => {
-            el.alt = `${displayName} profile`;
-        });
-    };
-
     // Initialize the dashboard with error handling
     const initDashboard = async () => {
         try {
             // Update UI with sanitized username
-            updateUsernameInUI();
+            document.querySelectorAll('.font-medium').forEach(el => {
+                if (el.textContent === 'John' || el.textContent === 'John Doe') {
+                    el.textContent = sanitizedUsername.split('@')[0];
+                }
+            });
 
             // Setup event listeners
             setupEventListeners();
@@ -248,447 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Start auto-refresh with exponential backoff
             startPeriodicRefresh();
             
-            // Set minimum time for datetime input
-            setMinimumDateTime();
-            
             showNotification('Dashboard loaded successfully', 'success');
         } catch (error) {
             console.error('Dashboard initialization failed:', error);
             showNotification('Failed to initialize dashboard', 'error');
-        }
-    };
-
-    const setMinimumDateTime = () => {
-        const timeInput = getElement('requestTime');
-        if (timeInput) {
-            const now = new Date();
-            
-            if (date.toDateString() === now.toDateString()) {
-                return `Today, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-            } else {
-                const yesterday = new Date(now);
-                yesterday.setDate(yesterday.getDate() - 1);
-                if (date.toDateString() === yesterday.toDateString()) {
-                    return `Yesterday, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-                } else {
-                    return date.toLocaleString([], {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Date formatting error:', error);
-            return 'Invalid date';
-        }
-    };
-
-    const formatStatus = (status) => {
-        const statusMap = {
-            'PENDING': 'Pending',
-            'ASSIGNED': 'Assigned',
-            'COMPLETED': 'Completed',
-            'CANCELLED': 'Cancelled'
-        };
-        return statusMap[status] || 'Unknown';
-    };
-
-    // Enhanced ride tracking with better error handling
-    const trackRide = async (requestId) => {
-        try {
-            const { data } = await apiCall(`/requests/${requestId}`);
-            
-            const lat = data.driver && data.driver.latitude != null ? Number(data.driver.latitude) : null;
-            const lng = data.driver && data.driver.longitude != null ? Number(data.driver.longitude) : null;
-            const isValidLocation = lat != null && lng != null && !isNaN(lat) && !isNaN(lng);
-            
-            // Use notification instead of alert for better UX
-            showNotification(
-                `Tracking ride #RS-${requestId}. ${data.driver ? `Driver: ${sanitizeString(data.driver.name)}` : 'No driver assigned yet'}. Status: ${formatStatus(data.status)}`,
-                'info',
-                8000
-            );
-
-            // If driver has valid location, open map modal
-            if (isValidLocation && data.driver) {
-                const mapModal = getElement('mapModal');
-                if (mapModal) {
-                    mapModal.classList.remove('hidden');
-                    initMap(lat, lng, data.driver.name, data.driver.id, requestId);
-                }
-            }
-        } catch (error) {
-            console.error('Error tracking ride:', error);
-            showNotification('Failed to fetch ride tracking information', 'error');
-        }
-    };
-
-    const viewRideDetails = async (requestId) => {
-        try {
-            const { data } = await apiCall(`/requests/${requestId}`);
-            
-            const lat = data.driver && data.driver.latitude != null ? Number(data.driver.latitude) : null;
-            const lng = data.driver && data.driver.longitude != null ? Number(data.driver.longitude) : null;
-            const isValidLocation = lat != null && lng != null && !isNaN(lat) && !isNaN(lng);
-            
-            const driverInfo = data.driver ? 
-                `Driver: ${sanitizeString(data.driver.name) || 'Unknown'}\nPhone: ${sanitizeString(data.driver.phone) || 'Not available'}\nVehicle: ${sanitizeString(data.driver.vehicle_number) || 'Not specified'}\nLocation: ${isValidLocation ? `(${lat.toFixed(4)}, ${lng.toFixed(4)})` : 'Not available'}`
-                : 'Driver: Not assigned';
-            
-            const fareText = data.fare_amount ? `₹${Number(data.fare_amount).toFixed(2)}` : 'Not calculated';
-            
-            const details = [
-                `Ride Details (#RS-${requestId})`,
-                '',
-                `Pickup: ${sanitizeString(data.pickup_location) || 'Not specified'}`,
-                `Dropoff: ${sanitizeString(data.dropoff_location) || 'Not specified'}`,
-                `Date: ${formatDate(data.request_time)}`,
-                `Status: ${formatStatus(data.status)}`,
-                `Fare: ${fareText}`,
-                driverInfo
-            ].join('\n');
-
-            // Use a modal instead of alert for better UX
-            showDetailsModal(details);
-        } catch (error) {
-            console.error('Error viewing ride details:', error);
-            showNotification('Failed to fetch ride details', 'error');
-        }
-    };
-
-    const showDetailsModal = (details) => {
-        // Create a simple modal for better UX
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-        modal.setAttribute('role', 'dialog');
-        modal.setAttribute('aria-modal', 'true');
-        
-        modal.innerHTML = `
-            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold">Ride Details</h3>
-                    <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()" aria-label="Close details">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <pre class="whitespace-pre-wrap text-sm text-gray-700">${details}</pre>
-                <div class="mt-4 flex justify-end">
-                    <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                        Close
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Close on background click
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
-        });
-        
-        // Close on escape key
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-                modal.remove();
-                document.removeEventListener('keydown', handleEscape);
-            }
-        };
-        document.addEventListener('keydown', handleEscape);
-    };
-
-    // Enhanced logout function
-    const handleLogout = () => {
-        try {
-            // Clean up resources
-            cleanup();
-            
-            // Clear storage
-            storage.clear();
-            
-            // Show logout message
-            showNotification('Logged out successfully', 'success', 2000);
-            
-            // Redirect after short delay
-            setTimeout(() => {
-                window.location.href = 'user-login.html';
-            }, 1000);
-        } catch (error) {
-            console.error('Logout error:', error);
-            // Force redirect even if cleanup fails
-            window.location.href = 'user-login.html';
-        }
-    };
-
-    // Expose necessary functions to global scope for HTML event handlers
-    window.updateDriverLocation = updateDriverLocation;
-    window.state = state;
-
-    // Initialize the dashboard
-    initDashboard().catch(error => {
-        console.error('Failed to initialize dashboard:', error);
-        showNotification('Failed to initialize dashboard. Please refresh the page.', 'error', 0); // Persistent error
-    });
-
-    // Global error handler
-    window.addEventListener('error', (event) => {
-        console.error('Global error:', event.error);
-        showNotification('An unexpected error occurred', 'error');
-    });
-
-    // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
-        console.error('Unhandled promise rejection:', event.reason);
-        showNotification('An unexpected error occurred', 'error');
-        event.preventDefault();
-    });
-
-    // Handle online/offline status
-    window.addEventListener('online', () => {
-        showNotification('Connection restored', 'success');
-        fetchRequests(); // Refresh data when back online
-    });
-
-    window.addEventListener('offline', () => {
-        showNotification('No internet connection', 'warning', 0); // Persistent warning
-    });
-
-    // Handle auto-refresh toggle in map modal
-    document.addEventListener('change', (e) => {
-        if (e.target.id === 'autoRefreshToggle') {
-            if (e.target.checked && state.currentDriverId) {
-                startMapRefresh(state.currentDriverId);
-            } else if (state.mapRefreshInterval) {
-                clearInterval(state.mapRefreshInterval);
-                state.mapRefreshInterval = null;
-            }
-        }
-    });
-
-    // Enhanced keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        // Ctrl/Cmd + R to refresh requests
-        if ((e.ctrlKey || e.metaKey) && e.key === 'r' && !e.shiftKey) {
-            e.preventDefault();
-            fetchRequests();
-            showNotification('Refreshing requests...', 'info', 2000);
-        }
-
-        // Escape key to close modals
-        if (e.key === 'Escape') {
-            const mapModal = getElement('mapModal');
-            if (mapModal && !mapModal.classList.contains('hidden')) {
-                closeMapModalHandler();
-            }
-
-            // Close any detail modals
-            const detailModal = document.querySelector('.fixed[role="dialog"]');
-            if (detailModal && detailModal !== mapModal) {
-                detailModal.remove();
-            }
-        }
-
-        // Alt + 1 for Dashboard
-        if (e.altKey && e.key === '1') {
-            e.preventDefault();
-            switchView('dashboard');
-        }
-
-        // Alt + 2 for History
-        if (e.altKey && e.key === '2') {
-            e.preventDefault();
-            switchView('ride history');
-        }
-    });
-
-    // Form auto-save functionality
-    if (form) {
-        const saveFormData = () => {
-            try {
-                const formData = new FormData(form);
-                const data = {};
-                for (let [key, value] of formData.entries()) {
-                    data[key] = value;
-                }
-                storage.set('unsavedRideRequest', JSON.stringify(data));
-            } catch (e) {
-                console.warn('Failed to save form data:', e);
-            }
-        };
-
-        const restoreFormData = () => {
-            try {
-                const saved = storage.get('unsavedRideRequest');
-                if (saved) {
-                    const data = JSON.parse(saved);
-                    Object.keys(data).forEach(key => {
-                        const element = form.elements[key];
-                        if (element && data[key]) {
-                            element.value = data[key];
-                        }
-                    });
-                }
-            } catch (e) {
-                console.warn('Failed to restore form data:', e);
-            }
-        };
-
-        const clearSavedData = () => {
-            try {
-                storage.set('unsavedRideRequest', '');
-            } catch (e) {
-                console.warn('Failed to clear saved form data:', e);
-            }
-        };
-
-        // Save form data on input with debouncing
-        let saveTimeout;
-        form.addEventListener('input', () => {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(saveFormData, 1000);
-        });
-        
-        // Restore on page load
-        restoreFormData();
-        
-        // Clear on successful submission
-        form.addEventListener('submit', () => {
-            setTimeout(clearSavedData, 2000);
-        });
-    }
-
-    // Performance monitoring
-    const performanceMonitor = {
-        startTime: performance.now(),
-        
-        logMetric: (name, value) => {
-            console.log(`Performance - ${name}: ${value}ms`);
-        },
-        
-        measureLoadTime: () => {
-            window.addEventListener('load', () => {
-                const loadTime = performance.now() - performanceMonitor.startTime;
-                performanceMonitor.logMetric('Dashboard Load Time', loadTime.toFixed(2));
-                
-                if (loadTime > 3000) {
-                    console.warn('Slow dashboard load detected');
-                }
-            });
-        }
-    };
-
-    performanceMonitor.measureLoadTime();
-
-    // Update last update time in header
-    const updateLastUpdateTime = () => {
-        const element = getElement('lastUpdateTime');
-        if (element) {
-            element.textContent = new Date().toLocaleTimeString();
-        }
-    };
-
-    // Update time every 30 seconds
-    setInterval(updateLastUpdateTime, 30000);
-
-    // Connection status monitoring
-    const updateConnectionStatus = () => {
-        const statusElement = getElement('connectionStatus');
-        const statusText = statusElement?.nextElementSibling;
-        
-        if (navigator.onLine) {
-            statusElement?.classList.remove('bg-red-500');
-            statusElement?.classList.add('bg-green-500');
-            if (statusText) statusText.textContent = 'Online';
-        } else {
-            statusElement?.classList.remove('bg-green-500');
-            statusElement?.classList.add('bg-red-500');
-            if (statusText) statusText.textContent = 'Offline';
-        }
-    };
-
-    // Initial connection status check
-    updateConnectionStatus();
-
-    // Memory management
-    const memoryManager = {
-        checkMemoryUsage: () => {
-            if ('memory' in performance) {
-                const memory = performance.memory;
-                const usedPercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
-                
-                if (usedPercent > 90) {
-                    console.warn('High memory usage detected:', usedPercent.toFixed(2) + '%');
-                    // Could trigger cleanup or show warning to user
-                }
-            }
-        }
-    };
-
-    // Check memory usage every minute
-    setInterval(memoryManager.checkMemoryUsage, 60000);
-
-    // Accessibility enhancements
-    const accessibilityManager = {
-        addSkipLink: () => {
-            const skipLink = document.createElement('a');
-            skipLink.href = '#main-content';
-            skipLink.textContent = 'Skip to main content';
-            skipLink.className = 'sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white p-2 rounded z-50';
-            document.body.insertBefore(skipLink, document.body.firstChild);
-        },
-
-        addMainContentId: () => {
-            if (mainContent && !mainContent.id) {
-                mainContent.id = 'main-content';
-            }
-        },
-
-        announcePageChanges: (pageName) => {
-            const announcement = document.createElement('div');
-            announcement.setAttribute('aria-live', 'polite');
-            announcement.setAttribute('aria-atomic', 'true');
-            announcement.className = 'sr-only';
-            announcement.textContent = `Navigated to ${pageName}`;
-            document.body.appendChild(announcement);
-            
-            setTimeout(() => {
-                document.body.removeChild(announcement);
-            }, 1000);
-        }
-    };
-
-    accessibilityManager.addSkipLink();
-    accessibilityManager.addMainContentId();
-
-    // Enhanced view switching with accessibility announcements
-    const originalSwitchView = switchView;
-    switchView = async (target) => {
-        await originalSwitchView(target);
-        accessibilityManager.announcePageChanges(target);
-    };
-
-    console.log('🚗 RideSwift User Dashboard initialized successfully');
-});
-
-// Service Worker registration for offline support
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-                console.log('SW registered: ', registration);
-            })
-            .catch((registrationError) => {
-                console.log('SW registration failed: ', registrationError);
-            });
-    });
-}();
-            now.setMinutes(now.getMinutes() + 15); // Minimum 15 minutes from now
-            timeInput.min = now.toISOString().slice(0, 16);
         }
     };
 
@@ -758,7 +301,7 @@ if ('serviceWorker' in navigator) {
                 item.classList.add('active');
                 const targetElement = item.querySelector('span');
                 if (targetElement) {
-                    const target = targetElement.textContent.toLowerCase().trim();
+                    const target = targetElement.textContent.toLowerCase();
                     switchView(target);
                 }
             });
@@ -770,13 +313,21 @@ if ('serviceWorker' in navigator) {
                 e.preventDefault();
                 const targetElement = item.querySelector('span');
                 if (targetElement) {
-                    const target = targetElement.textContent.toLowerCase().trim();
+                    const target = targetElement.textContent.toLowerCase();
                     switchView(target);
                 }
             });
         });
 
-        // Mobile menu toggle functionality is in HTML script section
+        // Mobile menu toggle
+        const mobileMenuButton = getElement('mobileMenuButton');
+        addListener(mobileMenuButton, 'click', () => {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('active');
+            }
+        });
 
         // Logout buttons with confirmation
         const logoutDesktop = getElement('logoutDesktop');
@@ -795,13 +346,6 @@ if ('serviceWorker' in navigator) {
         const closeMapModal = getElement('closeMapModal');
         addListener(closeMapModal, 'click', closeMapModalHandler);
 
-        // View all requests button
-        const viewAllBtn = getElement('viewAllRequests');
-        addListener(viewAllBtn, 'click', (e) => {
-            e.preventDefault();
-            switchView('ride history');
-        });
-
         // Cleanup function
         window.addEventListener('beforeunload', () => {
             eventListeners.forEach(({ element, event, handler }) => {
@@ -819,9 +363,6 @@ if ('serviceWorker' in navigator) {
             state.isLoading = true;
             showLoadingState();
 
-            // Update active navigation
-            updateActiveNavigation(target);
-
             switch(target) {
                 case 'dashboard':
                 case 'home':
@@ -829,8 +370,8 @@ if ('serviceWorker' in navigator) {
                     await showDashboard();
                     break;
                 case 'ride history':
-                case 'history':
                 case 'rides':
+                case 'history':
                     await showRideRequests();
                     break;
                 default:
@@ -845,49 +386,22 @@ if ('serviceWorker' in navigator) {
         }
     };
 
-    const updateActiveNavigation = (target) => {
-        // Update desktop navigation
-        document.querySelectorAll('.nav-item').forEach(item => {
-            const spanText = item.querySelector('span')?.textContent.toLowerCase().trim();
-            item.classList.remove('active');
-            
-            if ((target === 'dashboard' || target === 'home') && spanText === 'dashboard') {
-                item.classList.add('active');
-            } else if (target === 'book ride' && spanText === 'book ride') {
-                item.classList.add('active');
-            } else if ((target === 'ride history' || target === 'history') && spanText === 'ride history') {
-                item.classList.add('active');
-            }
-        });
-
-        // Update mobile navigation
-        document.querySelectorAll('[class*="fixed bottom-0"] a').forEach(item => {
-            const spanText = item.querySelector('span')?.textContent.toLowerCase().trim();
-            item.classList.remove('text-blue-600');
-            item.classList.add('text-gray-500');
-            
-            if ((target === 'dashboard' || target === 'home') && spanText === 'home') {
-                item.classList.remove('text-gray-500');
-                item.classList.add('text-blue-600');
-            } else if ((target === 'ride history' || target === 'history') && spanText === 'history') {
-                item.classList.remove('text-gray-500');
-                item.classList.add('text-blue-600');
-            }
-        });
-    };
-
     const showLoadingState = () => {
-        const loadingOverlay = getElement('loadingOverlay');
-        if (loadingOverlay) {
-            loadingOverlay.classList.remove('hidden');
+        if (mainContent) {
+            const loader = document.createElement('div');
+            loader.id = 'globalLoader';
+            loader.className = 'flex justify-center items-center p-8';
+            loader.innerHTML = `
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span class="ml-3">Loading...</span>
+            `;
+            mainContent.appendChild(loader);
         }
     };
 
     const hideLoadingState = () => {
-        const loadingOverlay = getElement('loadingOverlay');
-        if (loadingOverlay) {
-            loadingOverlay.classList.add('hidden');
-        }
+        const loader = getElement('globalLoader');
+        if (loader) loader.remove();
     };
 
     // Enhanced dashboard view with better error handling
@@ -895,6 +409,7 @@ if ('serviceWorker' in navigator) {
         state.currentView = 'dashboard';
         
         if (dashboardTitle) dashboardTitle.textContent = 'Dashboard';
+        if (lastUpdated) lastUpdated.textContent = 'Last updated: Just now';
         
         if (!mainContent) return;
 
@@ -911,85 +426,220 @@ if ('serviceWorker' in navigator) {
                    reqDate.getFullYear() === currentYear;
         }).length;
 
-        // Update stats cards
-        updateStatsCards(state.allRequests.length, pendingRides, completedRides, monthlyRides);
+        mainContent.innerHTML = `
+            <div class="mb-6 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
+                <div class="text-sm text-gray-500">Last updated: Just now</div>
+            </div>
 
-        // Update recent requests table
-        const recentRequestsTable = requestList;
-        if (recentRequestsTable) {
-            recentRequestsTable.innerHTML = renderRecentRequests(state.allRequests.slice(0, 3));
-            setupTableEventListeners();
-        }
+            <!-- Enhanced Stats Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Total Rides</p>
+                            <h3 class="text-2xl font-bold mt-1">${state.allRequests.length}</h3>
+                        </div>
+                        <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
+                            <i class="fas fa-car-side" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm text-green-500">
+                        <i class="fas fa-arrow-up mr-1" aria-hidden="true"></i>
+                        <span>${state.allRequests.length > 0 ? Math.floor(Math.random() * 20) : 0}% from last month</span>
+                    </div>
+                </div>
+                
+                <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Pending Requests</p>
+                            <h3 class="text-2xl font-bold mt-1">${pendingRides}</h3>
+                        </div>
+                        <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600">
+                            <i class="fas fa-clock" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="inline-block px-2 py-1 text-xs font-medium ride-status-pending rounded">
+                            ${pendingRides > 0 ? 'Active' : 'None'}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Completed Rides</p>
+                            <h3 class="text-2xl font-bold mt-1">${completedRides}</h3>
+                        </div>
+                        <div class="p-3 rounded-lg bg-green-100 text-green-600">
+                            <i class="fas fa-check-circle" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm text-gray-500">
+                        <i class="fas fa-calendar-alt mr-2" aria-hidden="true"></i>
+                        <span>This month: ${monthlyRides}</span>
+                    </div>
+                </div>
+            </div>
 
-        // Ensure form is properly set up
-        setupFormEventListeners();
-    };
+            <!-- Enhanced Quick Book Section -->
+            <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold">Book a Ride</h2>
+                    <div class="flex space-x-2">
+                        <button type="button" class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg" aria-pressed="true">Now</button>
+                        <button type="button" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50" disabled>Later</button>
+                    </div>
+                </div>
+                
+                <form id="cabRequestForm" class="space-y-4" novalidate>
+                    <div>
+                        <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-1">
+                            Pickup Location <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-map-marker-alt text-gray-400" aria-hidden="true"></i>
+                            </div>
+                            <select id="pickupLocation" name="pickupLocation" 
+                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
+                                   required aria-describedby="pickupLocation-error">
+                                <option value="">Select pickup location</option>
+                                ${generateLocationOptions()}
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div id="pickupLocation-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></div>
+                    </div>
+                    
+                    <div>
+                        <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-1">
+                            Dropoff Location <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-flag text-gray-400" aria-hidden="true"></i>
+                            </div>
+                            <select id="dropoffLocation" name="dropoffLocation" 
+                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
+                                   required aria-describedby="dropoffLocation-error">
+                                <option value="">Select dropoff location</option>
+                                ${generateLocationOptions()}
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <i class="fas fa-chevron-down text-gray-400" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div id="dropoffLocation-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></div>
+                    </div>
+                    
+                    <div>
+                        <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-1">
+                            Schedule <span class="text-red-500">*</span>
+                        </label>
+                        <input type="datetime-local" id="requestTime" name="requestTime" 
+                               class="w-full px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               required aria-describedby="requestTime-error">
+                        <div id="requestTime-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></div>
+                    </div>
+                    
+                    <div class="pt-2">
+                        <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-car" aria-hidden="true"></i>
+                            <span>Request Ride</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-    const updateStatsCards = (totalRides, pendingRides, completedRides, monthlyRides) => {
-        // Update stats in existing cards
-        const cards = document.querySelectorAll('.card');
+            <!-- Enhanced Recent Requests Section -->
+            <div class="card bg-white p-6 rounded-xl border border-gray-100 mt-8 hover:shadow-lg transition-shadow duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold">Recent Requests</h2>
+                    <button type="button" class="text-sm text-blue-600 hover:text-blue-800" id="viewAllRequests">View All</button>
+                </div>
+                
+                <div class="table-responsive overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200" role="table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Location</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestList" class="bg-white divide-y divide-gray-200">
+                            ${renderRecentRequests(state.allRequests.slice(0, 3))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
         
-        cards.forEach((card, index) => {
-            const valueElement = card.querySelector('h3');
-            const trendElement = card.querySelector('.text-green-500 span, .text-gray-500 span');
-            const statusElement = card.querySelector('.ride-status-pending');
-            
-            if (valueElement) {
-                switch(index) {
-                    case 0: // Total Rides
-                        valueElement.textContent = totalRides;
-                        if (trendElement) {
-                            trendElement.textContent = `${totalRides > 0 ? Math.floor(Math.random() * 20) : 0}% from last month`;
-                        }
-                        break;
-                    case 1: // Pending Requests
-                        valueElement.textContent = pendingRides;
-                        if (statusElement) {
-                            statusElement.textContent = pendingRides > 0 ? 'Active' : 'None';
-                        }
-                        break;
-                    case 2: // Completed Rides
-                        valueElement.textContent = completedRides;
-                        if (trendElement) {
-                            trendElement.textContent = `This month: ${monthlyRides}`;
-                        }
-                        break;
-                }
-            }
-        });
+        // Reattach event listeners with error handling
+        setupFormEventListeners();
+        setupTableEventListeners();
     };
 
     // Enhanced form event listeners setup
     const setupFormEventListeners = () => {
-        if (!form) return;
-
-        // Real-time validation
-        const pickupSelect = getElement('pickupLocation');
-        const dropoffSelect = getElement('dropoffLocation');
-        const timeInput = getElement('requestTime');
+        const newForm = getElement('cabRequestForm');
+        const viewAllBtn = getElement('viewAllRequests');
         
-        if (pickupSelect) {
-            pickupSelect.addEventListener('change', () => validateField('pickupLocation'));
+        if (newForm) {
+            newForm.addEventListener('submit', handleRideRequest);
+            
+            // Real-time validation
+            const pickupSelect = getElement('pickupLocation');
+            const dropoffSelect = getElement('dropoffLocation');
+            const timeInput = getElement('requestTime');
+            
+            if (pickupSelect) {
+                pickupSelect.addEventListener('change', () => validateField('pickupLocation'));
+            }
+            
+            if (dropoffSelect) {
+                dropoffSelect.addEventListener('change', () => {
+                    validateField('dropoffLocation');
+                    // Prevent same pickup and dropoff
+                    if (pickupSelect && pickupSelect.value === dropoffSelect.value && dropoffSelect.value) {
+                        showFieldError('dropoffLocation', 'Pickup and dropoff locations cannot be the same');
+                    }
+                });
+            }
+            
+            if (timeInput) {
+                timeInput.addEventListener('change', () => validateField('requestTime'));
+                
+                // Set minimum time to current time
+                const now = new Date();
+                now.setMinutes(now.getMinutes() + 15); // Minimum 15 minutes from now
+                timeInput.min = now.toISOString().slice(0, 16);
+            }
         }
         
-        if (dropoffSelect) {
-            dropoffSelect.addEventListener('change', () => {
-                validateField('dropoffLocation');
-                // Prevent same pickup and dropoff
-                if (pickupSelect && pickupSelect.value === dropoffSelect.value && dropoffSelect.value) {
-                    showFieldError('dropoffLocation', 'Pickup and dropoff locations cannot be the same');
-                }
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                showRideRequests();
             });
-        }
-        
-        if (timeInput) {
-            timeInput.addEventListener('change', () => validateField('requestTime'));
         }
     };
 
     // Field validation helper
     const validateField = (fieldName) => {
         const field = getElement(fieldName);
+        const errorElement = getElement(`${fieldName}-error`);
         
         if (!field) return false;
         
@@ -1030,20 +680,11 @@ if ('serviceWorker' in navigator) {
 
     const showFieldError = (fieldName, message) => {
         const field = getElement(fieldName);
-        let errorElement = getElement(`${fieldName}-error`);
-        
-        // Create error element if it doesn't exist
-        if (!errorElement && field) {
-            errorElement = document.createElement('div');
-            errorElement.id = `${fieldName}-error`;
-            errorElement.className = 'form-error mt-1';
-            errorElement.setAttribute('role', 'alert');
-            field.parentNode.insertBefore(errorElement, field.nextSibling);
-        }
+        const errorElement = getElement(`${fieldName}-error`);
         
         if (field) {
-            field.classList.add('error', 'border-red-500');
-            field.classList.remove('border-gray-200');
+            field.classList.add('border-red-500');
+            field.classList.remove('border-gray-300');
         }
         
         if (errorElement) {
@@ -1057,8 +698,8 @@ if ('serviceWorker' in navigator) {
         const errorElement = getElement(`${fieldName}-error`);
         
         if (field) {
-            field.classList.remove('error', 'border-red-500');
-            field.classList.add('border-gray-200');
+            field.classList.remove('border-red-500');
+            field.classList.add('border-gray-300');
         }
         
         if (errorElement) {
@@ -1090,35 +731,6 @@ if ('serviceWorker' in navigator) {
                 }
             });
         });
-
-        // Add other action button listeners
-        addActionButtonListeners();
-    };
-
-    const addActionButtonListeners = () => {
-        // Track ride buttons
-        document.querySelectorAll('.track-ride').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const requestId = e.target.getAttribute('data-id');
-                trackRide(requestId);
-            });
-        });
-
-        // View details buttons
-        document.querySelectorAll('.view-details').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const requestId = e.target.getAttribute('data-id');
-                viewRideDetails(requestId);
-            });
-        });
-
-        // Book again buttons
-        document.querySelectorAll('.book-again').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const requestId = e.target.getAttribute('data-id');
-                bookAgain(requestId);
-            });
-        });
     };
 
     // Enhanced ride requests view
@@ -1126,6 +738,7 @@ if ('serviceWorker' in navigator) {
         state.currentView = 'requests';
         
         if (dashboardTitle) dashboardTitle.textContent = 'Ride History';
+        if (lastUpdated) lastUpdated.textContent = `Showing ${state.allRequests.length} requests`;
         
         if (!mainContent) return;
 
@@ -1173,6 +786,61 @@ if ('serviceWorker' in navigator) {
                     </table>
                 </div>
             </div>
+
+            <!-- Enhanced Map Modal -->
+            <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" role="dialog" aria-labelledby="mapModalTitle" aria-modal="true">
+                <div class="bg-white rounded-lg p-4 w-full h-full max-w-4xl mx-2 sm:p-6 sm:mx-4 max-h-screen overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 id="mapModalTitle" class="text-lg font-semibold">Ride Tracking</h3>
+                        <button id="closeMapModal" class="text-gray-500 hover:text-gray-700 p-2" aria-label="Close map">
+                            <i class="fas fa-times" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <div id="driverMap" class="w-full h-[calc(100%-12rem)] sm:h-[calc(100%-14rem)] rounded-xl border border-gray-200 min-h-[300px]" role="img" aria-label="Driver location map"></div>
+                    <div class="mt-4 flex flex-col space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="driver-info-card">
+                                <p class="text-sm font-medium text-gray-500">Driver Name</p>
+                                <p id="driverNameInfo" class="font-medium">-</p>
+                            </div>
+                            <div class="driver-info-card">
+                                <p class="text-sm font-medium text-gray-500">Vehicle</p>
+                                <p id="driverVehicleInfo" class="font-medium">-</p>
+                            </div>
+                            <div class="driver-info-card">
+                                <p class="text-sm font-medium text-gray-500">Status</p>
+                                <p id="driverStatusInfo" class="font-medium">-</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="driver-info-card">
+                                <p class="text-sm font-medium text-gray-500">Your Location</p>
+                                <p id="userLocationInfo" class="font-medium">-</p>
+                            </div>
+                            <div class="driver-info-card">
+                                <p class="text-sm font-medium text-gray-500">Distance</p>
+                                <p id="distanceInfo" class="font-medium">-</p>
+                            </div>
+                            <div class="driver-info-card">
+                                <p class="text-sm font-medium text-gray-500">ETA</p>
+                                <p id="etaInfo" class="font-medium">-</p>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="text-sm text-gray-600">
+                                <span id="lastUpdatedInfo">Last updated: -</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-sm text-gray-500 mr-2">Auto-refresh:</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked aria-label="Toggle auto-refresh">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
 
         // Setup event listeners for the new elements
@@ -1182,6 +850,8 @@ if ('serviceWorker' in navigator) {
     const setupRideHistoryEventListeners = () => {
         const filterStatus = getElement('filterStatus');
         const refreshBtn = getElement('refreshRequests');
+        const autoRefreshToggle = getElement('autoRefreshToggle');
+        const closeModal = getElement('closeMapModal');
 
         if (filterStatus) {
             filterStatus.addEventListener('change', (e) => {
@@ -1189,8 +859,7 @@ if ('serviceWorker' in navigator) {
                 const fullRequestList = getElement('fullRequestList');
                 if (fullRequestList) {
                     fullRequestList.innerHTML = renderAllRequests(filtered);
-                    addActionButtonListeners();
-                    setupTableEventListeners();
+                    addTableButtonListeners();
                 }
             });
         }
@@ -1212,8 +881,22 @@ if ('serviceWorker' in navigator) {
             });
         }
 
-        addActionButtonListeners();
-        setupTableEventListeners();
+        if (autoRefreshToggle) {
+            autoRefreshToggle.addEventListener('change', (e) => {
+                if (e.target.checked && state.currentDriverId) {
+                    startMapRefresh(state.currentDriverId);
+                } else if (state.mapRefreshInterval) {
+                    clearInterval(state.mapRefreshInterval);
+                    state.mapRefreshInterval = null;
+                }
+            });
+        }
+
+        if (closeModal) {
+            closeModal.addEventListener('click', closeMapModalHandler);
+        }
+
+        addTableButtonListeners();
     };
 
     // Enhanced book again functionality
@@ -1222,7 +905,7 @@ if ('serviceWorker' in navigator) {
             const { data } = await apiCall(`/requests/${requestId}`);
             
             // Switch to dashboard view first
-            await switchView('dashboard');
+            await showDashboard();
             
             // Wait for DOM to update, then fill the form
             setTimeout(() => {
@@ -1234,6 +917,7 @@ if ('serviceWorker' in navigator) {
                     dropoffSelect.value = sanitizeString(data.dropoff_location);
                     
                     // Scroll to the form smoothly
+                    const form = getElement('cabRequestForm');
                     if (form) {
                         form.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         
@@ -1650,6 +1334,55 @@ if ('serviceWorker' in navigator) {
         }
     };
 
+    const addTableButtonListeners = () => {
+        // Track ride buttons
+        document.querySelectorAll('.track-ride').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const requestId = e.target.getAttribute('data-id');
+                trackRide(requestId);
+            });
+        });
+
+        // View details buttons
+        document.querySelectorAll('.view-details').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const requestId = e.target.getAttribute('data-id');
+                viewRideDetails(requestId);
+            });
+        });
+
+        // Book again buttons
+        document.querySelectorAll('.book-again').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const requestId = e.target.getAttribute('data-id');
+                bookAgain(requestId);
+            });
+        });
+
+        // View driver location buttons
+        document.querySelectorAll('.view-driver-location').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const lat = parseFloat(btn.getAttribute('data-lat'));
+                const lng = parseFloat(btn.getAttribute('data-lng'));
+                const name = sanitizeString(btn.getAttribute('data-name'));
+                const driverId = btn.getAttribute('data-driver-id');
+                const requestId = btn.getAttribute('data-request-id');
+                
+                if (isNaN(lat) || isNaN(lng)) {
+                    showNotification('Invalid location data', 'error');
+                    return;
+                }
+                
+                const mapModal = getElement('mapModal');
+                if (mapModal) {
+                    mapModal.classList.remove('hidden');
+                    initMap(lat, lng, name, driverId, requestId);
+                }
+            });
+        });
+    };
+
     const filterRequestsByStatus = (requests, status) => {
         if (status === 'all') return requests;
         
@@ -1694,7 +1427,7 @@ if ('serviceWorker' in navigator) {
             // Update the current view with fresh data
             if (state.currentView === 'dashboard') {
                 await showDashboard();
-            } else if (state.currentView === 'requests') {
+            } else {
                 await showRideRequests();
             }
         } catch (error) {
@@ -1777,24 +1510,9 @@ if ('serviceWorker' in navigator) {
             
             // Update view only if data has changed significantly
             if (state.currentView === 'dashboard') {
-                updateStatsCards(
-                    state.allRequests.length,
-                    state.allRequests.filter(req => req.status === 'PENDING' || req.status === 'ASSIGNED').length,
-                    state.allRequests.filter(req => req.status === 'COMPLETED').length,
-                    state.allRequests.filter(req => {
-                        const reqDate = new Date(req.request_time);
-                        const currentMonth = new Date().getMonth();
-                        const currentYear = new Date().getFullYear();
-                        return req.status === 'COMPLETED' && 
-                               reqDate.getMonth() === currentMonth && 
-                               reqDate.getFullYear() === currentYear;
-                    }).length
-                );
-                
-                if (requestList) {
-                    requestList.innerHTML = renderRecentRequests(state.allRequests.slice(0, 3));
-                    setupTableEventListeners();
-                }
+                await showDashboard();
+            } else if (state.currentView === 'requests') {
+                await showRideRequests();
             }
         } catch (error) {
             console.error('Error checking driver assignments:', error);
@@ -1893,7 +1611,6 @@ if ('serviceWorker' in navigator) {
             
             // Reset form
             e.target.reset();
-            setMinimumDateTime(); // Reset minimum time
             
             // Refresh requests
             await fetchRequests();
@@ -1930,6 +1647,7 @@ if ('serviceWorker' in navigator) {
             if (isNaN(date.getTime())) return 'Invalid date';
             
             const now = new Date();
+            
             if (date.toDateString() === now.toDateString()) {
                 return `Today, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
             } else {
@@ -1962,7 +1680,8 @@ if ('serviceWorker' in navigator) {
         };
         return statusMap[status] || 'Unknown';
     };
-// Enhanced ride tracking with better error handling
+
+    // Enhanced ride tracking with better error handling
     const trackRide = async (requestId) => {
         try {
             const { data } = await apiCall(`/requests/${requestId}`);
@@ -1986,7 +1705,8 @@ if ('serviceWorker' in navigator) {
             showNotification('Failed to fetch ride tracking information', 'error');
         }
     };
-const viewRideDetails = async (requestId) => {
+
+    const viewRideDetails = async (requestId) => {
         try {
             const { data } = await apiCall(`/requests/${requestId}`);
             
@@ -2005,7 +1725,6 @@ const viewRideDetails = async (requestId) => {
                 '',
                 `Pickup: ${sanitizeString(data.pickup_location) || 'Not specified'}`,
                 `Dropoff: ${sanitizeString(data.dropoff_location) || 'Not specified'}`,
-                `Passengers: ${data.passenger_count || 1}`,
                 `Date: ${formatDate(data.request_time)}`,
                 `Status: ${formatStatus(data.status)}`,
                 `Fare: ${fareText}`,
@@ -2019,23 +1738,24 @@ const viewRideDetails = async (requestId) => {
             showNotification('Failed to fetch ride details', 'error');
         }
     };
-const showDetailsModal = (details) => {
+
+    const showDetailsModal = (details) => {
         // Create a simple modal for better UX
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 no-print';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
         
         modal.innerHTML = `
-            <div class="modal-content bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto shadow-2xl">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-96 overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Ride Details</h3>
-                    <button class="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-colors" onclick="this.closest('.fixed').remove()" aria-label="Close details">
-                        <i class="fas fa-times text-lg"></i>
+                    <h3 class="text-lg font-semibold">Ride Details</h3>
+                    <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()" aria-label="Close details">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <pre class="whitespace-pre-wrap text-sm text-gray-700 font-sans">${details}</pre>
-                <div class="mt-6 flex justify-end">
+                <pre class="whitespace-pre-wrap text-sm text-gray-700">${details}</pre>
+                <div class="mt-4 flex justify-end">
                     <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
                         Close
                     </button>
@@ -2051,8 +1771,8 @@ const showDetailsModal = (details) => {
                 modal.remove();
             }
         });
-
-    // Close on escape key
+        
+        // Close on escape key
         const handleEscape = (e) => {
             if (e.key === 'Escape') {
                 modal.remove();
@@ -2084,20 +1804,6 @@ const showDetailsModal = (details) => {
             window.location.href = 'user-login.html';
         }
     };
-// Connection status monitoring
-    const updateConnectionStatus = (isOnline) => {
-        const statusElement = getElement('connectionStatus');
-        const statusText = document.querySelector('#connectionStatus + span');
-        
-        if (statusElement) {
-            statusElement.className = isOnline ? 'w-2 h-2 bg-green-500 rounded-full' : 'w-2 h-2 bg-red-500 rounded-full';
-            statusElement.title = isOnline ? 'Online' : 'Offline';
-        }
-        
-        if (statusText) {
-            statusText.textContent = isOnline ? 'Online' : 'Offline';
-        }
-    };
 
     // Initialize the dashboard
     initDashboard().catch(error => {
@@ -2118,65 +1824,13 @@ const showDetailsModal = (details) => {
         event.preventDefault();
     });
 
-// Handle online/offline status
+    // Handle online/offline status
     window.addEventListener('online', () => {
-        updateConnectionStatus(true);
         showNotification('Connection restored', 'success');
         fetchRequests(); // Refresh data when back online
     });
 
     window.addEventListener('offline', () => {
-        updateConnectionStatus(false);
         showNotification('No internet connection', 'warning', 0); // Persistent warning
     });
-
-    // Initialize connection status
-    updateConnectionStatus(navigator.onLine);
-
-    // Export functions for global access (if needed for debugging or external scripts)
-    window.dashboardFunctions = {
-        showNotification,
-        fetchRequests,
-        showCancelModal,
-        updateDriverLocation: updateDriverLocation,
-        currentDriverId: () => state.currentDriverId
-    };
-
-    // Set up keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        // Alt + N for new ride
-        if (e.altKey && e.key === 'n') {
-            e.preventDefault();
-            switchView('dashboard');
-            setTimeout(() => {
-                const pickupSelect = getElement('pickupLocation');
-                if (pickupSelect) pickupSelect.focus();
-            }, 100);
-        }
-        // Alt + H for history
-        if (e.altKey && e.key === 'h') {
-            e.preventDefault();
-            switchView('history');
-        }
-        
-        // Alt + R for refresh
-        if (e.altKey && e.key === 'r') {
-            e.preventDefault();
-            fetchRequests();
-        }
-    });
-
-    // Update last update time periodically
-    setInterval(() => {
-        const lastUpdateElement = getElement('lastUpdateTime');
-        if (lastUpdateElement) {
-            const now = new Date();
-            lastUpdateElement.textContent = now.toLocaleTimeString([], {
-                hour: '2-digit', 
-                minute: '2-digit'
-            });
-        }
-    }, 60000); // Update every minute
-
-    console.log('Enhanced User Dashboard initialized successfully');
 });
