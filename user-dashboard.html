@@ -153,6 +153,27 @@
             box-shadow: none;
         }
 
+        /* Cancel button styles */
+        .btn-cancel {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-cancel:hover {
+            background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-cancel:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         /* Status badges */
         .ride-status-pending {
             background-color: #fef3c7;
@@ -370,146 +391,101 @@
             padding-right: 2.5rem;
         }
 
-        /* Accessibility improvements */
-        .sr-only {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
+        /* Passenger count styles */
+        .passenger-counter {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        /* Focus styles */
-        button:focus,
-        a:focus,
-        input:focus,
-        select:focus {
-            outline: 2px solid var(--primary);
-            outline-offset: 2px;
-        }
-
-        /* Dark mode support */
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --gray-50: #1f2937;
-                --gray-100: #374151;
-                --gray-200: #4b5563;
-            }
-        }
-
-        /* Print styles */
-        @media print {
-            .no-print {
-                display: none !important;
-            }
-            
-            body {
-                font-size: 12pt;
-                line-height: 1.4;
-            }
-            
-            .card {
-                break-inside: avoid;
-                border: 1px solid #ccc;
-            }
-        }
-
-        /* Reduced motion */
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-
-        /* High contrast mode */
-        @media (prefers-contrast: high) {
-            .card {
-                border: 2px solid #000;
-            }
-            
-            .btn-primary {
-                border: 2px solid #000;
-            }
-        }
-
-        /* Loading overlay */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.9);
+        .counter-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.5rem;
+            border: 2px solid var(--gray-200);
+            background: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 9999;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
 
-        .loading-spinner {
-            width: 3rem;
-            height: 3rem;
-            border: 4px solid var(--gray-200);
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .counter-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background-color: rgba(67, 97, 238, 0.05);
         }
 
-        /* Responsive improvements */
-        @media (max-width: 640px) {
-            .container {
-                padding-left: 1rem;
-                padding-right: 1rem;
+        .counter-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .counter-display {
+            min-width: 3rem;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        /* Modal styles */
+        .modal-backdrop {
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(1rem) scale(0.95);
             }
-            
-            .card {
-                margin-bottom: 1rem;
-            }
-            
-            .btn-primary {
-                width: 100%;
-                justify-content: center;
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
             }
         }
-        
+
+        /* Contact us styles */
         .contact-us {
-    background-color: #f5f5f5;
-    border: 1px solid #ccc;
-    padding: 15px;
-    margin-top: 20px;
-    border-radius: 6px;
-    font-family: Arial, sans-serif;
-    max-width: 300px;
-}
+            background-color: #f5f5f5;
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 6px;
+            font-family: Arial, sans-serif;
+            max-width: 300px;
+        }
 
-.contact-us h3 {
-    margin-top: 0;
-    color: #2c3e50;
-}
+        .contact-us h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
 
-.contact-us p {
-    margin: 5px 0;
-    font-size: 14px;
-}
+        .contact-us p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
 
-.contact-us a {
-    color: #006400; /* Dark green for military look */
-    text-decoration: none;
-    font-weight: bold;
-}
+        .contact-us a {
+            color: #006400; 
+            text-decoration: none;
+            font-weight: bold;
+        }
 
-.contact-us a:hover {
-    text-decoration: underline;
-}
-
+        .contact-us a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -634,7 +610,7 @@
         </header>
 
         <!-- Enhanced Dashboard Content -->
-        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50" id="main-content">
             <div class="mb-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
                 <div class="text-sm text-gray-500">Last updated: <span id="lastUpdateTime">Just now</span></div>
@@ -779,6 +755,30 @@
                         </div>
                         <div id="dropoffLocation-error" class="form-error mt-1 hidden" role="alert"></div>
                     </div>
+
+                    <!-- NEW: Number of Passengers Field -->
+                    <div class="form-group">
+                        <label for="passengerCount" class="block text-sm font-medium text-gray-700 mb-2">
+                            Number of Passengers <span class="text-red-500" aria-label="required">*</span>
+                        </label>
+                        <div class="flex items-center justify-between">
+                            <div class="passenger-counter">
+                                <button type="button" class="counter-btn" id="decreasePassengers" aria-label="Decrease passenger count">
+                                    <i class="fas fa-minus text-sm" aria-hidden="true"></i>
+                                </button>
+                                <div class="counter-display" id="passengerDisplay">1</div>
+                                <button type="button" class="counter-btn" id="increasePassengers" aria-label="Increase passenger count">
+                                    <i class="fas fa-plus text-sm" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                <i class="fas fa-users mr-1" aria-hidden="true"></i>
+                                Max 4 passengers
+                            </div>
+                        </div>
+                        <input type="hidden" id="passengerCount" name="passengerCount" value="1" required>
+                        <div id="passengerCount-error" class="form-error mt-1 hidden" role="alert"></div>
+                    </div>
                     
                     <div class="form-group">
                         <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-2">
@@ -830,6 +830,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Passengers</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
@@ -839,7 +840,7 @@
                         </thead>
                         <tbody id="requestList" class="bg-white divide-y divide-gray-200">
                             <tr>
-                                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                                <td colspan="10" class="px-6 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <i class="fas fa-car text-4xl text-gray-300 mb-3" aria-hidden="true"></i>
                                         <p class="text-lg font-medium">No rides yet</p>
@@ -873,9 +874,72 @@
     <!-- Enhanced Notification Area -->
     <div id="notificationArea" class="fixed bottom-4 right-4 z-40 space-y-2 max-w-sm no-print"></div>
 
+    <!-- Ride Cancellation Confirmation Modal -->
+    <div id="cancelRideModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden no-print" role="dialog" aria-labelledby="cancelModalTitle" aria-modal="true">
+        <div class="modal-content bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div class="flex items-center mb-4">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3 id="cancelModalTitle" class="text-lg font-semibold text-gray-900">Cancel Ride Request</h3>
+                    <p class="text-sm text-gray-500">This action cannot be undone</p>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <p class="text-gray-700 mb-4">Are you sure you want to cancel this ride request?</p>
+                <div id="rideDetailsForCancel" class="bg-gray-50 p-4 rounded-lg text-sm">
+                    <!-- Ride details will be populated here -->
+                </div>
+                
+                <div class="mt-4">
+                    <label for="cancellationReason" class="block text-sm font-medium text-gray-700 mb-2">
+                        Reason for cancellation <span class="text-red-500">*</span>
+                    </label>
+                    <select id="cancellationReason" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
+                        <option value="">Select a reason</option>
+                        <option value="change_of_plans">Change of plans</option>
+                        <option value="emergency">Emergency situation</option>
+                        <option value="found_alternative">Found alternative transport</option>
+                        <option value="wrong_booking">Wrong booking details</option>
+                        <option value="driver_delay">Driver taking too long</option>
+                        <option value="other">Other reason</option>
+                    </select>
+                </div>
+
+                <div class="mt-3">
+                    <label for="cancellationNote" class="block text-sm font-medium text-gray-700 mb-2">
+                        Additional notes (optional)
+                    </label>
+                    <textarea id="cancellationNote" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none" 
+                              rows="3" 
+                              placeholder="Please provide any additional details..."
+                              maxlength="200"></textarea>
+                    <div class="text-xs text-gray-500 mt-1">
+                        <span id="noteCharCount">0</span>/200 characters
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:space-x-3">
+                <button id="confirmCancelRide" 
+                        class="btn-cancel flex-1 py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    <span>Cancel Ride</span>
+                </button>
+                <button id="closeCancelModal" 
+                        class="flex-1 py-3 px-4 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                    Keep Ride
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Enhanced Map Modal -->
-    <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print" role="dialog" aria-labelledby="mapModalTitle" aria-modal="true">
-        <div class="bg-white rounded-lg p-4 w-full h-full max-w-5xl mx-2 sm:p-6 sm:mx-4 max-h-screen overflow-y-auto shadow-2xl">
+    <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-50 hidden no-print" role="dialog" aria-labelledby="mapModalTitle" aria-modal="true">
+        <div class="modal-content bg-white rounded-lg p-4 w-full h-full max-w-5xl mx-2 sm:p-6 sm:mx-4 max-h-screen overflow-y-auto shadow-2xl">
             <div class="flex justify-between items-center mb-4">
                 <h3 id="mapModalTitle" class="text-lg font-semibold text-gray-900">Real-time Ride Tracking</h3>
                 <button id="closeMapModal" 
@@ -936,15 +1000,10 @@
                         </div>
                         <button type="button" 
                                 class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                                onclick="if(window.state && window.state.currentDriverId) window.updateDriverLocation(window.state.currentDriverId)">
+                                onclick="if(window.updateDriverLocation && window.currentDriverId) window.updateDriverLocation(window.currentDriverId)">
                             <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>
                             Refresh
                         </button>
-                        
-                        
-     
-
-                        
                     </div>
                 </div>
             </div>
@@ -959,222 +1018,268 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""></script>
 
-    <!-- Enhanced Service Worker Registration -->
     <script>
-        // Register service worker for offline capability
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then((registration) => {
-                        console.log('SW registered: ', registration);
-                    })
-                    .catch((registrationError) => {
-                        console.log('SW registration failed: ', registrationError);
-                    });
-            });
-        }
-
-        // Enhanced mobile menu functionality
-        document.addEventListener('DOMContentLoaded', () => {
-            const mobileMenuButton = document.getElementById('mobileMenuButton');
-            const sidebar = document.querySelector('.sidebar');
-            const mobileOverlay = document.getElementById('mobileOverlay');
-
-            const toggleMobileMenu = () => {
-                const isOpen = sidebar.classList.contains('active');
-                
-                if (isOpen) {
-                    sidebar.classList.remove('active');
-                    mobileOverlay.classList.add('hidden');
-                    mobileMenuButton.setAttribute('aria-expanded', 'false');
-                } else {
-                    sidebar.classList.add('active');
-                    mobileOverlay.classList.remove('hidden');
-                    mobileMenuButton.setAttribute('aria-expanded', 'true');
-                }
-            };
-
-            mobileMenuButton?.addEventListener('click', toggleMobileMenu);
-            mobileOverlay?.addEventListener('click', toggleMobileMenu);
-
-            // Close mobile menu on escape key
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && sidebar.classList.contains('active')) {
-                    toggleMobileMenu();
-                }
-            });
-
-            // Update connection status
-            const updateConnectionStatus = () => {
-                const statusElement = document.getElementById('connectionStatus');
-                const statusText = statusElement?.nextElementSibling;
-                
-                if (navigator.onLine) {
-                    statusElement?.classList.remove('bg-red-500');
-                    statusElement?.classList.add('bg-green-500');
-                    if (statusText) statusText.textContent = 'Online';
-                } else {
-                    statusElement?.classList.remove('bg-green-500');
-                    statusElement?.classList.add('bg-red-500');
-                    if (statusText) statusText.textContent = 'Offline';
-                }
-            };
-
-            window.addEventListener('online', updateConnectionStatus);
-            window.addEventListener('offline', updateConnectionStatus);
-            updateConnectionStatus();
-
-            // Update last update time periodically
-            const updateLastUpdateTime = () => {
-                const element = document.getElementById('lastUpdateTime');
-                if (element) {
-                    element.textContent = new Date().toLocaleTimeString();
-                }
-            };
-
-            setInterval(updateLastUpdateTime, 30000); // Update every 30 seconds
-
-            // Keyboard shortcuts
-            document.addEventListener('keydown', (e) => {
-                // Alt + D for Dashboard
-                if (e.altKey && e.key === 'd') {
-                    e.preventDefault();
-                    document.querySelector('.nav-item[href="#"]')?.click();
-                }
-                // Alt + H for History
-                if (e.altKey && e.key === 'h') {
-                    e.preventDefault();
-                    document.querySelector('.nav-item:nth-child(3)')?.click();
-                }
-            });
-
-            // Form auto-save to prevent data loss
-            const form = document.getElementById('cabRequestForm');
-            if (form) {
-                const saveFormData = () => {
-                    const formData = new FormData(form);
-                    const data = {};
-                    for (let [key, value] of formData.entries()) {
-                        data[key] = value;
-                    }
-                    try {
-                        localStorage.setItem('unsavedRideRequest', JSON.stringify(data));
-                    } catch (e) {
-                        // Handle localStorage errors silently
-                    }
-                };
-
-                const restoreFormData = () => {
-                    try {
-                        const saved = localStorage.getItem('unsavedRideRequest');
-                        if (saved) {
-                            const data = JSON.parse(saved);
-                            Object.keys(data).forEach(key => {
-                                const element = form.elements[key];
-                                if (element && data[key]) {
-                                    element.value = data[key];
-                                }
-                            });
-                        }
-                    } catch (e) {
-                        // Handle errors silently
-                    }
-                };
-
-                const clearSavedData = () => {
-                    try {
-                        localStorage.removeItem('unsavedRideRequest');
-                    } catch (e) {
-                        // Handle errors silently
-                    }
-                };
-
-                // Save form data on input
-                form.addEventListener('input', saveFormData);
-                
-                // Restore on page load
-                restoreFormData();
-                
-                // Clear on successful submission
-                form.addEventListener('submit', () => {
-                    setTimeout(clearSavedData, 1000);
-                });
-            }
-
-            // Enhanced accessibility
-            let lastFocusedElement = null;
-            
-            // Track focus for modal management
-            document.addEventListener('focusin', (e) => {
-                lastFocusedElement = e.target;
-            });
-
-            // Trap focus in modals
-            document.addEventListener('keydown', (e) => {
-                const modal = document.querySelector('[role="dialog"]:not(.hidden)');
-                if (modal && e.key === 'Tab') {
-                    const focusableElements = modal.querySelectorAll(
-                        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                    );
-                    const firstElement = focusableElements[0];
-                    const lastElement = focusableElements[focusableElements.length - 1];
-
-                    if (e.shiftKey && document.activeElement === firstElement) {
-                        e.preventDefault();
-                        lastElement.focus();
-                    } else if (!e.shiftKey && document.activeElement === lastElement) {
-                        e.preventDefault();
-                        firstElement.focus();
-                    }
-                }
-            });
-
-            // Skip to main content link
-            const skipLink = document.createElement('a');
-            skipLink.href = '#main-content';
-            skipLink.textContent = 'Skip to main content';
-            skipLink.className = 'sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white p-2 rounded z-50';
-            document.body.insertBefore(skipLink, document.body.firstChild);
-
-            // Add main content id
-            const main = document.querySelector('main');
-            if (main) {
-                main.id = 'main-content';
-            }
-        });
-
-        // Global error boundary
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            console.error('Global error:', { msg, url, lineNo, columnNo, error });
-            // Could send to error reporting service here
-            return false;
+        // Global state management
+        let dashboardState = {
+            currentView: 'dashboard',
+            allRequests: [],
+            passengerCount: 1,
+            currentRideForCancel: null
         };
 
-        // Performance monitoring
-        window.addEventListener('load', () => {
-            if ('performance' in window) {
-                const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
-                console.log('Page load time:', loadTime + 'ms');
-                
-                // Could send performance metrics to analytics service here
-                if (loadTime > 3000) {
-                    console.warn('Slow page load detected:', loadTime + 'ms');
-                }
+        // Mock API configuration (replace with your actual API endpoints)
+        const API_CONFIG = {
+            baseURL: 'https://serverone-w2xc.onrender.com/api',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer demo-token' // Replace with actual token
             }
-        });
+        };
 
-        // Memory usage monitoring (if available)
-        if ('memory' in performance) {
-            setInterval(() => {
-                const memory = performance.memory;
-                if (memory.usedJSHeapSize > memory.jsHeapSizeLimit * 0.9) {
-                    console.warn('High memory usage detected');
-                }
-            }, 30000);
+        // Utility functions
+        function sanitizeString(str) {
+            return str ? str.replace(/[<>&"']/g, '') : '';
         }
-    </script>
 
-    <!-- Load main dashboard script -->
-    <script src="./js/user-dashboard.js"></script>
-</body>
-</html>
+        function showNotification(message, type = 'info', duration = 5000) {
+            const notificationArea = document.getElementById('notificationArea');
+            if (!notificationArea) return;
+
+            const notification = document.createElement('div');
+            notification.className = `notification-item p-4 rounded-lg shadow-lg mb-4 ${getNotificationClass(type)}`;
+            notification.setAttribute('role', 'alert');
+            notification.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas ${getNotificationIcon(type)} mr-3"></i>
+                        <span>${sanitizeString(message)}</span>
+                    </div>
+                    <button class="ml-4 text-lg hover:opacity-70 transition-opacity" onclick="this.parentElement.parentElement.remove()" aria-label="Close notification">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            notificationArea.appendChild(notification);
+
+            if (duration > 0) {
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, duration);
+            }
+        }
+
+        function getNotificationClass(type) {
+            const classes = {
+                success: 'bg-green-100 text-green-800 border border-green-300',
+                error: 'bg-red-100 text-red-800 border border-red-300',
+                warning: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+                info: 'bg-blue-100 text-blue-800 border border-blue-300'
+            };
+            return classes[type] || classes.info;
+        }
+
+        function getNotificationIcon(type) {
+            const icons = {
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle',
+                warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle'
+            };
+            return icons[type] || icons.info;
+        }
+
+        // Passenger counter functionality
+        function initializePassengerCounter() {
+            const decreaseBtn = document.getElementById('decreasePassengers');
+            const increaseBtn = document.getElementById('increasePassengers');
+            const display = document.getElementById('passengerDisplay');
+            const hiddenInput = document.getElementById('passengerCount');
+
+            function updatePassengerCount(count) {
+                dashboardState.passengerCount = count;
+                display.textContent = count;
+                hiddenInput.value = count;
+                
+                // Update button states
+                decreaseBtn.disabled = count <= 1;
+                increaseBtn.disabled = count >= 4;
+            }
+
+            decreaseBtn.addEventListener('click', () => {
+                if (dashboardState.passengerCount > 1) {
+                    updatePassengerCount(dashboardState.passengerCount - 1);
+                }
+            });
+
+            increaseBtn.addEventListener('click', () => {
+                if (dashboardState.passengerCount < 4) {
+                    updatePassengerCount(dashboardState.passengerCount + 1);
+                }
+            });
+
+            // Initialize with default value
+            updatePassengerCount(1);
+        }
+
+        // Ride cancellation functionality
+        function initializeCancellationModal() {
+            const modal = document.getElementById('cancelRideModal');
+            const confirmBtn = document.getElementById('confirmCancelRide');
+            const closeBtn = document.getElementById('closeCancelModal');
+            const reasonSelect = document.getElementById('cancellationReason');
+            const noteTextarea = document.getElementById('cancellationNote');
+            const charCount = document.getElementById('noteCharCount');
+
+            // Character counter for notes
+            noteTextarea.addEventListener('input', () => {
+                charCount.textContent = noteTextarea.value.length;
+            });
+
+            // Close modal
+            function closeModal() {
+                modal.classList.add('hidden');
+                dashboardState.currentRideForCancel = null;
+                reasonSelect.value = '';
+                noteTextarea.value = '';
+                charCount.textContent = '0';
+            }
+
+            closeBtn.addEventListener('click', closeModal);
+
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // Confirm cancellation
+            confirmBtn.addEventListener('click', async () => {
+                if (!reasonSelect.value) {
+                    showNotification('Please select a reason for cancellation', 'error');
+                    return;
+                }
+
+                if (!dashboardState.currentRideForCancel) {
+                    showNotification('No ride selected for cancellation', 'error');
+                    return;
+                }
+
+                try {
+                    // Disable button and show loading
+                    confirmBtn.disabled = true;
+                    const originalHtml = confirmBtn.innerHTML;
+                    confirmBtn.innerHTML = `
+                        <div class="flex items-center justify-center space-x-2">
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            <span>Cancelling...</span>
+                        </div>
+                    `;
+
+                    await cancelRideRequest(
+                        dashboardState.currentRideForCancel.id,
+                        reasonSelect.value,
+                        noteTextarea.value
+                    );
+
+                    showNotification('Ride request cancelled successfully', 'success');
+                    closeModal();
+
+                    // Refresh the requests list
+                    loadDashboardData();
+
+                } catch (error) {
+                    console.error('Error cancelling ride:', error);
+                    showNotification('Failed to cancel ride request', 'error');
+                } finally {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = `
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                        <span>Cancel Ride</span>
+                    `;
+                }
+            });
+        }
+
+        // Show cancellation modal with ride details
+        function showCancelModal(rideRequest) {
+            dashboardState.currentRideForCancel = rideRequest;
+            
+            const modal = document.getElementById('cancelRideModal');
+            const detailsDiv = document.getElementById('rideDetailsForCancel');
+            
+            // Populate ride details
+            detailsDiv.innerHTML = `
+                <div class="space-y-2">
+                    <div><strong>Request ID:</strong> #RS-${rideRequest.id}</div>
+                    <div><strong>From:</strong> ${sanitizeString(rideRequest.pickup_location)}</div>
+                    <div><strong>To:</strong> ${sanitizeString(rideRequest.dropoff_location)}</div>
+                    <div><strong>Passengers:</strong> ${rideRequest.passenger_count || 1}</div>
+                    <div><strong>Scheduled:</strong> ${new Date(rideRequest.request_time).toLocaleString()}</div>
+                    <div><strong>Status:</strong> <span class="px-2 py-1 text-xs font-medium ride-status-${rideRequest.status?.toLowerCase()} rounded">${rideRequest.status}</span></div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        // API call to cancel ride
+        async function cancelRideRequest(rideId, reason, note) {
+            // Simulate API call - replace with actual API endpoint
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    // Simulate API response
+                    const success = Math.random() > 0.1; // 90% success rate for demo
+                    
+                    if (success) {
+                        // Update local state
+                        const rideIndex = dashboardState.allRequests.findIndex(r => r.id === rideId);
+                        if (rideIndex !== -1) {
+                            dashboardState.allRequests[rideIndex].status = 'CANCELLED';
+                            dashboardState.allRequests[rideIndex].cancellation_reason = reason;
+                            dashboardState.allRequests[rideIndex].cancellation_note = note;
+                            dashboardState.allRequests[rideIndex].cancelled_at = new Date().toISOString();
+                        }
+                        
+                        // Notify control center (in real implementation)
+                        notifyControlCenter(rideId, reason, note);
+                        
+                        resolve({ success: true });
+                    } else {
+                        reject(new Error('Failed to cancel ride'));
+                    }
+                }, 1500);
+            });
+        }
+
+        // Notify control center about cancellation
+        function notifyControlCenter(rideId, reason, note) {
+            // In a real implementation, this would send a notification to the control center
+            console.log('Notifying control center about cancellation:', {
+                rideId,
+                reason,
+                note,
+                timestamp: new Date().toISOString(),
+                controlPhone: '9086439489'
+            });
+            
+            // For demo purposes, show a notification
+            setTimeout(() => {
+                showNotification('Control center has been notified about the cancellation', 'info');
+            }, 2000);
+        }
+
+        // Enhanced form submission with passenger count
+        function initializeFormSubmission() {
+            const form = document.getElementById('cabRequestForm');
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                const rideData = {
+                    pickupLocation: formData.get('pickupLocation'),
+                    dropoffLocation:
