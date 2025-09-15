@@ -1,40 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Storage abstraction layer - fallback for environments without localStorage
-    const storage = {
-        get: (key) => {
-            try {
-                return localStorage.getItem(key) || sessionStorage.getItem(key);
-            } catch (e) {
-                console.warn('Storage not available, using memory fallback');
-                return window.memoryStorage?.[key] || null;
-            }
-        },
-        set: (key, value) => {
-            try {
-                localStorage.setItem(key, value);
-            } catch (e) {
-                try {
-                    sessionStorage.setItem(key, value);
-                } catch (e2) {
-                    window.memoryStorage = window.memoryStorage || {};
-                    window.memoryStorage[key] = value;
-                }
-            }
-        },
-        clear: () => {
-            try {
-                localStorage.clear();
-                sessionStorage.clear();
-            } catch (e) {
-                window.memoryStorage = {};
-            }
-        }
-    };
-
     // Check authentication with enhanced security
-    const token = storage.get('token');
-    const username = storage.get('username');
-    const userType = storage.get('userType');
+    const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+    const username = sessionStorage.getItem('username') || localStorage.getItem('username');
+    const userType = sessionStorage.getItem('userType') || localStorage.getItem('userType');
 
     if (!token || !username || userType !== 'user') {
         window.location.href = 'user-login.html';
@@ -55,11 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return element;
     };
 
-    const form = getElement('cabRequestForm');
-    const requestList = getElement('requestList');
-    const mainContent = document.querySelector('main');
-    const dashboardTitle = document.querySelector('.mb-6 h1');
-    const lastUpdated = document.querySelector('.mb-6 .text-sm');
+    const mainContent = getElement('mainContent');
     
     // Enhanced location options with validation
     const locationOptions = [
@@ -79,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'MAYUR VIHAR'
     ];
     
-    // Enhanced state management
-    let state = {
+    // Enhanced state management - Exposed globally for map refresh
+    window.state = {
         currentView: 'dashboard',
         allRequests: [],
         previousRequests: [],
@@ -95,7 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
         userLocation: null,
         isLoading: false,
         retryCount: 0,
-        maxRetries: 3
+        maxRetries: 3,
+        isMapModalOpen: false // NEW: Track modal state
     };
 
     // Enhanced API configuration
@@ -148,7 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Authentication error handler
     const handleAuthError = () => {
-        storage.clear();
+        sessionStorage.clear();
+        localStorage.clear();
         showNotification('Session expired. Please login again.', 'error');
         setTimeout(() => {
             window.location.href = 'user-login.html';
@@ -239,14 +205,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const checkDriverAssignment = async () => {
             try {
                 await checkForDriverAssignmentUpdate();
-                state.retryCount = 0; // Reset on success
+                window.state.retryCount = 0; // Reset on success
             } catch (error) {
-                state.retryCount++;
+                window.state.retryCount++;
                 console.error('Periodic refresh failed:', error);
                 
-                if (state.retryCount >= state.maxRetries) {
+                if (window.state.retryCount >= window.state.maxRetries) {
                     showNotification('Connection issues detected. Please refresh manually.', 'warning');
-                    state.retryCount = 0;
+                    window.state.retryCount = 0;
                 }
             }
         };
@@ -255,8 +221,8 @@ document.addEventListener('DOMContentLoaded', () => {
         checkDriverAssignment();
         
         // Set up periodic checks with exponential backoff
-        const baseInterval = 45000;
-        const getNextInterval = () => Math.min(baseInterval * Math.pow(1.5, state.retryCount), 300000);
+        const baseInterval = 30000; // 30 seconds
+        const getNextInterval = () => Math.min(baseInterval * Math.pow(1.5, window.state.retryCount), 300000);
         
         const scheduleNext = () => {
             setTimeout(() => {
@@ -290,9 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // Form submission with validation
-        addListener(form, 'submit', handleRideRequest);
-
         // Desktop navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             addListener(item, 'click', (e) => {
@@ -317,16 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     switchView(target);
                 }
             });
-        });
-
-        // Mobile menu toggle
-        const mobileMenuButton = getElement('mobileMenuButton');
-        addListener(mobileMenuButton, 'click', () => {
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('hidden');
-                sidebar.classList.toggle('active');
-            }
         });
 
         // Logout buttons with confirmation
@@ -357,10 +310,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Enhanced view switching with loading states
     const switchView = async (target) => {
-        if (state.isLoading) return;
+        if (window.state.isLoading) return;
 
         try {
-            state.isLoading = true;
+            window.state.isLoading = true;
             showLoadingState();
 
             switch(target) {
@@ -381,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('View switch error:', error);
             showNotification('Failed to load view', 'error');
         } finally {
-            state.isLoading = false;
+            window.state.isLoading = false;
             hideLoadingState();
         }
     };
@@ -404,22 +357,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loader) loader.remove();
     };
 
-    // Enhanced dashboard view with better error handling
+    // UPDATED: Enhanced dashboard view - only update data, not re-render if modal is open
     const showDashboard = async () => {
-        state.currentView = 'dashboard';
+        window.state.currentView = 'dashboard';
         
-        if (dashboardTitle) dashboardTitle.textContent = 'Dashboard';
-        if (lastUpdated) lastUpdated.textContent = 'Last updated: Just now';
+        // If map modal is open, only update data silently, don't re-render
+        if (window.state.isMapModalOpen) {
+            return updateDashboardData();
+        }
         
         if (!mainContent) return;
 
-        const completedRides = state.allRequests.filter(req => req.status === 'COMPLETED').length;
-        const pendingRides = state.allRequests.filter(req => 
+        const completedRides = window.state.allRequests.filter(req => req.status === 'COMPLETED').length;
+        const pendingRides = window.state.allRequests.filter(req => 
             req.status === 'PENDING' || req.status === 'ASSIGNED'
         ).length;
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
-        const monthlyRides = state.allRequests.filter(req => {
+        const monthlyRides = window.state.allRequests.filter(req => {
             const reqDate = new Date(req.request_time);
             return req.status === 'COMPLETED' && 
                    reqDate.getMonth() === currentMonth && 
@@ -429,16 +384,16 @@ document.addEventListener('DOMContentLoaded', () => {
         mainContent.innerHTML = `
             <div class="mb-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <div class="text-sm text-gray-500">Last updated: Just now</div>
+                <div class="text-sm text-gray-500">Last updated: <span id="lastUpdateTime">Just now</span></div>
             </div>
 
             <!-- Enhanced Stats Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="statsCards">
                 <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Rides</p>
-                            <h3 class="text-2xl font-bold mt-1">${state.allRequests.length}</h3>
+                            <h3 class="text-2xl font-bold mt-1" id="totalRidesCount">${window.state.allRequests.length}</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-blue-100 text-blue-600">
                             <i class="fas fa-car-side" aria-hidden="true"></i>
@@ -446,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="mt-4 flex items-center text-sm text-green-500">
                         <i class="fas fa-arrow-up mr-1" aria-hidden="true"></i>
-                        <span>${state.allRequests.length > 0 ? Math.floor(Math.random() * 20) : 0}% from last month</span>
+                        <span>${window.state.allRequests.length > 0 ? Math.floor(Math.random() * 20) : 0}% from last month</span>
                     </div>
                 </div>
                 
@@ -454,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Pending Requests</p>
-                            <h3 class="text-2xl font-bold mt-1">${pendingRides}</h3>
+                            <h3 class="text-2xl font-bold mt-1" id="pendingRidesCount">${pendingRides}</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600">
                             <i class="fas fa-clock" aria-hidden="true"></i>
@@ -471,7 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="flex justify-between items-start">
                         <div>
                             <p class="text-sm font-medium text-gray-500">Completed Rides</p>
-                            <h3 class="text-2xl font-bold mt-1">${completedRides}</h3>
+                            <h3 class="text-2xl font-bold mt-1" id="completedRidesCount">${completedRides}</h3>
                         </div>
                         <div class="p-3 rounded-lg bg-green-100 text-green-600">
                             <i class="fas fa-check-circle" aria-hidden="true"></i>
@@ -479,76 +434,78 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="mt-4 flex items-center text-sm text-gray-500">
                         <i class="fas fa-calendar-alt mr-2" aria-hidden="true"></i>
-                        <span>This month: ${monthlyRides}</span>
+                        <span id="monthlyRidesCount">This month: ${monthlyRides}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Enhanced Quick Book Section -->
-            <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold">Book a Ride</h2>
+            <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300 mb-8">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <h2 class="text-xl font-semibold text-gray-900">Book a Ride</h2>
                     <div class="flex space-x-2">
-                        <button type="button" class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg" aria-pressed="true">Now</button>
-                        <button type="button" class="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50" disabled>Later</button>
+                        <button type="button" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm" aria-pressed="true">
+                            <i class="fas fa-clock mr-1" aria-hidden="true"></i>
+                            Now
+                        </button>
+                        <button type="button" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" disabled title="Coming soon">
+                            <i class="fas fa-calendar mr-1" aria-hidden="true"></i>
+                            Later
+                        </button>
                     </div>
                 </div>
                 
-                <form id="cabRequestForm" class="space-y-4" novalidate>
-                    <div>
-                        <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-1">
-                            Pickup Location <span class="text-red-500">*</span>
+                <form id="cabRequestForm" class="space-y-6" novalidate>
+                    <div class="form-group">
+                        <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Pickup Location <span class="text-red-500" aria-label="required">*</span>
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-map-marker-alt text-gray-400" aria-hidden="true"></i>
                             </div>
-                            <select id="pickupLocation" name="pickupLocation" 
-                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
-                                   required aria-describedby="pickupLocation-error">
+                            <select id="pickupLocation" name="pickupLocation" class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" required aria-describedby="pickupLocation-error">
                                 <option value="">Select pickup location</option>
                                 ${generateLocationOptions()}
                             </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <i class="fas fa-chevron-down text-gray-400" aria-hidden="true"></i>
-                            </div>
                         </div>
-                        <div id="pickupLocation-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></div>
+                        <div id="pickupLocation-error" class="form-error mt-1 hidden" role="alert"></div>
                     </div>
                     
-                    <div>
-                        <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-1">
-                            Dropoff Location <span class="text-red-500">*</span>
+                    <div class="form-group">
+                        <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Dropoff Location <span class="text-red-500" aria-label="required">*</span>
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-flag text-gray-400" aria-hidden="true"></i>
                             </div>
-                            <select id="dropoffLocation" name="dropoffLocation" 
-                                   class="w-full pl-10 pr-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" 
-                                   required aria-describedby="dropoffLocation-error">
-                                <option value="">Select dropoff location</option>
+                            <select id="dropoffLocation" name="dropoffLocation" class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" required aria-describedby="dropoffLocation-error">
+                                <option value="">Select Dropoff Location</option>
                                 ${generateLocationOptions()}
                             </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <i class="fas fa-chevron-down text-gray-400" aria-hidden="true"></i>
-                            </div>
                         </div>
-                        <div id="dropoffLocation-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></div>
+                        <div id="dropoffLocation-error" class="form-error mt-1 hidden" role="alert"></div>
                     </div>
                     
-                    <div>
-                        <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-1">
-                            Schedule <span class="text-red-500">*</span>
+                    <div class="form-group">
+                        <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-2">
+                            Schedule <span class="text-red-500" aria-label="required">*</span>
                         </label>
-                        <input type="datetime-local" id="requestTime" name="requestTime" 
-                               class="w-full px-3 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                               required aria-describedby="requestTime-error">
-                        <div id="requestTime-error" class="text-red-500 text-sm mt-1 hidden" role="alert"></div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-calendar-alt text-gray-400" aria-hidden="true"></i>
+                            </div>
+                            <input type="datetime-local" id="requestTime" name="requestTime" class="form-input w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 transition-all" required aria-describedby="requestTime-error requestTime-help">
+                        </div>
+                        <div id="requestTime-help" class="text-sm text-gray-500 mt-1">
+                            Select a time at least 15 minutes from now
+                        </div>
+                        <div id="requestTime-error" class="form-error mt-1 hidden" role="alert"></div>
                     </div>
                     
-                    <div class="pt-2">
-                        <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg text-white font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <div class="pt-4">
+                        <button type="submit" class="btn-primary w-full py-3 px-6 rounded-lg text-white font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
                             <i class="fas fa-car" aria-hidden="true"></i>
                             <span>Request Ride</span>
                         </button>
@@ -557,15 +514,17 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <!-- Enhanced Recent Requests Section -->
-            <div class="card bg-white p-6 rounded-xl border border-gray-100 mt-8 hover:shadow-lg transition-shadow duration-300">
+            <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold">Recent Requests</h2>
-                    <button type="button" class="text-sm text-blue-600 hover:text-blue-800" id="viewAllRequests">View All</button>
+                    <h2 class="text-xl font-semibold text-gray-900">Recent Requests</h2>
+                    <button type="button" class="text-sm text-blue-600 hover:text-blue-800 transition-colors px-3 py-1 rounded hover:bg-blue-50" id="viewAllRequests">
+                        View All <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
+                    </button>
                 </div>
                 
-                <div class="table-responsive overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200" role="table">
-                        <thead class="bg-gray-50">
+                <div class="table-responsive">
+                    <table class="min-w-full" role="table">
+                        <thead>
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
@@ -579,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </tr>
                         </thead>
                         <tbody id="requestList" class="bg-white divide-y divide-gray-200">
-                            ${renderRecentRequests(state.allRequests.slice(0, 3))}
+                            ${renderRecentRequests(window.state.allRequests.slice(0, 3))}
                         </tbody>
                     </table>
                 </div>
@@ -589,6 +548,44 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reattach event listeners with error handling
         setupFormEventListeners();
         setupTableEventListeners();
+    };
+
+    // NEW: Function to update only dashboard data without re-rendering
+    const updateDashboardData = () => {
+        if (window.state.currentView !== 'dashboard') return;
+
+        const completedRides = window.state.allRequests.filter(req => req.status === 'COMPLETED').length;
+        const pendingRides = window.state.allRequests.filter(req => 
+            req.status === 'PENDING' || req.status === 'ASSIGNED'
+        ).length;
+        const currentMonth = new Date().getMonth();
+        const currentYear = new Date().getFullYear();
+        const monthlyRides = window.state.allRequests.filter(req => {
+            const reqDate = new Date(req.request_time);
+            return req.status === 'COMPLETED' && 
+                   reqDate.getMonth() === currentMonth && 
+                   reqDate.getFullYear() === currentYear;
+        }).length;
+
+        // Update stats cards without re-rendering
+        const totalRidesElement = getElement('totalRidesCount');
+        const pendingRidesElement = getElement('pendingRidesCount');
+        const completedRidesElement = getElement('completedRidesCount');
+        const monthlyRidesElement = getElement('monthlyRidesCount');
+        const lastUpdateElement = getElement('lastUpdateTime');
+        const requestListElement = getElement('requestList');
+
+        if (totalRidesElement) totalRidesElement.textContent = window.state.allRequests.length;
+        if (pendingRidesElement) pendingRidesElement.textContent = pendingRides;
+        if (completedRidesElement) completedRidesElement.textContent = completedRides;
+        if (monthlyRidesElement) monthlyRidesElement.textContent = `This month: ${monthlyRides}`;
+        if (lastUpdateElement) lastUpdateElement.textContent = new Date().toLocaleTimeString();
+
+        // Update recent requests table
+        if (requestListElement) {
+            requestListElement.innerHTML = renderRecentRequests(window.state.allRequests.slice(0, 3));
+            setupTableEventListeners();
+        }
     };
 
     // Enhanced form event listeners setup
@@ -726,26 +723,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const mapModal = getElement('mapModal');
                 if (mapModal) {
+                    window.state.isMapModalOpen = true; // Set modal state
                     mapModal.classList.remove('hidden');
                     initMap(lat, lng, name, driverId, requestId);
                 }
             });
         });
+
+        // Add other table event listeners
+        addTableButtonListeners();
     };
 
     // Enhanced ride requests view
     const showRideRequests = async () => {
-        state.currentView = 'requests';
-        
-        if (dashboardTitle) dashboardTitle.textContent = 'Ride History';
-        if (lastUpdated) lastUpdated.textContent = `Showing ${state.allRequests.length} requests`;
+        window.state.currentView = 'requests';
         
         if (!mainContent) return;
 
         mainContent.innerHTML = `
             <div class="mb-6 flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-gray-800">Ride History</h1>
-                <div class="text-sm text-gray-500">Showing ${state.allRequests.length} requests</div>
+                <div class="text-sm text-gray-500">Showing ${window.state.allRequests.length} requests</div>
             </div>
 
             <div class="card bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition-shadow duration-300">
@@ -781,64 +779,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             </tr>
                         </thead>
                         <tbody id="fullRequestList" class="bg-white divide-y divide-gray-200">
-                            ${renderAllRequests(state.allRequests)}
+                            ${renderAllRequests(window.state.allRequests)}
                         </tbody>
                     </table>
-                </div>
-            </div>
-
-            <!-- Enhanced Map Modal -->
-            <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" role="dialog" aria-labelledby="mapModalTitle" aria-modal="true">
-                <div class="bg-white rounded-lg p-4 w-full h-full max-w-4xl mx-2 sm:p-6 sm:mx-4 max-h-screen overflow-y-auto">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 id="mapModalTitle" class="text-lg font-semibold">Ride Tracking</h3>
-                        <button id="closeMapModal" class="text-gray-500 hover:text-gray-700 p-2" aria-label="Close map">
-                            <i class="fas fa-times" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                    <div id="driverMap" class="w-full h-[calc(100%-12rem)] sm:h-[calc(100%-14rem)] rounded-xl border border-gray-200 min-h-[300px]" role="img" aria-label="Driver location map"></div>
-                    <div class="mt-4 flex flex-col space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Driver Name</p>
-                                <p id="driverNameInfo" class="font-medium">-</p>
-                            </div>
-                            <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Vehicle</p>
-                                <p id="driverVehicleInfo" class="font-medium">-</p>
-                            </div>
-                            <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Status</p>
-                                <p id="driverStatusInfo" class="font-medium">-</p>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Your Location</p>
-                                <p id="userLocationInfo" class="font-medium">-</p>
-                            </div>
-                            <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">Distance</p>
-                                <p id="distanceInfo" class="font-medium">-</p>
-                            </div>
-                            <div class="driver-info-card">
-                                <p class="text-sm font-medium text-gray-500">ETA</p>
-                                <p id="etaInfo" class="font-medium">-</p>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div class="text-sm text-gray-600">
-                                <span id="lastUpdatedInfo">Last updated: -</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="text-sm text-gray-500 mr-2">Auto-refresh:</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="autoRefreshToggle" class="sr-only peer" checked aria-label="Toggle auto-refresh">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         `;
@@ -851,11 +794,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const filterStatus = getElement('filterStatus');
         const refreshBtn = getElement('refreshRequests');
         const autoRefreshToggle = getElement('autoRefreshToggle');
-        const closeModal = getElement('closeMapModal');
 
         if (filterStatus) {
             filterStatus.addEventListener('change', (e) => {
-                const filtered = filterRequestsByStatus(state.allRequests, e.target.value);
+                const filtered = filterRequestsByStatus(window.state.allRequests, e.target.value);
                 const fullRequestList = getElement('fullRequestList');
                 if (fullRequestList) {
                     fullRequestList.innerHTML = renderAllRequests(filtered);
@@ -883,17 +825,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (autoRefreshToggle) {
             autoRefreshToggle.addEventListener('change', (e) => {
-                if (e.target.checked && state.currentDriverId) {
-                    startMapRefresh(state.currentDriverId);
-                } else if (state.mapRefreshInterval) {
-                    clearInterval(state.mapRefreshInterval);
-                    state.mapRefreshInterval = null;
+                if (e.target.checked && window.state.currentDriverId) {
+                    startMapRefresh(window.state.currentDriverId);
+                } else if (window.state.mapRefreshInterval) {
+                    clearInterval(window.state.mapRefreshInterval);
+                    window.state.mapRefreshInterval = null;
                 }
             });
-        }
-
-        if (closeModal) {
-            closeModal.addEventListener('click', closeMapModalHandler);
         }
 
         addTableButtonListeners();
@@ -937,13 +875,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Enhanced map functionality with better error handling
+    // UPDATED: Enhanced map functionality - Track modal state
     const initMap = (driverLat, driverLng, driverName, driverId, requestId) => {
         try {
             // Clean up previous map
-            if (state.map) {
-                state.map.remove();
-                state.map = null;
+            if (window.state.map) {
+                window.state.map.remove();
+                window.state.map = null;
             }
             
             const mapElement = getElement('driverMap');
@@ -972,56 +910,56 @@ document.addEventListener('DOMContentLoaded', () => {
             let centerLng = driverLng;
             let zoomLevel = 15;
             
-            if (state.userLocation) {
-                centerLat = (driverLat + state.userLocation.latitude) / 2;
-                centerLng = (driverLng + state.userLocation.longitude) / 2;
+            if (window.state.userLocation) {
+                centerLat = (driverLat + window.state.userLocation.latitude) / 2;
+                centerLng = (driverLng + window.state.userLocation.longitude) / 2;
                 zoomLevel = 13;
             }
             
-            state.map = L.map(mapElement).setView([centerLat, centerLng], zoomLevel);
+            window.state.map = L.map(mapElement).setView([centerLat, centerLng], zoomLevel);
             
             // Add tile layer with error handling
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 maxZoom: 18,
                 errorTileUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk1hcCB0aWxlIG5vdCBhdmFpbGFibGU8L3RleHQ+PC9zdmc+'
-            }).addTo(state.map);
+            }).addTo(window.state.map);
 
             // Add driver marker
-            if (state.currentMarker) state.map.removeLayer(state.currentMarker);
-            state.currentMarker = L.marker([driverLat, driverLng], {
+            if (window.state.currentMarker) window.state.map.removeLayer(window.state.currentMarker);
+            window.state.currentMarker = L.marker([driverLat, driverLng], {
                 icon: L.divIcon({
                     className: 'driver-marker-icon',
                     html: '<i class="fas fa-car text-white text-xs relative" style="top: -1px; left: 1px;"></i>',
                     iconSize: [20, 20]
                 })
-            }).addTo(state.map)
+            }).addTo(window.state.map)
                 .bindPopup(`<b>${sanitizeString(driverName)}</b><br>Last updated: ${new Date().toLocaleTimeString()}`)
                 .openPopup();
                 
             // Add user marker if location is available
-            if (state.userLocation) {
-                if (state.userMarker) state.map.removeLayer(state.userMarker);
-                state.userMarker = L.marker([state.userLocation.latitude, state.userLocation.longitude], {
+            if (window.state.userLocation) {
+                if (window.state.userMarker) window.state.map.removeLayer(window.state.userMarker);
+                window.state.userMarker = L.marker([window.state.userLocation.latitude, window.state.userLocation.longitude], {
                     icon: L.divIcon({
                         className: 'user-marker-icon',
                         html: '<i class="fas fa-user text-white text-xs relative" style="top: -1px;"></i>',
                         iconSize: [20, 20]
                     })
-                }).addTo(state.map)
+                }).addTo(window.state.map)
                     .bindPopup('<b>Your Location</b>');
                     
                 // Add route line
-                if (state.routeLine) state.map.removeLayer(state.routeLine);
-                state.routeLine = L.polyline(
-                    [[state.userLocation.latitude, state.userLocation.longitude], [driverLat, driverLng]],
+                if (window.state.routeLine) window.state.map.removeLayer(window.state.routeLine);
+                window.state.routeLine = L.polyline(
+                    [[window.state.userLocation.latitude, window.state.userLocation.longitude], [driverLat, driverLng]],
                     {color: '#4361ee', dashArray: '10, 10', className: 'route-line'}
-                ).addTo(state.map);
+                ).addTo(window.state.map);
                 
                 // Calculate and display distance
                 const distance = calculateDistance(
-                    state.userLocation.latitude, 
-                    state.userLocation.longitude,
+                    window.state.userLocation.latitude, 
+                    window.state.userLocation.longitude,
                     driverLat,
                     driverLng
                 );
@@ -1033,7 +971,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
                 
             // Update driver info
-            const request = state.allRequests.find(req => req.id === parseInt(requestId));
+            const request = window.state.allRequests.find(req => req.id === parseInt(requestId));
             if (request && request.driver) {
                 updateMapInfo('driverNameInfo', sanitizeString(request.driver.name) || 'Unknown');
                 updateMapInfo('driverVehicleInfo', 
@@ -1044,9 +982,9 @@ document.addEventListener('DOMContentLoaded', () => {
             updateMapInfo('lastUpdatedInfo', `Last updated: ${new Date().toLocaleTimeString()}`);
             
             // Update user location info if available
-            if (state.userLocation) {
+            if (window.state.userLocation) {
                 updateMapInfo('userLocationInfo', 
-                    `${state.userLocation.latitude.toFixed(4)}, ${state.userLocation.longitude.toFixed(4)}`);
+                    `${window.state.userLocation.latitude.toFixed(4)}, ${window.state.userLocation.longitude.toFixed(4)}`);
             }
                 
             // Start auto-refresh if toggle is on
@@ -1057,8 +995,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Resize map to fit container
             setTimeout(() => {
-                if (state.map) {
-                    state.map.invalidateSize();
+                if (window.state.map) {
+                    window.state.map.invalidateSize();
                 }
             }, 100);
 
@@ -1088,60 +1026,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // UPDATED: Close map modal handler - Reset modal state
     const closeMapModalHandler = () => {
         const mapModal = getElement('mapModal');
         if (mapModal) {
             mapModal.classList.add('hidden');
+            window.state.isMapModalOpen = false; // Reset modal state
         }
         
         cleanup();
     };
 
     const cleanup = () => {
-        if (state.map) {
-            state.map.remove();
-            state.map = null;
+        if (window.state.map) {
+            window.state.map.remove();
+            window.state.map = null;
         }
-        if (state.mapRefreshInterval) {
-            clearInterval(state.mapRefreshInterval);
-            state.mapRefreshInterval = null;
+        if (window.state.mapRefreshInterval) {
+            clearInterval(window.state.mapRefreshInterval);
+            window.state.mapRefreshInterval = null;
         }
-        if (state.userLocationWatchId) {
-            navigator.geolocation.clearWatch(state.userLocationWatchId);
-            state.userLocationWatchId = null;
+        if (window.state.userLocationWatchId) {
+            navigator.geolocation.clearWatch(window.state.userLocationWatchId);
+            window.state.userLocationWatchId = null;
         }
-        state.currentDriverId = null;
-        state.currentMarker = null;
-        state.userMarker = null;
-        state.routeLine = null;
+        window.state.currentDriverId = null;
+        window.state.currentMarker = null;
+        window.state.userMarker = null;
+        window.state.routeLine = null;
     };
 
-    // Enhanced driver location update with better error handling
-    const updateDriverLocation = async (driverId) => {
+    // Enhanced driver location update with better error handling - EXPOSED GLOBALLY
+    window.updateDriverLocation = async (driverId) => {
         try {
             const { data } = await apiCall(`/drivers/${driverId}`);
             
             const lat = data.latitude != null ? Number(data.latitude) : null;
             const lng = data.longitude != null ? Number(data.longitude) : null;
             
-            if (lat && lng && state.map && state.currentMarker) {
+            if (lat && lng && window.state.map && window.state.currentMarker) {
                 // Update driver marker
-                state.currentMarker.setLatLng([lat, lng]);
-                state.currentMarker.getPopup().setContent(
+                window.state.currentMarker.setLatLng([lat, lng]);
+                window.state.currentMarker.getPopup().setContent(
                     `<b>${sanitizeString(data.name) || 'Driver'}</b><br>Last updated: ${new Date().toLocaleTimeString()}`
                 );
                 
                 // Update route line if user location is available
-                if (state.userLocation && state.routeLine) {
-                    state.routeLine.setLatLngs([
-                        [state.userLocation.latitude, state.userLocation.longitude],
+                if (window.state.userLocation && window.state.routeLine) {
+                    window.state.routeLine.setLatLngs([
+                        [window.state.userLocation.latitude, window.state.userLocation.longitude],
                         [lat, lng]
                     ]);
                     
                     // Update distance and ETA
                     const distance = calculateDistance(
-                        state.userLocation.latitude, 
-                        state.userLocation.longitude,
+                        window.state.userLocation.latitude, 
+                        window.state.userLocation.longitude,
                         lat,
                         lng
                     );
@@ -1151,14 +1091,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 // Adjust map view to show both markers if possible
-                if (state.userLocation) {
+                if (window.state.userLocation) {
                     const bounds = L.latLngBounds(
-                        [state.userLocation.latitude, state.userLocation.longitude],
+                        [window.state.userLocation.latitude, window.state.userLocation.longitude],
                         [lat, lng]
                     );
-                    state.map.fitBounds(bounds, {padding: [50, 50]});
+                    window.state.map.fitBounds(bounds, {padding: [50, 50]});
                 } else {
-                    state.map.setView([lat, lng]);
+                    window.state.map.setView([lat, lng]);
                 }
                 
                 updateMapInfo('lastUpdatedInfo', `Last updated: ${new Date().toLocaleTimeString()}`);
@@ -1170,12 +1110,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const startMapRefresh = (driverId) => {
-        if (state.mapRefreshInterval) {
-            clearInterval(state.mapRefreshInterval);
+        if (window.state.mapRefreshInterval) {
+            clearInterval(window.state.mapRefreshInterval);
         }
-        state.currentDriverId = driverId;
-        updateDriverLocation(driverId); // Initial update
-        state.mapRefreshInterval = setInterval(() => updateDriverLocation(driverId), 10000);
+        window.state.currentDriverId = driverId;
+        window.updateDriverLocation(driverId); // Initial update
+        window.state.mapRefreshInterval = setInterval(() => window.updateDriverLocation(driverId), 10000);
     };
 
     // Enhanced user location tracking
@@ -1191,30 +1131,30 @@ document.addEventListener('DOMContentLoaded', () => {
             timeout: 5000
         };
 
-        state.userLocationWatchId = navigator.geolocation.watchPosition(
+        window.state.userLocationWatchId = navigator.geolocation.watchPosition(
             (position) => {
-                state.userLocation = {
+                window.state.userLocation = {
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude,
                     accuracy: position.coords.accuracy
                 };
                 
                 // Update user marker if map is open
-                if (state.map && state.userMarker) {
-                    state.userMarker.setLatLng([state.userLocation.latitude, state.userLocation.longitude]);
+                if (window.state.map && window.state.userMarker) {
+                    window.state.userMarker.setLatLng([window.state.userLocation.latitude, window.state.userLocation.longitude]);
                     
                     // Update route line if driver location is available
-                    if (state.currentMarker && state.routeLine) {
-                        const driverLatLng = state.currentMarker.getLatLng();
-                        state.routeLine.setLatLngs([
-                            [state.userLocation.latitude, state.userLocation.longitude],
+                    if (window.state.currentMarker && window.state.routeLine) {
+                        const driverLatLng = window.state.currentMarker.getLatLng();
+                        window.state.routeLine.setLatLngs([
+                            [window.state.userLocation.latitude, window.state.userLocation.longitude],
                             [driverLatLng.lat, driverLatLng.lng]
                         ]);
                         
                         // Update distance and ETA
                         const distance = calculateDistance(
-                            state.userLocation.latitude, 
-                            state.userLocation.longitude,
+                            window.state.userLocation.latitude, 
+                            window.state.userLocation.longitude,
                             driverLatLng.lat,
                             driverLatLng.lng
                         );
@@ -1225,7 +1165,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Update user location info
                     updateMapInfo('userLocationInfo', 
-                        `${state.userLocation.latitude.toFixed(4)}, ${state.userLocation.longitude.toFixed(4)}`);
+                        `${window.state.userLocation.latitude.toFixed(4)}, ${window.state.userLocation.longitude.toFixed(4)}`);
                 }
             },
             (error) => {
@@ -1376,6 +1316,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const mapModal = getElement('mapModal');
                 if (mapModal) {
+                    window.state.isMapModalOpen = true; // Set modal state
                     mapModal.classList.remove('hidden');
                     initMap(lat, lng, name, driverId, requestId);
                 }
@@ -1400,34 +1341,42 @@ document.addEventListener('DOMContentLoaded', () => {
     // Enhanced fetch requests with better error handling and retry logic
     const fetchRequests = async () => {
         try {
-            // Show loading state
-            if (state.currentView === 'dashboard' && requestList) {
-                requestList.innerHTML = `
-                    <tr>
-                        <td colspan="9" class="px-6 py-4 text-center text-gray-500">
-                            <div class="flex justify-center items-center py-4">
-                                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-                                <span>Loading requests...</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+            // Show loading state only if not in modal
+            if (window.state.currentView === 'dashboard' && !window.state.isMapModalOpen) {
+                const requestListElement = getElement('requestList');
+                if (requestListElement) {
+                    requestListElement.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+                                <div class="flex justify-center items-center py-4">
+                                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+                                    <span>Loading requests...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
             }
 
             const { data } = await apiCall('/requests');
             
             if (!data) {
                 console.error('No data received from API');
-                state.allRequests = [];
+                window.state.allRequests = [];
                 showNotification('No ride data available', 'warning');
             } else {
-                state.allRequests = Array.isArray(data) ? data : [];
+                window.state.allRequests = Array.isArray(data) ? data : [];
             }
             
-            // Update the current view with fresh data
-            if (state.currentView === 'dashboard') {
-                await showDashboard();
-            } else {
+            // Update the current view with fresh data - RESPECTING MODAL STATE
+            if (window.state.currentView === 'dashboard') {
+                if (window.state.isMapModalOpen) {
+                    // Only update data silently, don't re-render
+                    updateDashboardData();
+                } else {
+                    await showDashboard();
+                }
+            } else if (window.state.currentView === 'requests') {
                 await showRideRequests();
             }
         } catch (error) {
@@ -1448,26 +1397,29 @@ document.addEventListener('DOMContentLoaded', () => {
             
             showNotification(errorMessage, 'error');
             
-            // Show error state in UI
-            if (requestList) {
-                requestList.innerHTML = `
-                    <tr>
-                        <td colspan="9" class="px-6 py-4 text-center text-red-500">
-                            <div class="flex flex-col items-center py-8">
-                                <i class="fas fa-exclamation-triangle text-4xl mb-2" aria-hidden="true"></i>
-                                <p class="mb-2">${errorMessage}</p>
-                                <button onclick="location.reload()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
-                                    Retry
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+            // Show error state in UI only if not in modal
+            if (!window.state.isMapModalOpen) {
+                const requestListElement = getElement('requestList');
+                if (requestListElement) {
+                    requestListElement.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="px-6 py-4 text-center text-red-500">
+                                <div class="flex flex-col items-center py-8">
+                                    <i class="fas fa-exclamation-triangle text-4xl mb-2" aria-hidden="true"></i>
+                                    <p class="mb-2">${errorMessage}</p>
+                                    <button onclick="location.reload()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+                                        Retry
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
             }
         }
     };
 
-    // Enhanced driver assignment checker with better error handling
+    // UPDATED: Enhanced driver assignment checker - RESPECTING MODAL STATE
     const checkForDriverAssignmentUpdate = async () => {
         try {
             const { data } = await apiCall('/requests');
@@ -1475,8 +1427,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Check for newly assigned drivers
             newRequests.forEach(newReq => {
-                const oldReq = state.previousRequests.find(req => req.id === newReq.id);
-                if (oldReq && !oldReq.driver && newReq.driver && !state.notifiedAssignments.has(newReq.id)) {
+                const oldReq = window.state.previousRequests.find(req => req.id === newReq.id);
+                if (oldReq && !oldReq.driver && newReq.driver && !window.state.notifiedAssignments.has(newReq.id)) {
                     const lat = newReq.driver && newReq.driver.latitude != null ? Number(newReq.driver.latitude) : null;
                     const lon = newReq.driver && newReq.driver.longitude != null ? Number(newReq.driver.longitude) : null;
                     const isValidLocation = lat != null && lon != null && !isNaN(lat) && !isNaN(lon);
@@ -1500,18 +1452,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         10000 // Show for 10 seconds
                     );
                     
-                    state.notifiedAssignments.add(newReq.id);
+                    window.state.notifiedAssignments.add(newReq.id);
                 }
             });
 
             // Update previous requests and current state
-            state.previousRequests = [...newRequests];
-            state.allRequests = newRequests;
+            window.state.previousRequests = [...newRequests];
+            window.state.allRequests = newRequests;
             
-            // Update view only if data has changed significantly
-            if (state.currentView === 'dashboard') {
-                await showDashboard();
-            } else if (state.currentView === 'requests') {
+            // Update view only if data has changed significantly - RESPECTING MODAL STATE
+            if (window.state.currentView === 'dashboard') {
+                if (window.state.isMapModalOpen) {
+                    // Only update data silently, don't re-render
+                    updateDashboardData();
+                } else {
+                    await showDashboard();
+                }
+            } else if (window.state.currentView === 'requests') {
                 await showRideRequests();
             }
         } catch (error) {
@@ -1789,7 +1746,8 @@ document.addEventListener('DOMContentLoaded', () => {
             cleanup();
             
             // Clear storage
-            storage.clear();
+            sessionStorage.clear();
+            localStorage.clear();
             
             // Show logout message
             showNotification('Logged out successfully', 'success', 2000);
