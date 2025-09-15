@@ -634,223 +634,8 @@
         </header>
 
         <!-- Enhanced Dashboard Content -->
-        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50">
-            <div class="mb-6 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-800">Dashboard</h1>
-                <div class="text-sm text-gray-500">Last updated: <span id="lastUpdateTime">Just now</span></div>
-            </div>
-
-            <!-- Enhanced Stats Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div class="card p-6 rounded-xl hover:shadow-lg transition-all duration-300 group">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Total Rides</p>
-                            <h3 class="text-2xl font-bold mt-1 text-gray-900">0</h3>
-                        </div>
-                        <div class="p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors">
-                            <i class="fas fa-car-side text-lg" aria-hidden="true"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-sm text-green-500">
-                        <i class="fas fa-arrow-up mr-1" aria-hidden="true"></i>
-                        <span>0% from last month</span>
-                    </div>
-                </div>
-                
-                <div class="card p-6 rounded-xl hover:shadow-lg transition-all duration-300 group">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Pending Requests</p>
-                            <h3 class="text-2xl font-bold mt-1 text-gray-900">0</h3>
-                        </div>
-                        <div class="p-3 rounded-lg bg-yellow-100 text-yellow-600 group-hover:bg-yellow-200 transition-colors">
-                            <i class="fas fa-clock text-lg" aria-hidden="true"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <span class="inline-block px-2 py-1 text-xs font-medium ride-status-pending rounded">
-                            None
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card p-6 rounded-xl hover:shadow-lg transition-all duration-300 group">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Completed Rides</p>
-                            <h3 class="text-2xl font-bold mt-1 text-gray-900">0</h3>
-                        </div>
-                        <div class="p-3 rounded-lg bg-green-100 text-green-600 group-hover:bg-green-200 transition-colors">
-                            <i class="fas fa-check-circle text-lg" aria-hidden="true"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center text-sm text-gray-500">
-                        <i class="fas fa-calendar-alt mr-2" aria-hidden="true"></i>
-                        <span>This month: 0</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Enhanced Quick Book Section -->
-            <div class="card p-6 rounded-xl mb-8 hover:shadow-lg transition-all duration-300">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                    <h2 class="text-xl font-semibold text-gray-900">Book a Ride</h2>
-                    <div class="flex space-x-2">
-                        <button type="button" 
-                                class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm" 
-                                aria-pressed="true">
-                            <i class="fas fa-clock mr-1" aria-hidden="true"></i>
-                            Now
-                        </button>
-                        <button type="button" 
-                                class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors" 
-                                disabled
-                                title="Coming soon">
-                            <i class="fas fa-calendar mr-1" aria-hidden="true"></i>
-                            Later
-                        </button>
-                    </div>
-                </div>
-                
-                <form id="cabRequestForm" class="space-y-6" novalidate>
-                    <div class="form-group">
-                        <label for="pickupLocation" class="block text-sm font-medium text-gray-700 mb-2">
-                            Pickup Location <span class="text-red-500" aria-label="required">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-map-marker-alt text-gray-400" aria-hidden="true"></i>
-                            </div>
-                            <select id="pickupLocation" 
-                                    name="pickupLocation" 
-                                    class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" 
-                                    required 
-                                    aria-describedby="pickupLocation-error">
-                                <option value="">Select pickup location</option>
-                                <option value="APS">APS</option>
-                                <option value="SONAR INCLAVE">SONAR INCLAVE</option>
-                                <option value="CHAN SINGH ENCLAVE">CHAN SINGH ENCLAVE</option>
-                                <option value="KSP">KSP</option>
-                                <option value="VASUDEV DWAR">VASUDEV DWAR</option>
-                                <option value="GOLF GROUND">GOLF GROUND</option>
-                                <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
-                                <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
-                                <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
-                                <option value="FORT KAMPTEE">FORT KAMPTEE</option>
-                                <option value="GARURA BUS STOP">GARURA BUS STOP</option>
-                                <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
-                                <option value="TCP II">TCP II</option>
-                                <option value="MAYUR VIHAR">MAYUR VIHAR</option>
-                            </select>
-                        </div>
-                        <div id="pickupLocation-error" class="form-error mt-1 hidden" role="alert"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="dropoffLocation" class="block text-sm font-medium text-gray-700 mb-2">
-                            Dropoff Location <span class="text-red-500" aria-label="required">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-flag text-gray-400" aria-hidden="true"></i>
-                            </div>
-                            <select id="dropoffLocation" 
-                                    name="dropoffLocation" 
-                                    class="form-input custom-select w-full pl-10 pr-10 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 appearance-none bg-white transition-all" 
-                                    required 
-                                    aria-describedby="dropoffLocation-error">
-                                <option value="">Select Dropoff Location</option>
-                                <option value="APS">APS</option>
-                                <option value="SONAR INCLAVE">SONAR ENCLAVE</option>
-                                <option value="CHAN SINGH ENCLAVE">CHAIN SINGH ENCLAVE</option>
-                                <option value="KSP">KSP</option>
-                                <option value="VASUDEV DWAR">VASUDEV DWAR</option>
-                                <option value="GOLF GROUND">GOLF GROUND</option>
-                                <option value="TASVIR SINGH DWAR">TASVIR SINGH DWAR</option>
-                                <option value="ARJUN GARH CHOWARAHA">ARJUN GARH CHOWARAHA</option>
-                                <option value="RATAN SINGH MARG TJN">RATAN SINGH MARG TJN</option>
-                                <option value="FORT KAMPTEE">FORT KAMPTEE</option>
-                                <option value="GARURA BUS STOP">GARURA BUS STOP</option>
-                                <option value="ASC PUMP HOUSE">ASC PUMP HOUSE</option>
-                                <option value="TCP II">TCP II</option>
-                                <option value="MAYUR VIHAR">MAYUR VIHAR</option>
-                            </select>
-                        </div>
-                        <div id="dropoffLocation-error" class="form-error mt-1 hidden" role="alert"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="requestTime" class="block text-sm font-medium text-gray-700 mb-2">
-                            Schedule <span class="text-red-500" aria-label="required">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-calendar-alt text-gray-400" aria-hidden="true"></i>
-                            </div>
-                            <input type="datetime-local" 
-                                   id="requestTime" 
-                                   name="requestTime" 
-                                   class="form-input w-full pl-10 pr-3 py-3 rounded-lg border-2 border-gray-200 focus:border-blue-500 transition-all" 
-                                   required 
-                                   aria-describedby="requestTime-error requestTime-help">
-                        </div>
-                        <div id="requestTime-help" class="text-sm text-gray-500 mt-1">
-                            Select a time at least 15 minutes from now
-                        </div>
-                        <div id="requestTime-error" class="form-error mt-1 hidden" role="alert"></div>
-                    </div>
-                    
-                    <div class="pt-4">
-                        <button type="submit" 
-                                class="btn-primary w-full py-3 px-6 rounded-lg text-white font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-                            <i class="fas fa-car" aria-hidden="true"></i>
-                            <span>Request Ride</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Enhanced Recent Requests Section -->
-            <div class="card p-6 rounded-xl hover:shadow-lg transition-all duration-300">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Recent Requests</h2>
-                    <button type="button" 
-                            class="text-sm text-blue-600 hover:text-blue-800 transition-colors px-3 py-1 rounded hover:bg-blue-50" 
-                            id="viewAllRequests">
-                        View All <i class="fas fa-arrow-right ml-1" aria-hidden="true"></i>
-                    </button>
-                </div>
-                
-                <div class="table-responsive">
-                    <table class="min-w-full" role="table">
-                        <thead>
-                            <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pickup</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dropoff</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Name</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Phone</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver Location</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="requestList" class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td colspan="9" class="px-6 py-8 text-center text-gray-500">
-                                    <div class="flex flex-col items-center">
-                                        <i class="fas fa-car text-4xl text-gray-300 mb-3" aria-hidden="true"></i>
-                                        <p class="text-lg font-medium">No rides yet</p>
-                                        <p class="text-sm text-gray-400">Your ride history will appear here</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-50" id="mainContent">
+            <!-- This will be populated by JavaScript -->
         </main>
     </div>
 
@@ -873,7 +658,7 @@
     <!-- Enhanced Notification Area -->
     <div id="notificationArea" class="fixed bottom-4 right-4 z-40 space-y-2 max-w-sm no-print"></div>
 
-    <!-- Enhanced Map Modal -->
+    <!-- Enhanced Map Modal - MOVED OUTSIDE MAIN CONTENT -->
     <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden no-print" role="dialog" aria-labelledby="mapModalTitle" aria-modal="true">
         <div class="bg-white rounded-lg p-4 w-full h-full max-w-5xl mx-2 sm:p-6 sm:mx-4 max-h-screen overflow-y-auto shadow-2xl">
             <div class="flex justify-between items-center mb-4">
@@ -940,11 +725,6 @@
                             <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>
                             Refresh
                         </button>
-                        
-                        
-     
-
-                        
                     </div>
                 </div>
             </div>
@@ -1048,45 +828,33 @@
                 }
             });
 
-            // Form auto-save to prevent data loss
+            // Form auto-save to prevent data loss - NOT USING localStorage
             const form = document.getElementById('cabRequestForm');
             if (form) {
+                let unsavedData = {};
+
                 const saveFormData = () => {
                     const formData = new FormData(form);
                     const data = {};
                     for (let [key, value] of formData.entries()) {
                         data[key] = value;
                     }
-                    try {
-                        localStorage.setItem('unsavedRideRequest', JSON.stringify(data));
-                    } catch (e) {
-                        // Handle localStorage errors silently
-                    }
+                    unsavedData = data;
                 };
 
                 const restoreFormData = () => {
-                    try {
-                        const saved = localStorage.getItem('unsavedRideRequest');
-                        if (saved) {
-                            const data = JSON.parse(saved);
-                            Object.keys(data).forEach(key => {
-                                const element = form.elements[key];
-                                if (element && data[key]) {
-                                    element.value = data[key];
-                                }
-                            });
-                        }
-                    } catch (e) {
-                        // Handle errors silently
+                    if (unsavedData && Object.keys(unsavedData).length > 0) {
+                        Object.keys(unsavedData).forEach(key => {
+                            const element = form.elements[key];
+                            if (element && unsavedData[key]) {
+                                element.value = unsavedData[key];
+                            }
+                        });
                     }
                 };
 
                 const clearSavedData = () => {
-                    try {
-                        localStorage.removeItem('unsavedRideRequest');
-                    } catch (e) {
-                        // Handle errors silently
-                    }
+                    unsavedData = {};
                 };
 
                 // Save form data on input
@@ -1131,22 +899,15 @@
 
             // Skip to main content link
             const skipLink = document.createElement('a');
-            skipLink.href = '#main-content';
+            skipLink.href = '#mainContent';
             skipLink.textContent = 'Skip to main content';
             skipLink.className = 'sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white p-2 rounded z-50';
             document.body.insertBefore(skipLink, document.body.firstChild);
-
-            // Add main content id
-            const main = document.querySelector('main');
-            if (main) {
-                main.id = 'main-content';
-            }
         });
 
         // Global error boundary
         window.onerror = function(msg, url, lineNo, columnNo, error) {
             console.error('Global error:', { msg, url, lineNo, columnNo, error });
-            // Could send to error reporting service here
             return false;
         };
 
@@ -1156,7 +917,6 @@
                 const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
                 console.log('Page load time:', loadTime + 'ms');
                 
-                // Could send performance metrics to analytics service here
                 if (loadTime > 3000) {
                     console.warn('Slow page load detected:', loadTime + 'ms');
                 }
