@@ -65,14 +65,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Enhanced API configuration
     const API_CONFIG = {
-        baseURL: 'https://serverone-w2xc.onrender.com/api',
-        timeout: 10000,
-        retryDelay: 1000,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        }
-    };
+    baseURL: 'https://serverone-w2xc.onrender.com/api/user', // Added /user prefix
+    timeout: 10000,
+    retryDelay: 1000,
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    }
+};
 
     // Enhanced API utility with retry logic and error handling
     const apiCall = async (endpoint, options = {}) => {
@@ -1792,3 +1792,4 @@ document.addEventListener('DOMContentLoaded', () => {
         showNotification('No internet connection', 'warning', 0); // Persistent warning
     });
 });
+
