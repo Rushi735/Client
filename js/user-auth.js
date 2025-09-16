@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const username = document.getElementById('username').value.trim();
             const email = document.getElementById('email').value.trim();
-            const phone_number = document.getElementById('phone').value.trim();
+            const phone = document.getElementById('phone').value.trim();
             const password = document.getElementById('password').value.trim();
 
             // Client-side validation
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Validate phone number format (10-15 digits, optional +)
-            if (!/^\+?\d{10,15}$/.test(phone_number.replace(/[\s-]/g, ''))) {
+            if (!/^\+?\d{10,15}$/.test(phone.replace(/[\s-]/g, ''))) {
                 return alert('Please enter a valid phone number (10-15 digits, optional country code).');
             }
 
@@ -75,4 +75,5 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
 });
