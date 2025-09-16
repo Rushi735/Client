@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(' https://serverone-w2xc.onrender.com/api/user/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, phone_number, password })
+                    body: JSON.stringify({ username, email, phone, password })
                 });
 
                 const data = await response.json();
@@ -77,3 +77,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
