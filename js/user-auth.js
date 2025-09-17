@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const password = document.getElementById('password').value.trim();
 
             // Client-side validation
-            if (!username || !email || !phone || !password) {
+            if (!username || !phone || !password) {
                 return alert('Please fill in all fields.');
             }
 
@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
 
 
 
