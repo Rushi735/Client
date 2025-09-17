@@ -827,7 +827,7 @@ async function fetchPendingUsers() {
             window.location.href = '/admin-login.html';
             return;
         }
-        const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/pending_users', {
+        const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/pending-users', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!response.ok) {
@@ -1214,7 +1214,7 @@ async function fetchPendingUsers() {
     
     showLoading();
     try {
-        const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/pending_users/${userId}/approve`, {
+        const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/pending-users/${userId}/approve`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1239,7 +1239,7 @@ async function rejectUser(userId) {
     
     showLoading();
     try {
-        const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/pending_users/${userId}`, {
+        const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/pending-users/${userId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -1724,6 +1724,7 @@ async function rejectUser(userId) {
         }
     }
 });
+
 
 
 
