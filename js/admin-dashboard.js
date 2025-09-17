@@ -817,39 +817,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function fetchPendingUsers() {
-    showLoading();
-    const userRequestsList = document.getElementById('userRequestsList');
-    const userRequestsLoading = document.getElementById('userRequestsLoading');
-    const userRequestsEmpty = document.getElementById('userRequestsEmpty');
-    
-    if (userRequestsList) userRequestsList.innerHTML = '';
-    if (userRequestsLoading) userRequestsLoading.classList.remove('hidden');
-    if (userRequestsEmpty) userRequestsEmpty.classList.add('hidden');
-    
+    // In the fetchPendingUsers function, make sure the URL is correct:
+async function fetchPendingUsers() {
     try {
+        showLoading(true);
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            showErrorMessage('No auth token found. Please log in.');
+            window.location.href = '/admin-login.html';
+            return;
+        }
         const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/pending-users', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
         if (!response.ok) {
+            if (response.status === 404) {
+                showErrorMessage('Pending users endpoint not found. Contact server admin.');
+                return;
+            }
             if (response.status === 401) {
-                localStorage.clear();
-                window.location.href = 'admin-login.html';
+                showErrorMessage('Session expired. Please log in again.');
+                window.location.href = '/admin-login.html';
                 return;
             }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        const { data } = await response.json();
-        renderUserRequests(data || []);
+        const { data, message } = await response.json();
+        renderUserRequests(data);
+        showSuccessMessage(message);
     } catch (error) {
         console.error('Error fetching pending users:', error);
-        showErrorMessage('Failed to load user requests. Please try again.');
-        if (userRequestsLoading) userRequestsLoading.classList.add('hidden');
-        if (userRequestsEmpty) userRequestsEmpty.classList.remove('hidden');
+        showErrorMessage('Failed to fetch pending users. Please try again.');
     } finally {
-        hideLoading();
+        showLoading(false);
     }
 }
     
@@ -1724,4 +1724,5 @@ async function rejectUser(userId) {
         }
     }
 });
+
 
