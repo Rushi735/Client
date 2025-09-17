@@ -818,18 +818,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // In the fetchPendingUsers function, make sure the URL is correct:
+// In the fetchPendingUsers function, fix the token retrieval:
 async function fetchPendingUsers() {
     try {
-        showLoading(true);
-        const token = localStorage.getItem('adminToken');
+        showLoading();
+        // Use the regular token, not adminToken
+        const token = localStorage.getItem('token');
         if (!token) {
             showErrorMessage('No auth token found. Please log in.');
             window.location.href = '/admin-login.html';
             return;
         }
+        
         const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/pending-users', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
         if (!response.ok) {
             if (response.status === 404) {
                 showErrorMessage('Pending users endpoint not found. Contact server admin.');
@@ -842,6 +846,7 @@ async function fetchPendingUsers() {
             }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const { data, message } = await response.json();
         renderUserRequests(data);
         showSuccessMessage(message);
@@ -849,7 +854,7 @@ async function fetchPendingUsers() {
         console.error('Error fetching pending users:', error);
         showErrorMessage('Failed to fetch pending users. Please try again.');
     } finally {
-        showLoading(false);
+        hideLoading();
     }
 }
     
@@ -1724,6 +1729,7 @@ async function rejectUser(userId) {
         }
     }
 });
+
 
 
 
