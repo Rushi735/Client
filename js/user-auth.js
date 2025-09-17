@@ -1,30 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('userLoginForm');
 
@@ -92,11 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert('Registration successful. Please log in.');
-                    window.location.href = 'user-login.html';
-                } else {
-                    alert(data.message || 'Registration failed');
-                }
+    alert('Registration request submitted. Waiting for admin approval.');
+    window.location.href = 'user-login.html';
+} else {
+    alert(data.message || 'Registration failed');
+}
             } catch (error) {
                 alert('Error registering: ' + error.message);
             }
@@ -104,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 });
+
 
 
 
