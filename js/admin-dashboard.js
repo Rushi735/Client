@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'ride-requests': createRideRequestsSection(),
         'drivers': createDriversSection(),
         'driver-locations': createDriverLocationsSection(),
+         'user-requests': createUserRequestsSection(), // NEW: Add this line
         'settings': createSettingsSection()
     };
 
@@ -79,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 driverLocationsRefreshInterval = setInterval(loadDriverLocations, 100000); // Refresh every 10 seconds
             }
             if (target === 'settings') fetchSystemSettings();
+                    if (target === 'user-requests') fetchPendingUsers(); // NEW: Add this line
+
         });
     });
 
@@ -731,6 +734,57 @@ document.addEventListener('DOMContentLoaded', () => {
         return section;
     }
 
+
+    function createUserRequestsSection() {
+    const section = document.createElement('div');
+    section.className = 'p-6';
+    section.innerHTML = `
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-black">User Registration Requests</h2>
+            <button id="refreshUserRequests" class="btn-primary bg-black text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-800">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-100 p-6">
+            <div class="max-h-[500px] overflow-y-auto">
+                <table class="w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userRequestsList">
+                        <tr id="userRequestsLoading">
+                            <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                                <div class="flex justify-center items-center space-x-2">
+                                    <i class="fas fa-circle-notch fa-spin text-black"></i>
+                                    <span>Loading user requests...</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr id="userRequestsEmpty" class="hidden">
+                            <td colspan="6" class="px-6 py-8 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-400">
+                                    <i class="fas fa-user-plus text-4xl mb-2"></i>
+                                    <h4 class="font-medium text-gray-500">No pending requests</h4>
+                                    <p class="text-sm mt-1">All user registration requests have been processed</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    document.querySelector('main').parentNode.appendChild(section);
+    section.querySelector('#refreshUserRequests').addEventListener('click', fetchPendingUsers);
+    return section;
+}
     async function fetchAndDisplayDrivers() {
         showLoading();
         const driversList = document.getElementById('driversList');
@@ -763,6 +817,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function fetchPendingUsers() {
+    showLoading();
+    const userRequestsList = document.getElementById('userRequestsList');
+    const userRequestsLoading = document.getElementById('userRequestsLoading');
+    const userRequestsEmpty = document.getElementById('userRequestsEmpty');
+    
+    if (userRequestsList) userRequestsList.innerHTML = '';
+    if (userRequestsLoading) userRequestsLoading.classList.remove('hidden');
+    if (userRequestsEmpty) userRequestsEmpty.classList.add('hidden');
+    
+    try {
+        const response = await fetch('https://serverone-w2xc.onrender.com/api/admin/pending-users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.clear();
+                window.location.href = 'admin-login.html';
+                return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const { data } = await response.json();
+        renderUserRequests(data || []);
+    } catch (error) {
+        console.error('Error fetching pending users:', error);
+        showErrorMessage('Failed to load user requests. Please try again.');
+        if (userRequestsLoading) userRequestsLoading.classList.add('hidden');
+        if (userRequestsEmpty) userRequestsEmpty.classList.remove('hidden');
+    } finally {
+        hideLoading();
+    }
+}
+    
     async function renderDriversList(drivers) {
         const driversList = document.getElementById('driversList');
         if (!driversList) return;
@@ -858,6 +948,46 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => viewRequestDetails(btn.dataset.id));
         });
     }
+
+
+    function renderUserRequests(users) {
+    const userRequestsList = document.getElementById('userRequestsList');
+    const userRequestsLoading = document.getElementById('userRequestsLoading');
+    const userRequestsEmpty = document.getElementById('userRequestsEmpty');
+    
+    if (userRequestsLoading) userRequestsLoading.classList.add('hidden');
+    if (userRequestsEmpty) users.length === 0 ? userRequestsEmpty.classList.remove('hidden') : userRequestsEmpty.classList.add('hidden');
+    
+    if (users.length === 0) return;
+    
+    userRequestsList.innerHTML = users.map(user => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${user.id}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.username}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.email}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${user.phone || 'N/A'}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTime(user.created_at)}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                <button class="text-green-600 hover:text-green-900 approve-user" data-id="${user.id}">
+                    Approve
+                </button>
+                <button class="text-red-600 hover:text-red-900 reject-user" data-id="${user.id}">
+                    Reject
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
+    // Add event listeners
+    document.querySelectorAll('.approve-user').forEach(btn => {
+        btn.addEventListener('click', () => approveUser(btn.dataset.id));
+    });
+    
+    document.querySelectorAll('.reject-user').forEach(btn => {
+        btn.addEventListener('click', () => rejectUser(btn.dataset.id));
+    });
+}
+    
 
     function createDriverLocationsSection() {
         const section = document.createElement('div');
@@ -1078,6 +1208,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+    async function approveUser(userId) {
+    if (!confirm('Are you sure you want to approve this user registration?')) return;
+    
+    showLoading();
+    try {
+        const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/pending-users/${userId}/approve`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to approve user');
+        }
+        
+        showSuccessMessage('User approved successfully!');
+        fetchPendingUsers(); // Refresh the list
+    } catch (error) {
+        console.error('Error approving user:', error);
+        showErrorMessage(error.message || 'Failed to approve user. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function rejectUser(userId) {
+    if (!confirm('Are you sure you want to reject this user registration?')) return;
+    
+    showLoading();
+    try {
+        const response = await fetch(`https://serverone-w2xc.onrender.com/api/admin/pending-users/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to reject user');
+        }
+        
+        showSuccessMessage('User registration request rejected successfully!');
+        fetchPendingUsers(); // Refresh the list
+    } catch (error) {
+        console.error('Error rejecting user:', error);
+        showErrorMessage(error.message || 'Failed to reject user. Please try again.');
+    } finally {
+        hideLoading();
+    }
+}
     async function showAssignDriverModal(requestId) {
         showLoading();
         try {
@@ -1544,3 +1724,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
